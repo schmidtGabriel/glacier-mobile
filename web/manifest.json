@@ -1,6 +1,6 @@
 {
-    "name": "test_truereaction",
-    "short_name": "test_truereaction",
+    "name": "glacier",
+    "short_name": "glacier",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

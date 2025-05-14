@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screen_recording/flutter_screen_recording.dart';
+import 'package:glacier/components/CameraPreviewWidget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:test_truereaction/components/CameraPreviewWidget.dart';
 import 'package:video_player/video_player.dart';
 
 class RecordPage extends StatefulWidget {

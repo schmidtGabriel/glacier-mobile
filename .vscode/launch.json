@@ -5,18 +5,18 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "test_truereaction",
+			"name": "glacier",
 			"request": "launch",
 			"type": "dart"
 		},
 		{
-			"name": "test_truereaction (profile mode)",
+			"name": "glacier (profile mode)",
 			"request": "launch",
 			"type": "dart",
 			"flutterMode": "profile"
 		},
 		{
-			"name": "test_truereaction (release mode)",
+			"name": "glacier (release mode)",
 			"request": "launch",
 			"type": "dart",
 			"flutterMode": "release"

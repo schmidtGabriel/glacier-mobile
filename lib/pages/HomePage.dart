@@ -2,10 +2,10 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:glacier/pages/EmbedVideoPage.dart';
+import 'package:glacier/pages/RecordPage.dart';
+import 'package:glacier/services/listReactions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:test_truereaction/pages/EmbedVideoPage.dart';
-import 'package:test_truereaction/pages/RecordPage.dart';
-import 'package:test_truereaction/services/listReactions.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

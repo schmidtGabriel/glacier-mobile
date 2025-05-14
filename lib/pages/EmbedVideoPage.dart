@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
+import 'package:glacier/components/CameraPreviewWidget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:test_truereaction/components/CameraPreviewWidget.dart';
 import 'package:video_player/video_player.dart';
 
 class EmbedVideoPage extends StatefulWidget {

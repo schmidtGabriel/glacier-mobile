@@ -1,10 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:test_truereaction/firebase_options.dart';
-import 'package:test_truereaction/gate/AuthGate.dart';
-import 'package:test_truereaction/pages/RecordPage.dart';
-import 'package:test_truereaction/services/getFCMToken.dart';
+import 'package:glacier/firebase_options.dart';
+import 'package:glacier/gate/AuthGate.dart';
+import 'package:glacier/pages/RecordPage.dart';
+import 'package:glacier/services/getFCMToken.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

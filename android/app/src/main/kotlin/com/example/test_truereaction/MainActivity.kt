@@ -1,4 +1,4 @@
-package com.example.test_truereaction
+package com.example.glacier
 
 import io.flutter.embedding.android.FlutterActivity
 
