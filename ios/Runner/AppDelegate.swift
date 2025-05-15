@@ -1,15 +1,19 @@
 import Flutter
 import UIKit
+import FirebaseMessaging
+import FirebaseCore
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, MessagingDelegate {
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
 
-    FirebaseApp.configure()
+    if FirebaseApp.app() == nil {
+      FirebaseApp.configure()
+    }
 
     UNUserNotificationCenter.current().delegate = self
     Messaging.messaging().delegate = self

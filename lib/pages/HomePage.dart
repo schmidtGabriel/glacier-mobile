@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:glacier/pages/EmbedVideoPage.dart';
 import 'package:glacier/pages/RecordPage.dart';
+import 'package:glacier/pages/SocialVideoPage.dart';
 import 'package:glacier/services/listReactions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -37,14 +37,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(color: Colors.black, fontSize: 20),
                   ),
                 ),
-              ElevatedButton(
-                onPressed:
-                    () => Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => EmbedVideoPage()),
-                    ),
-                child: Text('Embed Videos'),
-              ),
+
               Expanded(
                 child: ListView.builder(
                   itemCount: reactions.length,
@@ -57,7 +50,12 @@ class _HomePageState extends State<HomePage> {
                           context,
                           MaterialPageRoute(
                             builder:
-                                (context) => RecordPage(uuid: reaction['uuid']),
+                                (context) =>
+                                    reaction['type_video'] == 'video'
+                                        ? RecordPage(uuid: reaction['uuid'])
+                                        : SocialVideoPage(
+                                          uuid: reaction['uuid'],
+                                        ),
                           ),
                         );
                       },
