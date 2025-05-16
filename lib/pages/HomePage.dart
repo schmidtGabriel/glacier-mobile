@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:glacier/helpers/FormatStatusReaction.dart';
 import 'package:glacier/pages/RecordPage.dart';
 import 'package:glacier/pages/SocialVideoPage.dart';
 import 'package:glacier/services/listReactions.dart';
@@ -51,11 +52,11 @@ class _HomePageState extends State<HomePage> {
                           MaterialPageRoute(
                             builder:
                                 (context) =>
-                                    reaction['type_video'] == 'video'
-                                        ? RecordPage(uuid: reaction['uuid'])
-                                        : SocialVideoPage(
+                                    reaction['type_video'] == '2'
+                                        ? SocialVideoPage(
                                           uuid: reaction['uuid'],
-                                        ),
+                                        )
+                                        : RecordPage(uuid: reaction['uuid']),
                           ),
                         );
                       },
@@ -71,11 +72,7 @@ class _HomePageState extends State<HomePage> {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text(
-                                  reaction['status'] == 0
-                                      ? 'Pending'
-                                      : 'Approved ',
-                                ),
+                                Text(FormatStatusReaction(reaction['status'])),
 
                                 Text(
                                   reaction['created_at'] ?? 'No Date',

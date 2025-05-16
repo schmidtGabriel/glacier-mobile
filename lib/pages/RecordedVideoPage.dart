@@ -1,12 +1,22 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:glacier/services/FirebaseStorageService.dart';
+import 'package:glacier/services/updateReaction.dart';
 import 'package:video_player/video_player.dart';
 
 class RecordedVideoPage extends StatefulWidget {
   final String videoPath;
+  final String? uuid;
+  final String? videoName;
 
-  const RecordedVideoPage({super.key, required this.videoPath});
+  const RecordedVideoPage({
+    super.key,
+    required this.videoPath,
+    required this.videoName,
+    required this.uuid,
+  });
 
   @override
   State<RecordedVideoPage> createState() => _RecordedVideoPageState();
@@ -15,6 +25,7 @@ class RecordedVideoPage extends StatefulWidget {
 class _RecordedVideoPageState extends State<RecordedVideoPage> {
   late VideoPlayerController _controller;
   late Future<void> _initializeVideoPlayerFuture;
+  var _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -27,11 +38,15 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
               future: _initializeVideoPlayerFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.done) {
-                  return Center(
-                    child: AspectRatio(
-                      aspectRatio: _controller.value.aspectRatio,
-                      child: VideoPlayer(_controller),
-                    ),
+                  return Stack(
+                    children: [
+                      Center(
+                        child: AspectRatio(
+                          aspectRatio: _controller.value.aspectRatio,
+                          child: VideoPlayer(_controller),
+                        ),
+                      ),
+                    ],
                   );
                 } else {
                   return Center(child: CircularProgressIndicator());
@@ -40,25 +55,13 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            color: Colors.black87,
+            padding: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
             child: ValueListenableBuilder<VideoPlayerValue>(
               valueListenable: _controller,
               builder: (context, value, child) {
                 return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        value.isPlaying
-                            ? _controller.pause()
-                            : _controller.play();
-                      },
-                      icon: Icon(
-                        value.isPlaying ? Icons.pause : Icons.play_arrow,
-                      ),
-                      label: Text(value.isPlaying ? 'Pause' : 'Play'),
-                    ),
                     ElevatedButton.icon(
                       onPressed: () {
                         _controller.pause();
@@ -70,19 +73,52 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
                         style: TextStyle(color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Colors.blue.shade800,
                       ),
                     ),
-                    ElevatedButton.icon(
-                      onPressed: onSend,
-                      icon: Icon(Icons.send, color: Colors.white),
-                      label: Text(
-                        'Send',
-                        style: TextStyle(color: Colors.white),
-                      ),
+                    ValueListenableBuilder<VideoPlayerValue>(
+                      valueListenable: _controller,
+                      builder: (context, value, child) {
+                        return ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            shape: CircleBorder(),
+                            padding: EdgeInsets.all(10),
+                          ),
+                          onPressed: () {
+                            value.isPlaying
+                                ? _controller.pause()
+                                : _controller.play();
+                          },
+                          child: Icon(
+                            value.isPlaying ? Icons.pause : Icons.play_arrow,
+                            color: Colors.black,
+                            size: 30,
+                          ),
+                        );
+                      },
+                    ),
+                    ElevatedButton(
+                      onPressed: _isLoading ? null : onSend,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: Colors.green.shade800,
                       ),
+                      child:
+                          _isLoading
+                              ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                  strokeWidth: 2.0,
+                                ),
+                              )
+                              : Text(
+                                'Send Record',
+                                style: TextStyle(color: Colors.white),
+                              ),
                     ),
                   ],
                 );
@@ -108,8 +144,38 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
   }
 
   void onSend() {
+    var service = FirebaseStorageService();
+    _isLoading = true;
+    setState(() {});
     // Implement your send logic here
-    Navigator.of(context).popUntil((route) => route.isFirst);
+    service
+        .uploadVideo(widget.videoPath)
+        .then((value) async {
+          print('Video uploaded successfully: $value');
+
+          await updateReaction(widget.videoName, widget.uuid);
+          Fluttertoast.showToast(
+            msg: "Video uploaded and reaction updated successfully!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+          );
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        })
+        .catchError((error) {
+          Fluttertoast.showToast(
+            msg: "Error uploading video.",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+          );
+          print('Error uploading video: $error');
+
+          _isLoading = false;
+          setState(() {});
+        });
   }
 
   Future<void> _initializeVideoRecording() async {

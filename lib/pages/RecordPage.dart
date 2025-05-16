@@ -21,6 +21,7 @@ class _RecordPageState extends State<RecordPage> {
   int countdown = 3;
   bool startCountdown = false;
   bool showCamera = false;
+  String videoName = '';
 
   String? videoPath;
 
@@ -31,63 +32,68 @@ class _RecordPageState extends State<RecordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (_controllerVideo != null && _controllerVideo!.value.isInitialized)
-            AspectRatio(
-              aspectRatio: _controllerVideo!.value.aspectRatio,
-              child: SizedBox.expand(
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: _controllerVideo!.value.size.width,
-                    height: _controllerVideo!.value.size.height,
-                    child: VideoPlayer(_controllerVideo!),
-                  ),
-                ),
-              ),
-            )
-          else
-            Center(child: CircularProgressIndicator()),
-
-          if (_controllerVideo != null && _controllerVideo!.value.isInitialized)
-            ValueListenableBuilder<VideoPlayerValue>(
-              valueListenable: _controllerVideo!,
-              builder: (context, value, child) {
-                if (value.isPlaying) return SizedBox.shrink();
-                return Center(
-                  child: GestureDetector(
-                    onTap: () {
-                      _controllerVideo!.play();
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.play_arrow,
-                        color: Colors.white,
-                        size: 48,
-                      ),
+      body: Container(
+        color: Colors.black,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            if (_controllerVideo != null &&
+                _controllerVideo!.value.isInitialized)
+              AspectRatio(
+                aspectRatio: _controllerVideo!.value.aspectRatio,
+                child: SizedBox.expand(
+                  child: FittedBox(
+                    fit: BoxFit.contain,
+                    child: SizedBox(
+                      width: _controllerVideo!.value.size.width,
+                      height: _controllerVideo!.value.size.height,
+                      child: VideoPlayer(_controllerVideo!),
                     ),
                   ),
-                );
-              },
-            ),
+                ),
+              )
+            else
+              Center(child: CircularProgressIndicator()),
 
-          // Camera preview in bottom right
-          Visibility(
-            visible: showCamera,
-            child: Positioned(
-              bottom: 20,
-              right: 20,
-              child: CameraPreviewWidget(),
+            if (_controllerVideo != null &&
+                _controllerVideo!.value.isInitialized)
+              ValueListenableBuilder<VideoPlayerValue>(
+                valueListenable: _controllerVideo!,
+                builder: (context, value, child) {
+                  if (value.isPlaying) return SizedBox.shrink();
+                  return Center(
+                    child: GestureDetector(
+                      onTap: () {
+                        _controllerVideo!.play();
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.5),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.play_arrow,
+                          color: Colors.white,
+                          size: 48,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+            // Camera preview in bottom right
+            Visibility(
+              visible: showCamera,
+              child: Positioned(
+                bottom: 20,
+                right: 20,
+                child: CameraPreviewWidget(),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -130,7 +136,12 @@ class _RecordPageState extends State<RecordPage> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => RecordedVideoPage(videoPath: res),
+              builder:
+                  (context) => RecordedVideoPage(
+                    videoPath: res,
+                    videoName: videoName,
+                    uuid: widget.uuid,
+                  ),
             ),
           ).then(
             (value) => {
@@ -257,7 +268,18 @@ class _RecordPageState extends State<RecordPage> {
     Navigator.of(context).pop();
 
     await FlutterScreenRecording.startRecordScreenAndAudio(
-      currentReaction?['title'] ?? 'Video Title',
+      currentReaction != null
+          ? "${currentReaction?['title']}-${currentReaction?['user']}"
+              .replaceAll(' ', '-')
+              .trim()
+          : 'Video Title',
     );
+
+    videoName =
+        currentReaction != null
+            ? "${currentReaction?['title']}-${currentReaction?['user']}.mp4"
+                .replaceAll(' ', '-')
+                .trim()
+            : 'Video Title';
   }
 }
