@@ -105,23 +105,23 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    _loadUserData();
+    loadUserData();
   }
 
-  Future<void> _loadReactions() async {
+  Future<void> loadReactions() async {
     if (uuid == null) return;
     reactions = await listReactions(userId: uuid!);
     final prefs = await SharedPreferences.getInstance();
     prefs.setString('reactions', jsonEncode(reactions));
   }
 
-  Future<void> _loadUserData() async {
+  Future<void> loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     uuid = prefs.getString('uuid');
     email = prefs.getString('email');
     name = prefs.getString('name');
 
-    await _loadReactions();
+    await loadReactions();
     setState(() {}); // Update UI after loading data
   }
 }

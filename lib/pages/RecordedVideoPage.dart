@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/updateReaction.dart';
+import 'package:toastification/toastification.dart';
 import 'package:video_player/video_player.dart';
 
 class RecordedVideoPage extends StatefulWidget {
@@ -154,25 +154,22 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
           print('Video uploaded successfully: $value');
 
           await updateReaction(widget.videoName, widget.uuid);
-          Fluttertoast.showToast(
-            msg: "Video uploaded and reaction updated successfully!",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            backgroundColor: Colors.green,
-            textColor: Colors.white,
+          toastification.show(
+            title: Text('Video uploaded successfully'),
+            autoCloseDuration: const Duration(seconds: 5),
+            type: ToastificationType.success,
+            alignment: Alignment.bottomCenter,
           );
           Navigator.of(context).popUntil((route) => route.isFirst);
         })
         .catchError((error) {
-          Fluttertoast.showToast(
-            msg: "Error uploading video.",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            backgroundColor: Colors.red,
-            textColor: Colors.white,
-          );
           print('Error uploading video: $error');
-
+          toastification.show(
+            title: Text('Error uploading video'),
+            autoCloseDuration: const Duration(seconds: 5),
+            type: ToastificationType.error,
+            alignment: Alignment.bottomCenter,
+          );
           _isLoading = false;
           setState(() {});
         });
