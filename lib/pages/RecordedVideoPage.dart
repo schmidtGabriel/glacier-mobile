@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/updateReaction.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 import 'package:video_player/video_player.dart';
 
@@ -143,13 +144,15 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
     _initializeVideoPlayerFuture = _initializeVideoRecording();
   }
 
-  void onSend() {
+  Future<void> onSend() async {
     var service = FirebaseStorageService();
     _isLoading = true;
-    setState(() {});
+    final prefs = await SharedPreferences.getInstance();
+    final selfiePath = prefs.getString('selfiePath');
+
     // Implement your send logic here
     service
-        .uploadVideo(widget.videoPath)
+        .uploadVideo(widget.videoPath, selfiePath!)
         .then((value) async {
           print('Video uploaded successfully: $value');
 
@@ -160,6 +163,9 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
             type: ToastificationType.success,
             alignment: Alignment.bottomCenter,
           );
+          prefs.remove('selfiePath');
+          prefs.remove('selfieName');
+          prefs.remove('videoPath');
           Navigator.of(context).popUntil((route) => route.isFirst);
         })
         .catchError((error) {

@@ -1,8 +1,11 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CameraPreviewWidget extends StatefulWidget {
-  const CameraPreviewWidget({super.key});
+  final bool isFinished;
+
+  const CameraPreviewWidget({super.key, required this.isFinished});
 
   @override
   State<CameraPreviewWidget> createState() => _CameraPreviewWidgetState();
@@ -30,18 +33,27 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
   }
 
   @override
+  void didUpdateWidget(covariant CameraPreviewWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.isFinished && !oldWidget.isFinished) {
+      if (_controller != null && _controller!.value.isRecordingVideo) {
+        _controller!.stopVideoRecording().then((file) async {
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setString('selfiePath', file.path);
+          prefs.setString('selfieName', file.name);
+        });
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _controller?.dispose();
     super.dispose();
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _initCamera();
-  }
-
-  Future<void> _initCamera() async {
+  Future<void> initCamera() async {
     try {
       _cameras = await availableCameras();
       print('Available cameras: $_cameras');
@@ -53,6 +65,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
         _controller = CameraController(frontCamera, ResolutionPreset.high);
         await _controller!.initialize();
+        await _controller!.startVideoRecording();
         if (!mounted) return;
         setState(() {
           _isInitialized = true;
@@ -63,5 +76,11 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     } catch (e) {
       print('Camera error: $e');
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    initCamera();
   }
 }

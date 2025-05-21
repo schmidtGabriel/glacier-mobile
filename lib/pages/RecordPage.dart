@@ -89,7 +89,11 @@ class _RecordPageState extends State<RecordPage> {
               child: Positioned(
                 bottom: 20,
                 right: 20,
-                child: CameraPreviewWidget(),
+                child: CameraPreviewWidget(
+                  isFinished:
+                      _controllerVideo!.value.position >=
+                      _controllerVideo!.value.duration,
+                ),
               ),
             ),
           ],
@@ -127,6 +131,7 @@ class _RecordPageState extends State<RecordPage> {
     _controllerVideo!.addListener(() async {
       final bool isFinished =
           _controllerVideo!.value.position >= _controllerVideo!.value.duration;
+
       if (isFinished && !_controllerVideo!.value.isPlaying) {
         String res = await FlutterScreenRecording.stopRecordScreen;
 

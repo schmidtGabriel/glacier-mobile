@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-Future<void> updateReaction(videoPath, uuid) async {
+Future<void> updateReaction(videoName, uuid) async {
   final db = FirebaseFirestore.instance;
-  print(uuid);
-  print(videoPath);
+
   final docRef = db.collection('reactions').doc(uuid);
   final docSnapshot = await docRef.get();
   if (docSnapshot.exists) {
     await docRef.update({
-      'recorded_video': 'records/$videoPath',
+      'recorded_video': 'records/$videoName',
+      'selfie_video': 'records/selfie-$videoName',
       'status': '1',
     });
     print('Reaction updated successfully');

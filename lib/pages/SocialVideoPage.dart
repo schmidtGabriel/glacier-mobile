@@ -18,11 +18,13 @@ class SocialVideoPage extends StatefulWidget {
 
 class _SocialVideoPageState extends State<SocialVideoPage> {
   bool isRecording = false;
+
   int countdown = 3;
   bool startCountdown = false;
   bool showCamera = false;
 
   String? videoPath;
+  String? selfiePath;
 
   VideoPlayerController? _controllerVideo;
 
@@ -68,7 +70,7 @@ class _SocialVideoPageState extends State<SocialVideoPage> {
             child: Positioned(
               bottom: 20,
               right: 20,
-              child: CameraPreviewWidget(),
+              child: CameraPreviewWidget(isFinished: !isRecording),
             ),
           ),
         ],
