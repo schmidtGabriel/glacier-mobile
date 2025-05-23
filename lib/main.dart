@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
     return ToastificationWrapper(
       child: MaterialApp(
         navigatorKey: navigatorKey,
-        title: 'Flutter Demo',
+        title: 'Glacier',
         theme: ThemeData(
           // This is the theme of your application.
           //

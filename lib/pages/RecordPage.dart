@@ -113,7 +113,6 @@ class _RecordPageState extends State<RecordPage> {
       print('No reaction data available');
       return false;
     }
-    // 'https://cdn.pixabay.com/video/2023/07/12/171272-845168271_large.mp4'
     final videoUrl = currentReaction?['url']?.toString().trim();
     if (videoUrl == null || videoUrl.isEmpty) {
       print('Invalid or missing video URL');
@@ -263,11 +262,15 @@ class _RecordPageState extends State<RecordPage> {
     for (int i = countdown - 1; i >= 0; i--) {
       await Future.delayed(Duration(seconds: 1));
       dialogState(() => countdown = i);
+      setState(() {
+        if (countdown == 1) {
+          showCamera = true;
+        }
+      });
     }
 
     setState(() {
       isRecording = true;
-      showCamera = true;
     });
 
     Navigator.of(context).pop();
