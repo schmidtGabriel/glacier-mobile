@@ -19,41 +19,130 @@ class _SigninPageState extends State<SigninPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Sign In')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              if (_errorMessage.isNotEmpty)
-                Text(_errorMessage, style: TextStyle(color: Colors.red)),
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
-                validator:
-                    (value) =>
-                        value != null && value.contains('@')
-                            ? null
-                            : 'Invalid email',
+      backgroundColor: const Color(0xFFF5F5F5),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 24.0,
+              right: 24.0,
+              top: 24.0,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 24.0,
+            ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 40),
+                      Center(
+                        child: Image.asset('assets/logo.png', height: 100),
+                      ),
+                      const SizedBox(height: 40),
+                      Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (_errorMessage.isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: Text(
+                                  _errorMessage,
+                                  style: const TextStyle(color: Colors.red),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            TextFormField(
+                              controller: _emailController,
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                prefixIcon: Icon(Icons.email),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                              ),
+                              validator:
+                                  (value) =>
+                                      value != null && value.contains('@')
+                                          ? null
+                                          : 'Invalid email',
+                            ),
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _passwordController,
+                              obscureText: true,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                prefixIcon: Icon(Icons.lock),
+                                filled: true,
+                                fillColor: Colors.white,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                              ),
+                              validator:
+                                  (value) =>
+                                      value != null && value.length >= 6
+                                          ? null
+                                          : 'Password too short',
+                            ),
+                            const SizedBox(height: 24),
+                            _isLoading
+                                ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                                : SizedBox(
+                                  height: 50,
+                                  child: ElevatedButton(
+                                    onPressed: _signIn,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blueAccent,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                          12.0,
+                                        ),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'Sign In',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            const SizedBox(height: 16),
+                            Center(
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.pushNamed(context, '/signup');
+                                },
+                                child: const Text(
+                                  "Don't have an account? Sign up",
+                                  style: TextStyle(
+                                    color: Colors.blueAccent,
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator:
-                    (value) =>
-                        value != null && value.length >= 6
-                            ? null
-                            : 'Password too short',
-              ),
-              SizedBox(height: 20),
-              _isLoading
-                  ? CircularProgressIndicator()
-                  : ElevatedButton(onPressed: _signIn, child: Text('Sign In')),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
   }

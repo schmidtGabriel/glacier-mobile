@@ -3,7 +3,10 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/firebase_options.dart';
 import 'package:glacier/gate/AuthGate.dart';
+import 'package:glacier/pages/HomePage.dart';
 import 'package:glacier/pages/RecordPage.dart';
+import 'package:glacier/pages/SigninPage.dart';
+import 'package:glacier/pages/SignupPage.dart';
 import 'package:glacier/services/getFCMToken.dart';
 import 'package:toastification/toastification.dart';
 
@@ -47,28 +50,52 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ToastificationWrapper(
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         navigatorKey: navigatorKey,
         title: 'Glacier',
         theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // TRY THIS: Try running your application with "flutter run". You'll see
-          // the application has a purple toolbar. Then, without quitting the app,
-          // try changing the seedColor in the colorScheme below to Colors.green
-          // and then invoke "hot reload" (save your changes or press the "hot
-          // reload" button in a Flutter-supported IDE, or press "r" if you used
-          // the command line to start the app).
-          //
-          // Notice that the counter didn't reset back to zero; the application
-          // state is not lost during the reload. To reset the state, use hot
-          // restart instead.
-          //
-          // This works for code too, not just values: Most code changes can be
-          // tested with just a hot reload.
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         ),
-        home: const AuthGate(),
+        initialRoute: '/',
+        onGenerateRoute: (RouteSettings settings) {
+          final args = settings.arguments;
+
+          switch (settings.name) {
+            case '/login':
+              return MaterialPageRoute(builder: (_) => SigninPage());
+            case '/signup':
+              return MaterialPageRoute(builder: (_) => SignupPage());
+            case '/':
+              return MaterialPageRoute(
+                builder: (_) => AuthGate(child: HomePage()),
+              );
+
+            case '/home':
+              return MaterialPageRoute(
+                builder: (_) => AuthGate(child: HomePage()),
+              );
+
+            // case '/record':
+            //   if (args is String) {
+            //     return MaterialPageRoute(builder: (_) => RecordPage(uuid: args));
+            //   }
+            //   return _errorRoute();
+
+            default:
+              return _errorRoute();
+          }
+        },
       ),
+    );
+  }
+
+  Route _errorRoute() {
+    return MaterialPageRoute(
+      builder:
+          (_) => Scaffold(
+            appBar: AppBar(title: Text("Error")),
+            body: Center(child: Text("Page not found or invalid arguments")),
+          ),
     );
   }
 }
