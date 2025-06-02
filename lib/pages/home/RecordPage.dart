@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screen_recording/flutter_screen_recording.dart';
 import 'package:glacier/components/CameraPreviewWidget.dart';
-import 'package:glacier/pages/RecordedVideoPage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
@@ -32,6 +31,14 @@ class _RecordPageState extends State<RecordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          currentReaction != null
+              ? currentReaction!['title'] ?? 'Video Recording'
+              : 'Video Recording',
+        ),
+        centerTitle: true,
+      ),
       body: Container(
         color: Colors.black,
         child: Stack(
@@ -91,8 +98,9 @@ class _RecordPageState extends State<RecordPage> {
                 right: 20,
                 child: CameraPreviewWidget(
                   isFinished:
+                      _controllerVideo != null &&
                       _controllerVideo!.value.position >=
-                      _controllerVideo!.value.duration,
+                          _controllerVideo!.value.duration,
                 ),
               ),
             ),
@@ -137,16 +145,14 @@ class _RecordPageState extends State<RecordPage> {
         setState(() {
           isRecording = false;
           videoPath = res;
-          Navigator.push(
+          Navigator.pushNamed(
             context,
-            MaterialPageRoute(
-              builder:
-                  (context) => RecordedVideoPage(
-                    videoPath: res,
-                    videoName: videoName,
-                    uuid: widget.uuid,
-                  ),
-            ),
+            '/recorded-video',
+            arguments: {
+              'videoPath': res,
+              'videoName': videoName,
+              'uuid': widget.uuid,
+            },
           ).then(
             (value) => {
               if (value == true)
@@ -197,6 +203,7 @@ class _RecordPageState extends State<RecordPage> {
   // Show countdown dialog
   void _showCountdownDialog() {
     late StateSetter dialogState;
+    late BuildContext dialogContext;
 
     if (isRecording) {
       return;
@@ -209,6 +216,7 @@ class _RecordPageState extends State<RecordPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             dialogState = setState;
+            dialogContext = context;
             return AlertDialog(
               title: Text('Recording Countdown'),
               content: Column(
@@ -229,7 +237,7 @@ class _RecordPageState extends State<RecordPage> {
                               startCountdown = true;
                             });
                             dialogState(() {});
-                            _startCountdown(dialogState);
+                            _startCountdown(dialogState, dialogContext);
                           },
                           child: Text('Start Recording'),
                         ),
@@ -258,7 +266,10 @@ class _RecordPageState extends State<RecordPage> {
   }
 
   // Start countdown and recording
-  void _startCountdown(StateSetter dialogState) async {
+  void _startCountdown(
+    StateSetter dialogState,
+    BuildContext dialogContext,
+  ) async {
     for (int i = countdown - 1; i >= 0; i--) {
       await Future.delayed(Duration(seconds: 1));
       dialogState(() => countdown = i);
@@ -272,22 +283,27 @@ class _RecordPageState extends State<RecordPage> {
     setState(() {
       isRecording = true;
     });
-
-    Navigator.of(context).pop();
-
-    await FlutterScreenRecording.startRecordScreenAndAudio(
-      currentReaction != null
-          ? "${currentReaction?['title']}-${currentReaction?['user']}"
-              .replaceAll(' ', '-')
-              .trim()
-          : 'Video Title',
-    );
-
-    videoName =
-        currentReaction != null
-            ? "${currentReaction?['title']}-${currentReaction?['user']}.mp4"
-                .replaceAll(' ', '-')
-                .trim()
-            : 'Video Title';
+    Navigator.pop(dialogContext); // Close the dialog
+    FlutterScreenRecording.startRecordScreenAndAudio(
+          currentReaction != null
+              ? "${currentReaction?['title']}-${currentReaction?['user']}"
+                  .replaceAll(' ', '-')
+                  .trim()
+              : 'Video Title',
+        )
+        .then((result) {
+          videoName =
+              currentReaction != null
+                  ? "${currentReaction?['title']}-${currentReaction?['user']}.mp4"
+                      .replaceAll(' ', '-')
+                      .trim()
+                  : 'Video Title';
+        })
+        .catchError((error) {
+          print('Error starting screen recording');
+          setState(() {
+            isRecording = false;
+          });
+        });
   }
 }

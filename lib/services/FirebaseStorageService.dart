@@ -20,7 +20,7 @@ class FirebaseStorageService {
   }
 
   /// Uploads a video file to Firebase Storage
-  Future<String?> uploadVideo(String videoPath, String selfiePath) async {
+  Future<String?> uploadRecord(String videoPath, String selfiePath) async {
     try {
       final videoFile = File(videoPath);
       final selfieFile = File(selfiePath);
@@ -47,6 +47,34 @@ class FirebaseStorageService {
 
       UploadTask uploadTaskSelfie = storageRefSelfie.putFile(selfieFile);
       await uploadTaskSelfie;
+
+      // Get the screen recording download URL
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Upload failed: $e');
+      return null;
+    }
+  }
+
+  /// Uploads a video file to Firebase Storage
+  Future<String?> uploadVideo(String videoPath) async {
+    try {
+      final videoFile = File(videoPath);
+
+      if (!videoFile.existsSync()) {
+        print('Video file does not exist at path: $videoPath');
+        return null;
+      }
+
+      // Upload screen recording
+      final fileName = basename(videoPath);
+      final storageRef = _storage.ref().child(
+        'videos/${DateTime.now().millisecondsSinceEpoch}-$fileName',
+      );
+
+      UploadTask uploadTask = storageRef.putFile(videoFile);
+      TaskSnapshot snapshot = await uploadTask;
 
       // Get the screen recording download URL
       final downloadUrl = await snapshot.ref.getDownloadURL();

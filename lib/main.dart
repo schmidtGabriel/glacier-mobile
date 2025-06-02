@@ -1,12 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:glacier/components/BottomMenuLayout.dart';
 import 'package:glacier/firebase_options.dart';
 import 'package:glacier/gate/AuthGate.dart';
-import 'package:glacier/pages/HomePage.dart';
-import 'package:glacier/pages/RecordPage.dart';
 import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/pages/SignupPage.dart';
+import 'package:glacier/pages/home/RecordPage.dart';
 import 'package:glacier/services/getFCMToken.dart';
 import 'package:toastification/toastification.dart';
 
@@ -65,14 +65,10 @@ class MyApp extends StatelessWidget {
               return MaterialPageRoute(builder: (_) => SigninPage());
             case '/signup':
               return MaterialPageRoute(builder: (_) => SignupPage());
+
             case '/':
               return MaterialPageRoute(
-                builder: (_) => AuthGate(child: HomePage()),
-              );
-
-            case '/home':
-              return MaterialPageRoute(
-                builder: (_) => AuthGate(child: HomePage()),
+                builder: (_) => AuthGate(child: BottomMenuLayout()),
               );
 
             // case '/record':
@@ -84,6 +80,7 @@ class MyApp extends StatelessWidget {
             default:
               return _errorRoute();
           }
+          return null;
         },
       ),
     );

@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
+import 'package:glacier/services/auth/signup.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -12,6 +13,7 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   int _step = 0;
+  bool _obscurePassword = true;
 
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -150,13 +152,33 @@ class _SignupPageState extends State<SignupPage> {
                 SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: inputDecoration("Password"),
-                  obscureText: true,
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    prefixIcon: Icon(Icons.lock),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
                   validator:
                       (value) =>
                           value != null && value.length >= 6
                               ? null
-                              : "Password too short",
+                              : 'Password too short',
                 ),
                 SizedBox(height: 32),
               ],
@@ -215,12 +237,13 @@ class _SignupPageState extends State<SignupPage> {
     }
   }
 
-  void _submit() {
-    // Handle submit logic here
-    print('Name: ${_nameController.text}');
-    print('Email: ${_emailController.text}');
-    print('Phone: ${_phoneController.text}');
-    print('Password: ${_passwordController.text}');
-    print('Invited Friends: $_invitedFriends');
+  Future<void> _submit() async {
+    await signup({
+      'name': _nameController.text,
+      'email': _emailController.text,
+      'phone': _phoneController.text,
+      'password': _passwordController.text,
+      'invited_friends': _invitedFriends,
+    });
   }
 }

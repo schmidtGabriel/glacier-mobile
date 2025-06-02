@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:glacier/services/auth/signin.dart';
 
 class SigninPage extends StatefulWidget {
   const SigninPage({super.key});
@@ -9,12 +10,12 @@ class SigninPage extends StatefulWidget {
 }
 
 class _SigninPageState extends State<SigninPage> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   String _errorMessage = '';
+  bool _obscurePassword = true;
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +77,7 @@ class _SigninPageState extends State<SigninPage> {
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _passwordController,
-                              obscureText: true,
+                              obscureText: _obscurePassword,
                               decoration: InputDecoration(
                                 labelText: 'Password',
                                 prefixIcon: Icon(Icons.lock),
@@ -84,6 +85,18 @@ class _SigninPageState extends State<SigninPage> {
                                 fillColor: Colors.white,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12.0),
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
                                 ),
                               ),
                               validator:
@@ -156,9 +169,9 @@ class _SigninPageState extends State<SigninPage> {
     });
 
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+      await signin(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
       );
       // Navigate to home or next screen
     } on FirebaseAuthException catch (e) {

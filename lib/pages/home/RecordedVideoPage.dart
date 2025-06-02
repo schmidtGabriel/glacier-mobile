@@ -152,7 +152,7 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
 
     // Implement your send logic here
     service
-        .uploadVideo(widget.videoPath, selfiePath!)
+        .uploadRecord(widget.videoPath, selfiePath!)
         .then((value) async {
           print('Video uploaded successfully: $value');
 
