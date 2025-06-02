@@ -16,10 +16,12 @@ class _SignupPageState extends State<SignupPage> {
   bool _obscurePassword = true;
 
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
-  final _passwordController = TextEditingController();
+  final Map<String, TextEditingController> _controllers = {
+    'name': TextEditingController(),
+    'email': TextEditingController(),
+    'phone': TextEditingController(),
+    'password': TextEditingController(),
+  };
 
   final _friendEmailController = TextEditingController();
   final List<String> _invitedFriends = [];
@@ -98,6 +100,13 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
+  @override
+  void dispose() {
+    _controllers.forEach((_, controller) => controller.dispose());
+    _friendEmailController.dispose();
+    super.dispose();
+  }
+
   void _addFriend() {
     final email = _friendEmailController.text.trim();
     if (email.isNotEmpty && !_invitedFriends.contains(email)) {
@@ -119,7 +128,7 @@ class _SignupPageState extends State<SignupPage> {
             child: Column(
               children: [
                 TextFormField(
-                  controller: _nameController,
+                  controller: _controllers['name'],
                   decoration: inputDecoration("Name"),
                   validator:
                       (value) =>
@@ -129,7 +138,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
                 SizedBox(height: 16),
                 TextFormField(
-                  controller: _emailController,
+                  controller: _controllers['email'],
                   decoration: inputDecoration("Email"),
                   keyboardType: TextInputType.emailAddress,
                   validator:
@@ -140,7 +149,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
                 SizedBox(height: 16),
                 TextFormField(
-                  controller: _phoneController,
+                  controller: _controllers['phone'],
                   decoration: inputDecoration("Phone"),
                   keyboardType: TextInputType.phone,
                   validator:
@@ -151,7 +160,7 @@ class _SignupPageState extends State<SignupPage> {
                 ),
                 SizedBox(height: 16),
                 TextFormField(
-                  controller: _passwordController,
+                  controller: _controllers['password'],
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     labelText: 'Password',
@@ -239,10 +248,10 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<void> _submit() async {
     await signup({
-      'name': _nameController.text,
-      'email': _emailController.text,
-      'phone': _phoneController.text,
-      'password': _passwordController.text,
+      'name': _controllers['name']!.text,
+      'email': _controllers['email']!.text,
+      'phone': _controllers['phone']!.text,
+      'password': _controllers['password']!.text,
       'invited_friends': _invitedFriends,
     });
   }

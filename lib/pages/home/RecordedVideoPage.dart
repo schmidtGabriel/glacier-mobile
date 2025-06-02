@@ -133,6 +133,8 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
 
   @override
   void dispose() {
+    _isLoading = false;
+    _controller.pause();
     _controller.dispose();
     super.dispose();
   }

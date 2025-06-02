@@ -111,6 +111,12 @@ class _RecordPageState extends State<RecordPage> {
   }
 
   @override
+  void dispose() {
+    _controllerVideo?.dispose();
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _loadReactionByUuid();

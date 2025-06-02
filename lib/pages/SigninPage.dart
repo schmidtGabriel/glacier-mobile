@@ -160,6 +160,13 @@ class _SigninPageState extends State<SigninPage> {
     );
   }
 
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _signIn() async {
     if (_formKey.currentState?.validate() != true) return;
 

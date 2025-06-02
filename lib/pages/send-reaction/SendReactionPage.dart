@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/enums/ReactionVideoType.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
+import 'package:glacier/services/createReaction.dart';
 import 'package:video_player/video_player.dart';
 
 class SendReactionPage extends StatefulWidget {
@@ -29,6 +30,10 @@ class _SendReactionPageState extends State<SendReactionPage> {
   final TextEditingController _videoDurationController =
       TextEditingController();
 
+  final TextEditingController _titleController = TextEditingController();
+  String? selectedFriendId;
+  String? selectedVideoType;
+
   final uploadService = FirebaseStorageService();
 
   @override
@@ -50,10 +55,8 @@ class _SendReactionPageState extends State<SendReactionPage> {
                       ),
                       SizedBox(height: 8),
                       TextField(
+                        controller: _titleController,
                         decoration: inputDecoration("Enter title"),
-                        onChanged: (value) {
-                          // handle title change
-                        },
                       ),
                       SizedBox(height: 16),
 
@@ -71,7 +74,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
                               );
                             }).toList(),
                         onChanged: (value) {
-                          // handle user selection
+                          setState(() {
+                            selectedFriendId = value;
+                          });
                         },
                         decoration: inputDecoration("Choose a user"),
                       ),
@@ -86,12 +91,14 @@ class _SendReactionPageState extends State<SendReactionPage> {
                         items:
                             ReactionVideoType.map((type) {
                               return DropdownMenuItem(
-                                value: type['value'] as String,
+                                value: type['value'].toString(),
                                 child: Text(type['label'] as String),
                               );
                             }).toList(),
                         onChanged: (value) {
-                          // handle video type change
+                          setState(() {
+                            selectedVideoType = value;
+                          });
                         },
                         decoration: inputDecoration("Select video type"),
                       ),
@@ -145,11 +152,36 @@ class _SendReactionPageState extends State<SendReactionPage> {
                           "Video Duration",
                         ).copyWith(hintText: "Duration in seconds"),
                       ),
+
+                      SizedBox(height: 16),
+
+                      ElevatedButton(
+                        onPressed: _sendReaction,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12.0),
+                          ),
+                        ),
+                        child: const Text(
+                          'Sign In',
+                          style: TextStyle(fontSize: 16, color: Colors.white),
+                        ),
+                      ),
                     ],
                   ),
                 ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _friendEmailController.dispose();
+    _videoUrlController.dispose();
+    _videoDurationController.dispose();
+    _titleController.dispose();
+    super.dispose();
   }
 
   @override
@@ -169,5 +201,38 @@ class _SendReactionPageState extends State<SendReactionPage> {
     setState(() {
       isLoading = false;
     });
+  }
+
+  Future<void> _sendReaction() async {
+    final videoUrl = _videoUrlController.text.trim();
+    final videoDuration = _videoDurationController.text.trim();
+
+    if (videoUrl.isEmpty || videoDuration.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Please upload a video first.")));
+      return;
+    }
+
+    if (selectedFriendId == null ||
+        selectedVideoType == null ||
+        _titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Please fill in all fields.")));
+      return;
+    }
+
+    await createReaction({
+      'userId': selectedFriendId,
+      'videoUrl': videoUrl,
+      'videoDuration': videoDuration,
+      'title': _titleController.text.trim(),
+      'videoType': selectedVideoType,
+    });
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("Reaction sent successfully!")));
   }
 }
