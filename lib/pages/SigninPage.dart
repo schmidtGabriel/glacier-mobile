@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/services/auth/signin.dart';
 
 class SigninPage extends StatefulWidget {
@@ -59,20 +60,15 @@ class _SigninPageState extends State<SigninPage> {
                               ),
                             TextFormField(
                               controller: _emailController,
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                prefixIcon: Icon(Icons.email),
-                                filled: true,
-                                fillColor: Colors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
-                              ),
+                              decoration: inputDecoration('Email'),
                               validator:
                                   (value) =>
                                       value != null && value.contains('@')
                                           ? null
                                           : 'Invalid email',
+                              onTapOutside: (event) {
+                                FocusScope.of(context).unfocus();
+                              },
                             ),
                             const SizedBox(height: 16),
                             TextFormField(
@@ -80,12 +76,16 @@ class _SigninPageState extends State<SigninPage> {
                               obscureText: _obscurePassword,
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                prefixIcon: Icon(Icons.lock),
                                 filled: true,
                                 fillColor: Colors.white,
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
+                                enabledBorder: const OutlineInputBorder(
+                                  // width: 0.0 produces a thin "hairline" border
+                                  borderSide: BorderSide(
+                                    color: Colors.grey,
+                                    width: 0.0,
+                                  ),
                                 ),
+                                border: OutlineInputBorder(),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
@@ -104,6 +104,10 @@ class _SigninPageState extends State<SigninPage> {
                                       value != null && value.length >= 6
                                           ? null
                                           : 'Password too short',
+
+                              onTapOutside: (event) {
+                                FocusScope.of(context).unfocus();
+                              },
                             ),
                             const SizedBox(height: 24),
                             _isLoading

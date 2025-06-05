@@ -1,10 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 
-signin(email, password) async {
+Future signin(email, password) async {
   final FirebaseAuth auth = FirebaseAuth.instance;
 
-  return await auth.signInWithEmailAndPassword(
-    email: email,
-    password: password,
-  );
+  auth
+      .signInWithEmailAndPassword(email: email, password: password)
+      .then((value) async {
+        return auth.currentUser;
+      })
+      .catchError((error) {
+        print('Error signing in: $error');
+        throw error; // Rethrow the error to handle it in the UI
+      });
 }

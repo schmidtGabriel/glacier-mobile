@@ -58,7 +58,10 @@ class FirebaseStorageService {
   }
 
   /// Uploads a video file to Firebase Storage
-  Future<String?> uploadVideo(String videoPath) async {
+  Future<String?> uploadVideo(
+    String videoPath, {
+    required void Function(dynamic progress, dynamic total) onProgress,
+  }) async {
     try {
       final videoFile = File(videoPath);
 
@@ -69,11 +72,17 @@ class FirebaseStorageService {
 
       // Upload screen recording
       final fileName = basename(videoPath);
-      final storageRef = _storage.ref().child(
-        'videos/${DateTime.now().millisecondsSinceEpoch}-$fileName',
-      );
+      final storageRef = _storage.ref().child('videos/$fileName');
 
       UploadTask uploadTask = storageRef.putFile(videoFile);
+
+      // Listen to progress
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        final sent = snapshot.bytesTransferred;
+        final total = snapshot.totalBytes;
+        onProgress(sent, total);
+      });
+
       TaskSnapshot snapshot = await uploadTask;
 
       // Get the screen recording download URL

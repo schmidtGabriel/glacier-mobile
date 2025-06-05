@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/pages/SigninPage.dart';
-import 'package:glacier/services/getUserData.dart';
+import 'package:glacier/services/user/getUserData.dart';
 
 class AuthGate extends StatelessWidget {
   final Widget child;

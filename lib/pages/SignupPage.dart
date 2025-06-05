@@ -84,14 +84,12 @@ class _SignupPageState extends State<SignupPage> {
               24.0,
               24.0 + MediaQuery.of(context).viewInsets.bottom,
             ),
-            child: Expanded(
-              flex: 1,
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: [if (_step == 0) _buildStep1() else _buildStep2()],
-                ),
+
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [if (_step == 0) _buildStep1() else _buildStep2()],
               ),
             ),
           );
@@ -118,83 +116,93 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Widget _buildStep1() {
-    return Expanded(
-      flex: 1,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                TextFormField(
-                  controller: _controllers['name'],
-                  decoration: inputDecoration("Name"),
-                  validator:
-                      (value) =>
-                          value != null && value.isNotEmpty
-                              ? null
-                              : "Name is required",
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _controllers['email'],
-                  decoration: inputDecoration("Email"),
-                  keyboardType: TextInputType.emailAddress,
-                  validator:
-                      (value) =>
-                          value != null && value.contains("@")
-                              ? null
-                              : "Enter a valid email",
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _controllers['phone'],
-                  decoration: inputDecoration("Phone"),
-                  keyboardType: TextInputType.phone,
-                  validator:
-                      (value) =>
-                          value != null && value.isNotEmpty
-                              ? null
-                              : "Phone is required",
-                ),
-                SizedBox(height: 16),
-                TextFormField(
-                  controller: _controllers['password'],
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12.0),
-                    ),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        });
-                      },
-                    ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: _controllers['name'],
+                decoration: inputDecoration("Name"),
+                validator:
+                    (value) =>
+                        value != null && value.isNotEmpty
+                            ? null
+                            : "Name is required",
+                onTapOutside: (event) {
+                  FocusScope.of(context).unfocus();
+                },
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _controllers['email'],
+                decoration: inputDecoration("Email"),
+                keyboardType: TextInputType.emailAddress,
+                validator:
+                    (value) =>
+                        value != null && value.contains("@")
+                            ? null
+                            : "Enter a valid email",
+                onTapOutside: (event) {
+                  FocusScope.of(context).unfocus();
+                },
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _controllers['phone'],
+                decoration: inputDecoration("Phone"),
+                keyboardType: TextInputType.phone,
+                validator:
+                    (value) =>
+                        value != null && value.isNotEmpty
+                            ? null
+                            : "Phone is required",
+                onTapOutside: (event) {
+                  FocusScope.of(context).unfocus();
+                },
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _controllers['password'],
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  filled: true,
+                  fillColor: Colors.white,
+                  enabledBorder: const OutlineInputBorder(
+                    // width: 0.0 produces a thin "hairline" border
+                    borderSide: BorderSide(color: Colors.grey, width: 0.0),
                   ),
-                  validator:
-                      (value) =>
-                          value != null && value.length >= 6
-                              ? null
-                              : 'Password too short',
+                  border: OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                 ),
-                SizedBox(height: 32),
-              ],
-            ),
+                onTapOutside: (event) {
+                  FocusScope.of(context).unfocus();
+                },
+                validator:
+                    (value) =>
+                        value != null && value.length >= 6
+                            ? null
+                            : 'Password too short',
+              ),
+              SizedBox(height: 32),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -215,6 +223,9 @@ class _SignupPageState extends State<SignupPage> {
               onPressed: _addFriend,
             ),
           ),
+          onTapOutside: (event) {
+            FocusScope.of(context).unfocus();
+          },
           onSubmitted: (_) => _addFriend(),
         ),
         SizedBox(height: 24),
@@ -247,12 +258,24 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future<void> _submit() async {
-    await signup({
-      'name': _controllers['name']!.text,
-      'email': _controllers['email']!.text,
-      'phone': _controllers['phone']!.text,
-      'password': _controllers['password']!.text,
-      'invited_friends': _invitedFriends,
-    });
+    try {
+      await signup({
+        'name': _controllers['name']!.text,
+        'email': _controllers['email']!.text,
+        'phone': _controllers['phone']!.text,
+        'password': _controllers['password']!.text,
+        'invited_friends': _invitedFriends,
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Signup successful!')));
+      Navigator.pop(context); // Navigate back after successful signup
+    } catch (e) {
+      print('Signup failed: $e');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Signup failed: $e')));
+      return;
+    }
   }
 }

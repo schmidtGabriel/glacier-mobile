@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
@@ -5,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/enums/ReactionVideoType.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
-import 'package:glacier/services/createReaction.dart';
+import 'package:glacier/services/reactions/createReaction.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
 class SendReactionPage extends StatefulWidget {
@@ -20,11 +22,8 @@ class _SendReactionPageState extends State<SendReactionPage> {
   String? email;
   String? name;
   List friends = [];
-  bool isLoading = true;
-
-  final _friendEmailController = TextEditingController();
-
-  final List<String> _invitedFriends = [];
+  bool isLoading = false;
+  String _filePath = '';
 
   final TextEditingController _videoUrlController = TextEditingController();
   final TextEditingController _videoDurationController =
@@ -36,10 +35,12 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
   final uploadService = FirebaseStorageService();
 
+  double _uploadProgress = 0.0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Send Reaction')),
+      // appBar: AppBar(title: Text('Send Reaction')),
       body: SafeArea(
         child:
             isLoading
@@ -57,6 +58,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
                       TextField(
                         controller: _titleController,
                         decoration: inputDecoration("Enter title"),
+                        onTapOutside: (event) {
+                          FocusScope.of(context).unfocus();
+                        },
                       ),
                       SizedBox(height: 16),
 
@@ -66,11 +70,19 @@ class _SendReactionPageState extends State<SendReactionPage> {
                       ),
                       SizedBox(height: 8),
                       DropdownButtonFormField<String>(
+                        value: selectedFriendId,
+
                         items:
                             friends.map<DropdownMenuItem<String>>((friend) {
+                              var item = friend['invited_user'];
                               return DropdownMenuItem<String>(
-                                value: friend['id'],
-                                child: Text(friend['name']),
+                                value: item['uuid'],
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12.0,
+                                  ),
+                                  child: Text(item['name']),
+                                ),
                               );
                             }).toList(),
                         onChanged: (value) {
@@ -78,7 +90,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
                             selectedFriendId = value;
                           });
                         },
-                        decoration: inputDecoration("Choose a user"),
+                        decoration: inputDecoration("Choose a friend"),
                       ),
                       SizedBox(height: 16),
 
@@ -87,7 +99,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                       SizedBox(height: 8),
+
                       DropdownButtonFormField<String>(
+                        value: selectedVideoType,
                         items:
                             ReactionVideoType.map((type) {
                               return DropdownMenuItem(
@@ -95,6 +109,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                 child: Text(type['label'] as String),
                               );
                             }).toList(),
+
                         onChanged: (value) {
                           setState(() {
                             selectedVideoType = value;
@@ -112,11 +127,20 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
                           if (result != null &&
                               result.files.single.path != null) {
-                            uploadService
-                                .uploadVideo(result.files.single.path!)
+                            _filePath = result.files.single.path!;
+                            await uploadService
+                                .uploadVideo(
+                                  result.files.single.path!,
+                                  onProgress: (sent, total) {
+                                    setState(() {
+                                      _uploadProgress = sent / total;
+                                    });
+                                  },
+                                )
                                 .then((value) async {
                                   final filePath = result.files.single.path!;
-                                  _videoUrlController.text = filePath;
+                                  _videoUrlController.text =
+                                      'videos/${result.files.single.name}';
 
                                   final videoController =
                                       VideoPlayerController.file(
@@ -128,13 +152,31 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                   _videoDurationController.text =
                                       "${duration.inSeconds}s";
                                   videoController.dispose();
+                                  setState(() {
+                                    _uploadProgress = 0.0;
+                                  });
+
+                                  File(_filePath).delete();
                                 });
                           }
                         },
                         icon: Icon(Icons.upload),
                         label: Text("Upload Video"),
                       ),
+                      if (_uploadProgress > 0)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0),
+                          child: LinearProgressIndicator(
+                            value: _uploadProgress,
+                          ),
+                        ),
                       SizedBox(height: 16),
+
+                      Text(
+                        "Video Path",
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      SizedBox(height: 8),
 
                       TextField(
                         controller: _videoUrlController,
@@ -144,6 +186,12 @@ class _SendReactionPageState extends State<SendReactionPage> {
                         ).copyWith(hintText: "Path of uploaded video"),
                       ),
                       SizedBox(height: 16),
+
+                      Text(
+                        "Video Duration",
+                        style: Theme.of(context).textTheme.labelLarge,
+                      ),
+                      SizedBox(height: 8),
 
                       TextField(
                         controller: _videoDurationController,
@@ -155,19 +203,29 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
                       SizedBox(height: 16),
 
-                      ElevatedButton(
-                        onPressed: _sendReaction,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blueAccent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0),
+                      isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : SizedBox(
+                            height: 50,
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _sendReaction,
+
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                ),
+                              ),
+                              child: const Text(
+                                'Submit Reaction',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
                           ),
-                        ),
-                        child: const Text(
-                          'Sign In',
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -175,9 +233,18 @@ class _SendReactionPageState extends State<SendReactionPage> {
     );
   }
 
+  clearTextFields() {
+    setState(() {
+      _videoUrlController.clear();
+      _videoDurationController.clear();
+      _titleController.clear();
+      selectedFriendId = null;
+      selectedVideoType = null;
+    });
+  }
+
   @override
   void dispose() {
-    _friendEmailController.dispose();
     _videoUrlController.dispose();
     _videoDurationController.dispose();
     _titleController.dispose();
@@ -187,7 +254,6 @@ class _SendReactionPageState extends State<SendReactionPage> {
   @override
   void initState() {
     super.initState();
-
     loadFriends();
   }
 
@@ -195,9 +261,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
     setState(() {
       isLoading = true;
     });
-    // friends = await listReactions(userId: uuid!);
-    // final prefs = await SharedPreferences.getInstance();
-    // prefs.setString('friends', jsonEncode(friends));
+    final prefs = await SharedPreferences.getInstance();
+    friends = jsonDecode(prefs.getString('friends') ?? '[]') as List;
+
     setState(() {
       isLoading = false;
     });
@@ -224,12 +290,14 @@ class _SendReactionPageState extends State<SendReactionPage> {
     }
 
     await createReaction({
-      'userId': selectedFriendId,
-      'videoUrl': videoUrl,
-      'videoDuration': videoDuration,
+      'user': selectedFriendId,
+      'url': videoUrl,
+      'video_duration': videoDuration,
       'title': _titleController.text.trim(),
-      'videoType': selectedVideoType,
+      'type_video': selectedVideoType,
     });
+
+    clearTextFields();
 
     ScaffoldMessenger.of(
       context,

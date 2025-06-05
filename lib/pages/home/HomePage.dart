@@ -3,7 +3,10 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/helpers/FormatStatusReaction.dart';
-import 'package:glacier/services/listReactions.dart';
+import 'package:glacier/resources/UserResource.dart';
+import 'package:glacier/services/reactions/listReactions.dart';
+import 'package:glacier/services/user/getUserData.dart';
+import 'package:glacier/services/user/getUserFriends.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -14,11 +17,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? uuid;
-  String? email;
-  String? name;
+  late UserResource user;
+
   List reactions = [];
-  bool isLoading = true;
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -32,14 +34,25 @@ class _HomePageState extends State<HomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (name != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: Text(
-                            'Hello $name',
-                            style: TextStyle(color: Colors.black, fontSize: 20),
-                          ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16.0),
+                        child: Text(
+                          'Hello ${user.name}',
+                          style: TextStyle(color: Colors.black, fontSize: 20),
                         ),
+                      ),
+                      SizedBox(height: 16),
+                      Text(
+                        "Requested Reactions",
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      reactions.isEmpty
+                          ? Text(
+                            "No reactions found.",
+                            style: TextStyle(color: Colors.grey),
+                          )
+                          : SizedBox.shrink(),
+
                       ListView.separated(
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
@@ -94,10 +107,17 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           await FirebaseAuth.instance.signOut();
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.remove('user');
         },
         child: Icon(Icons.logout),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
@@ -107,27 +127,33 @@ class _HomePageState extends State<HomePage> {
     loadUserData();
   }
 
-  Future<void> loadReactions() async {
-    if (uuid == null) return;
-
-    setState(() {
-      isLoading = true;
-    });
-    reactions = await listReactions(userId: uuid!);
+  Future<void> loadFriends() async {
+    List friends = await getUserFriends();
     final prefs = await SharedPreferences.getInstance();
+    prefs.setString('friends', jsonEncode(friends));
+  }
+
+  Future<void> loadReactions() async {
+    reactions = await listReactions(userId: user.uuid);
+    final prefs = await SharedPreferences.getInstance();
+
     prefs.setString('reactions', jsonEncode(reactions));
-    setState(() {
-      isLoading = false;
-    });
   }
 
   Future<void> loadUserData() async {
+    setState(() {
+      isLoading = true;
+    });
+    await getUserData();
     final prefs = await SharedPreferences.getInstance();
-    uuid = prefs.getString('uuid');
-    email = prefs.getString('email');
-    name = prefs.getString('name');
+    Map<String, dynamic> userMap = jsonDecode(prefs.getString('user') ?? '{}');
+
+    user = UserResource.fromJson(userMap);
 
     await loadReactions();
-    setState(() {}); // Update UI after loading data
+    loadFriends();
+    setState(() {
+      isLoading = false;
+    });
   }
 }

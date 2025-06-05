@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,6 +19,7 @@ Future<Map<String, dynamic>?> getUserData() async {
 
     if (querySnapshot.docs.isNotEmpty) {
       await saveUserInfo(querySnapshot.docs.first.data());
+
       return querySnapshot.docs.first.data();
     } else {
       return null;
@@ -29,7 +32,15 @@ Future<Map<String, dynamic>?> getUserData() async {
 
 saveUserInfo(user) async {
   final prefs = await SharedPreferences.getInstance();
-  prefs.setString('uuid', user['uuid']);
-  prefs.setString('email', user['email']);
-  prefs.setString('name', user['name']);
+  var userData = {
+    'uuid': user['uuid'],
+    'name': user['name'],
+    'email': user['email'],
+    'phone': user['phone'],
+    'created_at': user['created_at']?.toDate().toIso8601String(),
+    'status': user['status'] ?? 0,
+    'role': user['role'] ?? 10,
+  };
+  print('Saving user data: $userData');
+  prefs.setString('user', jsonEncode(userData));
 }

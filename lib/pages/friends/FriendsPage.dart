@@ -1,6 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
-import 'package:glacier/helpers/FormatStatusReaction.dart';
+import 'package:glacier/resources/UserResource.dart';
+import 'package:glacier/services/user/saveFriend.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({super.key});
@@ -10,9 +14,7 @@ class FriendsPage extends StatefulWidget {
 }
 
 class _FriendsPageState extends State<FriendsPage> {
-  String? uuid;
-  String? email;
-  String? name;
+  UserResource? user;
   List friends = [];
   bool isLoading = true;
 
@@ -70,50 +72,17 @@ class _FriendsPageState extends State<FriendsPage> {
                               itemCount: friends.length,
                               separatorBuilder: (_, __) => Divider(),
                               itemBuilder: (context, index) {
-                                final reaction = friends[index];
-                                final name =
-                                    reaction['invited_user'] ?? 'No Name';
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      '/reaction',
-                                      arguments: reaction,
-                                    );
-                                  },
-                                  child: ListTile(
-                                    title: Text(name),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          reaction['url'] ?? 'No Description',
-                                        ),
-                                        SizedBox(height: 8),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              FormatStatusReaction(
-                                                reaction['status'],
-                                              ),
-                                            ),
-                                            Text(
-                                              reaction['created_at'] ??
-                                                  'No Date',
-                                              textAlign: TextAlign.end,
-                                              style:
-                                                  Theme.of(
-                                                    context,
-                                                  ).textTheme.bodySmall,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                final friend =
+                                    friends[index]['invited_user']['uuid'] ==
+                                            user?.uuid
+                                        ? friends[index]['requested_user']
+                                        : friends[index]['invited_user'];
+                                final name = friend['name'] ?? 'No Name';
+                                final email = friend['email'] ?? 'No Email';
+
+                                return ListTile(
+                                  title: Text('$name - $email'),
+                                  subtitle: null,
                                 );
                               },
                             ),
@@ -129,28 +98,44 @@ class _FriendsPageState extends State<FriendsPage> {
   void initState() {
     super.initState();
 
-    loadFriends();
+    loadUserData();
   }
 
   Future<void> loadFriends() async {
-    setState(() {
-      isLoading = true;
-    });
-    // friends = await listReactions(userId: uuid!);
-    // final prefs = await SharedPreferences.getInstance();
-    // prefs.setString('friends', jsonEncode(friends));
+    final prefs = await SharedPreferences.getInstance();
+    final friendsPrefs = prefs.getString('friends');
+    if (friendsPrefs != null) {
+      friends = jsonDecode(friendsPrefs);
+    } else {
+      friends = [];
+    }
+
     setState(() {
       isLoading = false;
     });
   }
 
-  void _addFriend() {
+  Future<void> loadUserData() async {
+    setState(() {
+      isLoading = true;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    Map<String, dynamic> userMap = jsonDecode(prefs.getString('user') ?? '{}');
+    user = UserResource.fromJson(userMap);
+    await loadFriends();
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> _addFriend() async {
     final email = _friendEmailController.text.trim();
-    if (email.isNotEmpty && !_invitedFriends.contains(email)) {
-      setState(() {
-        _invitedFriends.add(email);
-        _friendEmailController.clear();
-      });
-    }
+    final prefs = await SharedPreferences.getInstance();
+    Map<String, dynamic> userMap = jsonDecode(prefs.getString('user') ?? '{}');
+    var user = UserResource.fromJson(userMap);
+
+    await saveFriend(user.uuid, email);
+
+    _friendEmailController.clear();
   }
 }

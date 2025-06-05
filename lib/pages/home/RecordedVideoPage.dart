@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
-import 'package:glacier/services/updateReaction.dart';
+import 'package:glacier/services/reactions/updateReaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 import 'package:video_player/video_player.dart';

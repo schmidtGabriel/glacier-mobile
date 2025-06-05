@@ -19,10 +19,11 @@ Future<String> handleVideo(data) async {
 
 Future<List> listReactions({required String userId}) async {
   try {
-    final db = FirebaseFirestore.instance;
-
     final querySnapshot =
-        await db.collection('reactions').where('user', isEqualTo: userId).get();
+        await FirebaseFirestore.instance
+            .collection('reactions')
+            .where('user', isEqualTo: userId)
+            .get();
 
     // Use async map and wait for all futures
     final res = await Future.wait(
