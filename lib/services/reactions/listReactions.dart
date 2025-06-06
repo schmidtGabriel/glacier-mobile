@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:glacier/helpers/ParseTimeStamp.dart';
+import 'package:glacier/helpers/parseTimeStamp.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 
 Future<String> handleVideo(data) async {

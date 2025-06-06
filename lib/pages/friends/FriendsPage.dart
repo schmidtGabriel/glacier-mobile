@@ -70,7 +70,7 @@ class _FriendsPageState extends State<FriendsPage> {
                               shrinkWrap: true,
                               physics: NeverScrollableScrollPhysics(),
                               itemCount: friends.length,
-                              separatorBuilder: (_, __) => Divider(),
+                              separatorBuilder: (_, __) => SizedBox(height: 8),
                               itemBuilder: (context, index) {
                                 final friend =
                                     friends[index]['invited_user']['uuid'] ==
@@ -80,9 +80,36 @@ class _FriendsPageState extends State<FriendsPage> {
                                 final name = friend['name'] ?? 'No Name';
                                 final email = friend['email'] ?? 'No Email';
 
-                                return ListTile(
-                                  title: Text('$name - $email'),
-                                  subtitle: null,
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.grey.withOpacity(0.1),
+                                        blurRadius: 4,
+                                        offset: Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: ListTile(
+                                    title: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(name),
+                                        Text(
+                                          email,
+                                          style: TextStyle(
+                                            color: Colors.grey.shade700,
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    subtitle: null,
+                                  ),
                                 );
                               },
                             ),

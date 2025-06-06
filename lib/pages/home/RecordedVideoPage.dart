@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:glacier/helpers/includeWaterMark.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/updateReaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,108 +27,119 @@ class RecordedVideoPage extends StatefulWidget {
 class _RecordedVideoPageState extends State<RecordedVideoPage> {
   late VideoPlayerController _controller;
   late Future<void> _initializeVideoPlayerFuture;
+  late String editedVideo;
   var _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
-        children: [
-          Expanded(
-            child: FutureBuilder(
-              future: _initializeVideoPlayerFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return Stack(
-                    children: [
-                      Center(
-                        child: AspectRatio(
-                          aspectRatio: _controller.value.aspectRatio,
-                          child: VideoPlayer(_controller),
-                        ),
-                      ),
-                    ],
-                  );
-                } else {
-                  return Center(child: CircularProgressIndicator());
-                }
-              },
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.only(bottom: 30, left: 20, right: 20),
-            child: ValueListenableBuilder<VideoPlayerValue>(
-              valueListenable: _controller,
-              builder: (context, value, child) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        _controller.pause();
-                        Navigator.of(context).pop(true);
+      body:
+          _isLoading
+              ? Center(child: CircularProgressIndicator())
+              : Column(
+                children: [
+                  Expanded(
+                    child: FutureBuilder(
+                      future: _initializeVideoPlayerFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          return Stack(
+                            children: [
+                              Center(
+                                child: AspectRatio(
+                                  aspectRatio: _controller.value.aspectRatio,
+                                  child: VideoPlayer(_controller),
+                                ),
+                              ),
+                            ],
+                          );
+                        } else {
+                          return Center(child: CircularProgressIndicator());
+                        }
                       },
-                      icon: Icon(Icons.replay, color: Colors.white),
-                      label: Text(
-                        'Try again',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue.shade800,
-                      ),
                     ),
-                    ValueListenableBuilder<VideoPlayerValue>(
+                  ),
+                  Container(
+                    padding: const EdgeInsets.only(
+                      bottom: 30,
+                      left: 20,
+                      right: 20,
+                    ),
+                    child: ValueListenableBuilder<VideoPlayerValue>(
                       valueListenable: _controller,
                       builder: (context, value, child) {
-                        return ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: CircleBorder(),
-                            padding: EdgeInsets.all(10),
-                          ),
-                          onPressed: () {
-                            value.isPlaying
-                                ? _controller.pause()
-                                : _controller.play();
-                          },
-                          child: Icon(
-                            value.isPlaying ? Icons.pause : Icons.play_arrow,
-                            color: Colors.black,
-                            size: 30,
-                          ),
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                _controller.pause();
+                                Navigator.of(context).pop(true);
+                              },
+                              icon: Icon(Icons.replay, color: Colors.white),
+                              label: Text(
+                                'Try again',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue.shade800,
+                              ),
+                            ),
+                            ValueListenableBuilder<VideoPlayerValue>(
+                              valueListenable: _controller,
+                              builder: (context, value, child) {
+                                return ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    shape: CircleBorder(),
+                                    padding: EdgeInsets.all(10),
+                                  ),
+                                  onPressed: () {
+                                    value.isPlaying
+                                        ? _controller.pause()
+                                        : _controller.play();
+                                  },
+                                  child: Icon(
+                                    value.isPlaying
+                                        ? Icons.pause
+                                        : Icons.play_arrow,
+                                    color: Colors.black,
+                                    size: 30,
+                                  ),
+                                );
+                              },
+                            ),
+                            ElevatedButton(
+                              onPressed: _isLoading ? null : onSend,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green.shade800,
+                              ),
+                              child:
+                                  _isLoading
+                                      ? SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                          strokeWidth: 2.0,
+                                        ),
+                                      )
+                                      : Text(
+                                        'Send Record',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                            ),
+                          ],
                         );
                       },
                     ),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : onSend,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green.shade800,
-                      ),
-                      child:
-                          _isLoading
-                              ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white,
-                                  ),
-                                  strokeWidth: 2.0,
-                                ),
-                              )
-                              : Text(
-                                'Send Record',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+                  ),
+                ],
+              ),
     );
   }
 
@@ -139,11 +151,24 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
     super.dispose();
   }
 
+  handleVideoInit() async {
+    setState(() {
+      _isLoading = true;
+    });
+    editedVideo = await processVideo(widget.videoPath);
+
+    _controller = VideoPlayerController.file(File(editedVideo));
+    setState(() {
+      _isLoading = false;
+    });
+    _initializeVideoPlayerFuture = _initializeVideoRecording();
+  }
+
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.file(File(widget.videoPath));
-    _initializeVideoPlayerFuture = _initializeVideoRecording();
+
+    handleVideoInit();
   }
 
   Future<void> onSend() async {
@@ -154,7 +179,7 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
 
     // Implement your send logic here
     service
-        .uploadRecord(widget.videoPath, selfiePath!)
+        .uploadRecord(editedVideo, selfiePath!)
         .then((value) async {
           print('Video uploaded successfully: $value');
 

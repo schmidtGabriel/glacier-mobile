@@ -5,6 +5,7 @@ import 'package:glacier/firebase_options.dart';
 import 'package:glacier/gate/AuthGate.dart';
 import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/pages/SignupPage.dart';
+import 'package:glacier/pages/home/RecordPage.dart';
 import 'package:toastification/toastification.dart';
 
 void main() async {
@@ -68,16 +69,27 @@ class MyApp extends StatelessWidget {
                 builder: (_) => AuthGate(child: BottomMenuLayout()),
               );
 
-            // case '/record':
-            //   if (args is String) {
-            //     return MaterialPageRoute(builder: (_) => RecordPage(uuid: args));
-            //   }
-            //   return _errorRoute();
+            case '/reaction':
+              if (args is Map<String, dynamic> && args.containsKey('uuid')) {
+                print(args['uuid']);
+                return MaterialPageRoute(
+                  builder:
+                      (_) => AuthGate(child: RecordPage(uuid: args['uuid'])),
+                );
+              }
+              return _errorRoute();
+
+            case '/record':
+              if (args is String) {
+                return MaterialPageRoute(
+                  builder: (_) => AuthGate(child: RecordPage(uuid: args)),
+                );
+              }
+              return _errorRoute();
 
             default:
               return _errorRoute();
           }
-          return null;
         },
       ),
     );

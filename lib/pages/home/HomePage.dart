@@ -2,10 +2,9 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:glacier/helpers/FormatStatusReaction.dart';
+import 'package:glacier/helpers/formatStatusReaction.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/reactions/listReactions.dart';
-import 'package:glacier/services/user/getUserData.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -52,49 +51,94 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(color: Colors.grey),
                           )
                           : SizedBox.shrink(),
-
+                      SizedBox(height: 16),
                       ListView.separated(
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
                         itemCount: reactions.length,
-                        separatorBuilder: (_, __) => Divider(),
+                        separatorBuilder:
+                            (context, index) => SizedBox(height: 8),
                         itemBuilder: (context, index) {
                           final reaction = reactions[index];
                           final title = reaction['title'] ?? 'No Name';
                           return GestureDetector(
                             onTap: () {
-                              Navigator.pushNamed(
+                              Navigator.of(
                                 context,
-                                '/reaction',
-                                arguments: reaction,
-                              );
+                                rootNavigator: true,
+                              ).pushNamed('/reaction', arguments: reaction);
                             },
-                            child: ListTile(
-                              title: Text(title),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(reaction['url'] ?? 'No Description'),
-                                  SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        FormatStatusReaction(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.grey.withOpacity(0.2),
+                                    spreadRadius: 1,
+                                    blurRadius: 5,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: ListTile(
+                                title: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(title),
+                                    Badge(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 3,
+                                        horizontal: 10,
+                                      ),
+                                      label: Text(
+                                        formatStatusReaction(
                                           reaction['status'],
                                         ),
+                                        style: TextStyle(color: Colors.white),
                                       ),
-                                      Text(
-                                        reaction['created_at'] ?? 'No Date',
-                                        style:
-                                            Theme.of(
-                                              context,
-                                            ).textTheme.bodySmall,
+                                      backgroundColor: colorStatusReaction(
+                                        reaction['status'],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                subtitle: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    vertical: 8.0,
+                                    horizontal: 0,
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+
+                                    children: [
+                                      // Text(reaction['url'] ?? 'No Description'),
+                                      // SizedBox(height: 8),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Duration: ${reaction['video_duration'] ?? '0'}',
+                                            style:
+                                                Theme.of(
+                                                  context,
+                                                ).textTheme.bodySmall,
+                                          ),
+                                          Text(
+                                            reaction['created_at'] ?? 'No Date',
+                                            style:
+                                                Theme.of(
+                                                  context,
+                                                ).textTheme.bodySmall,
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
                             ),
                           );
@@ -144,9 +188,10 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       isLoading = true;
     });
-    await getUserData();
     final prefs = await SharedPreferences.getInstance();
-    Map<String, dynamic> userMap = jsonDecode(prefs.getString('user') ?? '{}');
+    Map<String, dynamic> userMap = await jsonDecode(
+      prefs.getString('user') ?? '{}',
+    );
 
     user = UserResource.fromJson(userMap);
 

@@ -40,7 +40,7 @@ class _RecordPageState extends State<RecordPage> {
         centerTitle: true,
       ),
       body: Container(
-        color: Colors.black,
+        color: Colors.white,
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -113,6 +113,9 @@ class _RecordPageState extends State<RecordPage> {
   @override
   void dispose() {
     _controllerVideo?.dispose();
+    if (isRecording) {
+      FlutterScreenRecording.stopRecordScreen;
+    }
     super.dispose();
   }
 
@@ -310,6 +313,7 @@ class _RecordPageState extends State<RecordPage> {
           setState(() {
             isRecording = false;
           });
+          FlutterScreenRecording.stopRecordScreen;
         });
   }
 }

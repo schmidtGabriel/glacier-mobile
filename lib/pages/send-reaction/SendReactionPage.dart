@@ -40,7 +40,10 @@ class _SendReactionPageState extends State<SendReactionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: Text('Send Reaction')),
+      appBar: AppBar(
+        title: Text('Send Reaction'),
+        automaticallyImplyLeading: false,
+      ),
       body: SafeArea(
         child:
             isLoading
@@ -117,59 +120,65 @@ class _SendReactionPageState extends State<SendReactionPage> {
                         },
                         decoration: inputDecoration("Select video type"),
                       ),
-                      SizedBox(height: 16),
 
-                      ElevatedButton.icon(
-                        onPressed: () async {
-                          final result = await FilePicker.platform.pickFiles(
-                            type: FileType.video,
-                          );
+                      if (selectedVideoType == "3") ...[
+                        SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () async {
+                            final result = await FilePicker.platform.pickFiles(
+                              type: FileType.video,
+                            );
 
-                          if (result != null &&
-                              result.files.single.path != null) {
-                            _filePath = result.files.single.path!;
-                            await uploadService
-                                .uploadVideo(
-                                  result.files.single.path!,
-                                  onProgress: (sent, total) {
+                            if (result != null &&
+                                result.files.single.path != null) {
+                              _filePath = result.files.single.path!;
+                              await uploadService
+                                  .uploadVideo(
+                                    result.files.single.path!,
+                                    onProgress: (sent, total) {
+                                      setState(() {
+                                        _uploadProgress = sent / total;
+                                      });
+                                    },
+                                  )
+                                  .then((value) async {
+                                    final filePath = result.files.single.path!;
+                                    _videoUrlController.text =
+                                        'videos/${result.files.single.name}';
+
+                                    final videoController =
+                                        VideoPlayerController.file(
+                                          File(filePath),
+                                        );
+                                    await videoController.initialize();
+                                    final duration =
+                                        videoController.value.duration;
+                                    _videoDurationController.text =
+                                        "${duration.inSeconds}s";
+                                    videoController.dispose();
                                     setState(() {
-                                      _uploadProgress = sent / total;
+                                      _uploadProgress = 0.0;
                                     });
-                                  },
-                                )
-                                .then((value) async {
-                                  final filePath = result.files.single.path!;
-                                  _videoUrlController.text =
-                                      'videos/${result.files.single.name}';
 
-                                  final videoController =
-                                      VideoPlayerController.file(
-                                        File(filePath),
-                                      );
-                                  await videoController.initialize();
-                                  final duration =
-                                      videoController.value.duration;
-                                  _videoDurationController.text =
-                                      "${duration.inSeconds}s";
-                                  videoController.dispose();
-                                  setState(() {
-                                    _uploadProgress = 0.0;
+                                    File(_filePath).delete();
                                   });
+                            }
+                          },
+                          icon: Icon(Icons.upload),
+                          label: Text("Upload Video"),
+                        ),
+                      ],
 
-                                  File(_filePath).delete();
-                                });
-                          }
-                        },
-                        icon: Icon(Icons.upload),
-                        label: Text("Upload Video"),
-                      ),
-                      if (_uploadProgress > 0)
+                      if (_uploadProgress > 0) ...[
+                        SizedBox(height: 8),
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: LinearProgressIndicator(
                             value: _uploadProgress,
                           ),
                         ),
+                      ],
+
                       SizedBox(height: 16),
 
                       Text(
@@ -180,7 +189,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
                       TextField(
                         controller: _videoUrlController,
-                        readOnly: true,
+                        readOnly: selectedVideoType == "3" ? true : false,
                         decoration: inputDecoration(
                           "Video URL",
                         ).copyWith(hintText: "Path of uploaded video"),
@@ -195,7 +204,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
                       TextField(
                         controller: _videoDurationController,
-                        readOnly: true,
+                        readOnly: selectedVideoType == "3" ? true : false,
                         decoration: inputDecoration(
                           "Video Duration",
                         ).copyWith(hintText: "Duration in seconds"),

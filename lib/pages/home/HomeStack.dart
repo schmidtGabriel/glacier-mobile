@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:glacier/gate/AuthGate.dart';
 import 'package:glacier/pages/home/HomePage.dart';
-import 'package:glacier/pages/home/RecordPage.dart';
 import 'package:glacier/pages/home/RecordedVideoPage.dart';
 
 class HomeStack extends StatelessWidget {
@@ -29,13 +28,13 @@ class HomeStack extends StatelessWidget {
             return MaterialPageRoute(
               builder: (_) => AuthGate(child: HomePage()),
             );
-          case '/reaction':
-            if (args is Map<String, dynamic> && args.containsKey('uuid')) {
-              return MaterialPageRoute(
-                builder: (_) => AuthGate(child: RecordPage(uuid: args['uuid'])),
-              );
-            }
-            return _errorRoute();
+          // case '/reaction':
+          //   if (args is Map<String, dynamic> && args.containsKey('uuid')) {
+          //     return MaterialPageRoute(
+          //       builder: (_) => AuthGate(child: RecordPage(uuid: args['uuid'])),
+          //     );
+          //   }
+          //   return _errorRoute();
           case '/recorded-video':
             if (args is Map<String, dynamic>) {
               return MaterialPageRoute(

@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/services/user/getUserData.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthGate extends StatelessWidget {
   final Widget child;
@@ -19,17 +20,43 @@ class AuthGate extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasData) {
-          getUserData();
-
-          final user = FirebaseAuth.instance.currentUser;
-          if (user == null) {
-            return const SigninPage();
-          }
-          return child;
+          return FutureBuilder(
+            future: _checkUserDataAndFetch(),
+            builder: (context, futureSnapshot) {
+              if (futureSnapshot.connectionState == ConnectionState.done) {
+                if (futureSnapshot.hasError) {
+                  return Scaffold(
+                    body: Center(child: Text('Error: ${futureSnapshot.error}')),
+                  );
+                }
+                final user = FirebaseAuth.instance.currentUser;
+                if (user == null) {
+                  return const SigninPage();
+                }
+                return child;
+              }
+              return const Scaffold(
+                body: Center(child: CircularProgressIndicator()),
+              );
+            },
+          );
         } else {
           return const SigninPage();
         }
       },
     );
+  }
+
+  Future<Map<String, dynamic>?> _checkUserDataAndFetch() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userString = prefs.getString('user');
+
+    if (userString == null || userString.isEmpty) {
+      // No user data in SharedPreferences, fetch from Firestore
+      return await getUserData();
+    }
+
+    // User data exists in SharedPreferences, no need to fetch
+    return null;
   }
 }
