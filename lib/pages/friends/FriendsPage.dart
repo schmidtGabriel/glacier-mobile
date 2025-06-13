@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
+import 'package:glacier/helpers/formatStatusInviteFriend.dart';
 import 'package:glacier/resources/UserResource.dart';
+import 'package:glacier/services/user/getUserFriends.dart';
 import 'package:glacier/services/user/saveFriend.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -19,8 +21,6 @@ class _FriendsPageState extends State<FriendsPage> {
   bool isLoading = true;
 
   final _friendEmailController = TextEditingController();
-
-  final List<String> _invitedFriends = [];
 
   @override
   Widget build(BuildContext context) {
@@ -42,6 +42,9 @@ class _FriendsPageState extends State<FriendsPage> {
                         SizedBox(height: 16),
                         TextField(
                           controller: _friendEmailController,
+                          keyboardType: TextInputType.emailAddress,
+                          autocorrect: false,
+
                           decoration: inputDecoration(
                             "Friend's Email",
                           ).copyWith(
@@ -72,13 +75,23 @@ class _FriendsPageState extends State<FriendsPage> {
                               itemCount: friends.length,
                               separatorBuilder: (_, __) => SizedBox(height: 8),
                               itemBuilder: (context, index) {
+                                final friendData = friends[index];
+                                final invitedUser = friendData['invited_user'];
+                                final requestedUser =
+                                    friendData['requested_user'];
+
+                                // Null safety check before accessing uuid
                                 final friend =
-                                    friends[index]['invited_user']['uuid'] ==
-                                            user?.uuid
-                                        ? friends[index]['requested_user']
-                                        : friends[index]['invited_user'];
-                                final name = friend['name'] ?? 'No Name';
-                                final email = friend['email'] ?? 'No Email';
+                                    (invitedUser != null &&
+                                            invitedUser['uuid'] == user?.uuid)
+                                        ? requestedUser
+                                        : invitedUser;
+
+                                final name =
+                                    friend?['name'] ??
+                                    friends[index]['invited_email'] ??
+                                    'Unknown';
+                                final email = friend?['email'] ?? '';
 
                                 return Container(
                                   decoration: BoxDecoration(
@@ -93,22 +106,59 @@ class _FriendsPageState extends State<FriendsPage> {
                                     ],
                                   ),
                                   child: ListTile(
-                                    title: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                    subtitle: null,
+                                    title: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Text(name),
-                                        Text(
-                                          email,
-                                          style: TextStyle(
-                                            color: Colors.grey.shade700,
-                                            fontSize: 14,
-                                            fontStyle: FontStyle.italic,
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            SizedBox(
+                                              width:
+                                                  MediaQuery.of(
+                                                    context,
+                                                  ).size.width *
+                                                  0.6,
+                                              child: Text(
+                                                name,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+
+                                            email.isEmpty
+                                                ? SizedBox.shrink()
+                                                : Text(
+                                                  email,
+                                                  style: TextStyle(
+                                                    color: Colors.grey.shade700,
+                                                    fontSize: 14,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                          ],
+                                        ),
+                                        Badge(
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 3,
+                                            horizontal: 10,
                                           ),
+                                          label: Text(
+                                            formatStatusInviteFriend(
+                                              friendData['status'],
+                                            ),
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          backgroundColor:
+                                              colorStatusInviteFriend(
+                                                friendData['status'],
+                                              ),
                                         ),
                                       ],
                                     ),
-                                    subtitle: null,
                                   ),
                                 );
                               },
@@ -119,6 +169,13 @@ class _FriendsPageState extends State<FriendsPage> {
                 ),
       ),
     );
+  }
+
+  Future<void> getFriends() async {
+    List friends = await getUserFriends();
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('friends', jsonEncode(friends));
+    loadFriends();
   }
 
   @override
@@ -136,7 +193,7 @@ class _FriendsPageState extends State<FriendsPage> {
     } else {
       friends = [];
     }
-
+    print(friends);
     setState(() {
       isLoading = false;
     });
@@ -156,13 +213,45 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   Future<void> _addFriend() async {
+    setState(() {
+      isLoading = true;
+    });
     final email = _friendEmailController.text.trim();
     final prefs = await SharedPreferences.getInstance();
     Map<String, dynamic> userMap = jsonDecode(prefs.getString('user') ?? '{}');
     var user = UserResource.fromJson(userMap);
+    saveFriend(user.uuid, email)
+        .then(
+          (value) async => {
+            if (mounted)
+              {
+                setState(() {
+                  _friendEmailController.clear();
+                }),
+              },
+            await getFriends(),
+            setState(() {
+              isLoading = false;
+            }),
 
-    await saveFriend(user.uuid, email);
-
-    _friendEmailController.clear();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(value.message ?? 'Friend invited successfully!'),
+              ),
+            ),
+          },
+        )
+        .catchError((error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(error.mensage ?? 'Error inviting friend'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          setState(() {
+            isLoading = false;
+          });
+          return error; // Return the error to satisfy the return type requirement
+        });
   }
 }

@@ -6,6 +6,7 @@ import 'package:glacier/gate/AuthGate.dart';
 import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/pages/SignupPage.dart';
 import 'package:glacier/pages/home/RecordPage.dart';
+import 'package:glacier/pages/home/RecordedVideoPage.dart';
 import 'package:toastification/toastification.dart';
 
 void main() async {
@@ -79,10 +80,17 @@ class MyApp extends StatelessWidget {
               }
               return _errorRoute();
 
-            case '/record':
-              if (args is String) {
+            case '/recorded-video':
+              if (args is Map<String, dynamic>) {
                 return MaterialPageRoute(
-                  builder: (_) => AuthGate(child: RecordPage(uuid: args)),
+                  builder:
+                      (_) => AuthGate(
+                        child: RecordedVideoPage(
+                          videoPath: args['videoPath'],
+                          videoName: args['videoName'],
+                          uuid: args['uuid'],
+                        ),
+                      ),
                 );
               }
               return _errorRoute();

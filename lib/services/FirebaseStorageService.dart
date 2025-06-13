@@ -19,6 +19,43 @@ class FirebaseStorageService {
     }
   }
 
+  Future<String?> uploadReaction(
+    String videoPath, {
+    void Function(dynamic progress, dynamic total)? onProgress,
+  }) async {
+    try {
+      final videoFile = File(videoPath);
+
+      // Check if the file exists
+      if (!videoFile.existsSync()) {
+        print('Video file does not exist at path: $videoPath');
+        return null;
+      }
+
+      // Upload screen recording
+      final fileName = basename(videoPath);
+      final storageRef = _storage.ref().child('reactions/$fileName');
+
+      UploadTask uploadTask = storageRef.putFile(videoFile);
+
+      // Listen to progress
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        final sent = snapshot.bytesTransferred;
+        final total = snapshot.totalBytes;
+        onProgress!(sent, total);
+      });
+
+      TaskSnapshot snapshot = await uploadTask;
+
+      // Get the screen recording download URL
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Upload failed: $e');
+      return null;
+    }
+  }
+
   /// Uploads a video file to Firebase Storage
   Future<String?> uploadRecord(String videoPath, String selfiePath) async {
     try {
@@ -43,7 +80,7 @@ class FirebaseStorageService {
       TaskSnapshot snapshot = await uploadTask;
 
       // Upload selfie video
-      final storageRefSelfie = _storage.ref().child('records/selfie-$fileName');
+      final storageRefSelfie = _storage.ref().child('reactions/$fileName');
 
       UploadTask uploadTaskSelfie = storageRefSelfie.putFile(selfieFile);
       await uploadTaskSelfie;
@@ -60,7 +97,7 @@ class FirebaseStorageService {
   /// Uploads a video file to Firebase Storage
   Future<String?> uploadVideo(
     String videoPath, {
-    required void Function(dynamic progress, dynamic total) onProgress,
+    void Function(dynamic progress, dynamic total)? onProgress,
   }) async {
     try {
       final videoFile = File(videoPath);
@@ -80,7 +117,7 @@ class FirebaseStorageService {
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
         final sent = snapshot.bytesTransferred;
         final total = snapshot.totalBytes;
-        onProgress(sent, total);
+        onProgress!(sent, total);
       });
 
       TaskSnapshot snapshot = await uploadTask;

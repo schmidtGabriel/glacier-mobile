@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:glacier/gate/AuthGate.dart';
 import 'package:glacier/pages/home/HomePage.dart';
-import 'package:glacier/pages/home/RecordedVideoPage.dart';
 
 class HomeStack extends StatelessWidget {
   const HomeStack({super.key});
@@ -35,20 +34,20 @@ class HomeStack extends StatelessWidget {
           //     );
           //   }
           //   return _errorRoute();
-          case '/recorded-video':
-            if (args is Map<String, dynamic>) {
-              return MaterialPageRoute(
-                builder:
-                    (_) => AuthGate(
-                      child: RecordedVideoPage(
-                        videoPath: args['videoPath'],
-                        videoName: args['videoName'],
-                        uuid: args['uuid'],
-                      ),
-                    ),
-              );
-            }
-            return _errorRoute();
+          // case '/recorded-video':
+          //   if (args is Map<String, dynamic>) {
+          //     return MaterialPageRoute(
+          //       builder:
+          //           (_) => AuthGate(
+          //             child: RecordedVideoPage(
+          //               videoPath: args['videoPath'],
+          //               videoName: args['videoName'],
+          //               uuid: args['uuid'],
+          //             ),
+          //           ),
+          //     );
+          //   }
+          //   return _errorRoute();
           default:
             return _errorRoute();
         }

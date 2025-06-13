@@ -6,16 +6,16 @@ import 'package:glacier/components/CameraPreviewWidget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
-class RecordPage extends StatefulWidget {
+class RecordPage2 extends StatefulWidget {
   final String? uuid;
 
-  const RecordPage({super.key, this.uuid});
+  const RecordPage2({super.key, this.uuid});
 
   @override
-  State<RecordPage> createState() => _RecordPageState();
+  State<RecordPage2> createState() => _RecordPage2State();
 }
 
-class _RecordPageState extends State<RecordPage> {
+class _RecordPage2State extends State<RecordPage2> {
   bool isRecording = false;
   int countdown = 3;
   bool startCountdown = false;
@@ -61,72 +61,60 @@ class _RecordPageState extends State<RecordPage> {
               !_controllerVideo!.value.isInitialized) {
             return Center(child: Text('Video not available'));
           }
-          return Column(
-            children: [
-              // Video Player section (70% height)
-              Expanded(
-                flex: 6,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Stack(
-                    children: [
-                      // Video Player
-                      SizedBox.expand(
-                        child: FittedBox(
-                          fit: BoxFit.cover,
-                          child: SizedBox(
-                            width: _controllerVideo!.value.size.width,
-                            height: _controllerVideo!.value.size.height,
-                            child: VideoPlayer(_controllerVideo!),
-                          ),
-                        ),
-                      ),
-
-                      // Play button overlay if video is paused
-                      if (_controllerVideo != null &&
-                          _controllerVideo!.value.isInitialized)
-                        ValueListenableBuilder<VideoPlayerValue>(
-                          valueListenable: _controllerVideo!,
-                          builder: (context, value, child) {
-                            if (value.isPlaying) {
-                              return SizedBox.shrink();
-                            } else {
-                              return Center(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    _controllerVideo!.play();
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.5),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.play_arrow,
-                                      color: Colors.white,
-                                      size: 48,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                    ],
+          return Container(
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                SizedBox.expand(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: _controllerVideo!.value.size.width,
+                      height: _controllerVideo!.value.size.height,
+                      child: VideoPlayer(_controllerVideo!),
+                    ),
                   ),
                 ),
-              ),
-
-              // Camera Preview section (30% height)
-              Expanded(
-                flex: 4,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: CameraPreviewWidget(isFinished: isVideoFinished),
+                if (_controllerVideo != null &&
+                    _controllerVideo!.value.isInitialized)
+                  ValueListenableBuilder<VideoPlayerValue>(
+                    valueListenable: _controllerVideo!,
+                    builder: (context, value, child) {
+                      if (value.isPlaying) {
+                        return SizedBox.shrink();
+                      } else {
+                        return Center(
+                          child: GestureDetector(
+                            onTap: () {
+                              _controllerVideo!.play();
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withOpacity(0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.play_arrow,
+                                color: Colors.white,
+                                size: 48,
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                Visibility(
+                  visible: showCamera,
+                  child: Positioned(
+                    bottom: 20,
+                    right: 20,
+                    child: CameraPreviewWidget(isFinished: isVideoFinished),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
@@ -361,7 +349,6 @@ class _RecordPageState extends State<RecordPage> {
       isRecording = true;
     });
     Navigator.pop(dialogContext); // Close the dialog
-    Future.delayed(Duration(seconds: 2));
     FlutterScreenRecording.startRecordScreenAndAudio(
           currentReaction != null
               ? "${currentReaction?['title']}-${currentReaction?['user']}"

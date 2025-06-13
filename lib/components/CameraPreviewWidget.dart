@@ -23,11 +23,15 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
     }
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: SizedBox(
-        width: 150,
-        height: 220,
-        child: CameraPreview(_controller!),
+      child: SizedBox.expand(
+        child: FittedBox(
+          fit: BoxFit.cover,
+          child: SizedBox(
+            width: _controller!.value.previewSize!.height,
+            height: _controller!.value.previewSize!.width,
+            child: CameraPreview(_controller!),
+          ),
+        ),
       ),
     );
   }
@@ -38,11 +42,19 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
     if (widget.isFinished && !oldWidget.isFinished) {
       if (_controller != null && _controller!.value.isRecordingVideo) {
-        _controller!.stopVideoRecording().then((file) async {
-          final prefs = await SharedPreferences.getInstance();
-          prefs.setString('selfiePath', file.path);
-          prefs.setString('selfieName', file.name);
-        });
+        _controller!
+            .stopVideoRecording()
+            .then((file) async {
+              final prefs = await SharedPreferences.getInstance();
+
+              prefs.setString('selfiePath', file.path);
+              prefs.setString('selfieName', file.name);
+            })
+            .catchError((error) {
+              print('Error stopping camera recording: $error');
+            });
+      } else {
+        print('Camera controller is null or not recording');
       }
     }
   }
@@ -55,6 +67,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
   Future<void> initCamera() async {
     try {
+      print('Initializing camera...');
       _cameras = await availableCameras();
       print('Available cameras: $_cameras');
       if (_cameras!.isNotEmpty) {
@@ -65,7 +78,9 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
 
         _controller = CameraController(frontCamera, ResolutionPreset.ultraHigh);
         await _controller!.initialize();
+        print('Camera initialized, starting video recording...');
         await _controller!.startVideoRecording();
+        print('Camera video recording started');
         if (!mounted) return;
         setState(() {
           _isInitialized = true;

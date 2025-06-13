@@ -1,45 +1,124 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:glacier/services/SendInviteEmail.dart';
 
-Future<String?> saveFriend(userId, friendEmail) async {
-  final docFriendRef = FirebaseFirestore.instance.collection(
-    'friend_invitations',
-  );
-  final docRef = FirebaseFirestore.instance.collection('users');
+Future<FriendInvitationResponse> saveFriend(
+  String userId,
+  String friendEmail,
+) async {
+  try {
+    // Validate inputs
+    if (userId.isEmpty || friendEmail.isEmpty) {
+      print('User ID or friend email cannot be empty');
+      return FriendInvitationResponse(
+        result: FriendInvitationResult.error,
+        message: 'User ID and friend email cannot be empty',
+      );
+    }
 
-  var friend =
-      await docRef.where('email', isEqualTo: friendEmail).limit(1).get();
+    final firestore = FirebaseFirestore.instance;
+    final friendInvitationsRef = firestore.collection('friend_invitations');
+    final usersRef = firestore.collection('users');
 
-  var exist =
-      await docFriendRef
-          .where('requested_user', isEqualTo: userId)
-          .where('invited_user', isEqualTo: friend.docs.first.id)
-          .limit(1)
-          .get();
+    // Check if user is trying to invite themselves
+    final currentUser = await usersRef.doc(userId).get();
+    if (currentUser.exists && currentUser.data()?['email'] == friendEmail) {
+      print('User cannot invite themselves');
+      throw FriendInvitationResponse(
+        result: FriendInvitationResult.cannotInviteSelf,
+        message: 'You cannot invite yourself',
+      );
+    }
 
-  var exist2 =
-      await docFriendRef
-          .where('requested_user', isEqualTo: friend.docs.first.id)
-          .where('invited_user', isEqualTo: userId)
-          .limit(1)
-          .get();
+    // Find the friend by email
+    final friendQuery =
+        await usersRef.where('email', isEqualTo: friendEmail).limit(1).get();
 
-  if (exist.docs.isNotEmpty || exist2.docs.isNotEmpty) {
-    print('Friend invitation already exists.');
-    return null;
+    final friendId =
+        friendQuery.docs.isNotEmpty ? friendQuery.docs.first.id : null;
+
+    // Check for existing invitations in both directions using a single query
+    Query<Map<String, dynamic>> existingInvitationsQuery;
+
+    if (friendId != null) {
+      // If friend exists, check for invitations in both directions
+      existingInvitationsQuery = friendInvitationsRef.where(
+        Filter.or(
+          Filter.and(
+            Filter('requested_user', isEqualTo: userId),
+            Filter('invited_user', isEqualTo: friendId),
+          ),
+          Filter.and(
+            Filter('requested_user', isEqualTo: friendId),
+            Filter('invited_user', isEqualTo: userId),
+          ),
+          Filter.and(
+            Filter('requested_user', isEqualTo: userId),
+            Filter('friend_email', isEqualTo: friendEmail),
+          ),
+        ),
+      );
+    } else {
+      // If friend doesn't exist, only check by email
+      existingInvitationsQuery = friendInvitationsRef.where(
+        Filter.and(
+          Filter('requested_user', isEqualTo: userId),
+          Filter('friend_email', isEqualTo: friendEmail),
+        ),
+      );
+    }
+
+    final existingInvitations = await existingInvitationsQuery.limit(1).get();
+
+    if (existingInvitations.docs.isNotEmpty) {
+      print('Friend invitation already exists');
+      throw FriendInvitationResponse(
+        result: FriendInvitationResult.alreadyExists,
+        message: 'Friend invitation already exists',
+      );
+    }
+
+    // Create the friend invitation with UUID in a single operation
+    final newInvitationRef = friendInvitationsRef.doc();
+    await newInvitationRef.set({
+      'uuid': newInvitationRef.id,
+      'requested_user': userId,
+      'invited_email': friendEmail,
+      'invited_user': friendId,
+      'created_at': FieldValue.serverTimestamp(),
+      'status': 0, // 0 = pending
+    });
+    await sendInviteEmail(friendEmail);
+
+    return FriendInvitationResponse(
+      result: FriendInvitationResult.success,
+      invitationId: newInvitationRef.id,
+      message: 'Friend invitation sent successfully',
+    );
+  } catch (e) {
+    print('Error saving friend invitation: $e');
+    throw FriendInvitationResponse(
+      result: FriendInvitationResult.error,
+      message: 'Failed to send friend invitation: $e',
+    );
   }
+}
 
-  var newFriend = await docFriendRef.add({
-    'requested_user': userId,
-    'friend_email': friendEmail,
-    'invited_user': friend.docs.isNotEmpty ? friend.docs.first.id : null,
-    'created_at': FieldValue.serverTimestamp(),
-    'status': 0,
+class FriendInvitationResponse {
+  final FriendInvitationResult result;
+  final String? invitationId;
+  final String? message;
+
+  FriendInvitationResponse({
+    required this.result,
+    this.invitationId,
+    this.message,
   });
+}
 
-  if (newFriend.id.isNotEmpty) {
-    docFriendRef.doc(newFriend.id).update({'uuid': newFriend.id});
-  } else {
-    print('Failed to create friend invitation.');
-  }
-  return null;
+enum FriendInvitationResult {
+  success,
+  userNotFound,
+  alreadyExists,
+  cannotInviteSelf,
+  error,
 }

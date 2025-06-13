@@ -53,15 +53,15 @@ signup(data) async {
       'role': 10,
       'uuid': res.user!.uid,
     });
-
+    print('User document created for ${res.user!.uid}');
     for (var friendEmail in data['invited_friends'] ?? []) {
-      saveFriend(res.user, friendEmail);
+      var reslt = await saveFriend(res.user!.uid, friendEmail);
     }
+
+    await handleInvitations(data['email'], res.user!.uid);
+    return res;
   } catch (error) {
     print('Error creating user document: $error');
     return null;
   }
-  await handleInvitations(data['email'], res.user!.uid);
-
-  return res;
 }

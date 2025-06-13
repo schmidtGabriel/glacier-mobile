@@ -189,6 +189,9 @@ class _SigninPageState extends State<SigninPage> {
       setState(() {
         _errorMessage = e.message ?? 'An error occurred';
         print(_errorMessage);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Signup failed: $e')));
       });
     } finally {
       setState(() {
