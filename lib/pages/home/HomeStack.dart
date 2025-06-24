@@ -14,40 +14,16 @@ class HomeStack extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      initialRoute: '/',
+      initialRoute: '/home',
       onGenerateRoute: (RouteSettings settings) {
         final args = settings.arguments;
 
         switch (settings.name) {
-          case '/':
-            return MaterialPageRoute(
-              builder: (_) => AuthGate(child: HomePage()),
-            );
           case '/home':
             return MaterialPageRoute(
               builder: (_) => AuthGate(child: HomePage()),
             );
-          // case '/reaction':
-          //   if (args is Map<String, dynamic> && args.containsKey('uuid')) {
-          //     return MaterialPageRoute(
-          //       builder: (_) => AuthGate(child: RecordPage(uuid: args['uuid'])),
-          //     );
-          //   }
-          //   return _errorRoute();
-          // case '/recorded-video':
-          //   if (args is Map<String, dynamic>) {
-          //     return MaterialPageRoute(
-          //       builder:
-          //           (_) => AuthGate(
-          //             child: RecordedVideoPage(
-          //               videoPath: args['videoPath'],
-          //               videoName: args['videoName'],
-          //               uuid: args['uuid'],
-          //             ),
-          //           ),
-          //     );
-          //   }
-          //   return _errorRoute();
+
           default:
             return _errorRoute();
         }

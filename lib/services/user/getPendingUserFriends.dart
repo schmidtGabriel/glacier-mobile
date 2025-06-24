@@ -2,19 +2,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:glacier/services/user/getUser.dart';
 
-Future<List> getUserFriends() async {
+Future<List> getPendingUserFriends() async {
   try {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return [];
+    final email = FirebaseAuth.instance.currentUser?.email;
+    if (email == null) return [];
     final querySnapshot =
         await FirebaseFirestore.instance
             .collection('friend_invitations')
-            .where(
-              Filter.or(
-                Filter('requested_user', isEqualTo: uid),
-                Filter('invited_user', isEqualTo: uid),
-              ),
-            )
+            .where(Filter('invited_email', isEqualTo: email))
+            .where(Filter('status', isEqualTo: 0))
             .get();
 
     List requested = await Future.wait(
@@ -31,7 +27,7 @@ Future<List> getUserFriends() async {
                 ? await getUser(data['invited_user'])
                 : null;
 
-        if (requested == null && invited == null) {
+        if (requested == null) {
           print('No valid users found for invitation: ${data['uuid']}');
           return null;
         }

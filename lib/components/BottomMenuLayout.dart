@@ -4,7 +4,9 @@ import 'package:glacier/pages/home/HomeStack.dart';
 import 'package:glacier/pages/send-reaction/SendReactionStack.dart';
 
 class BottomMenuLayout extends StatefulWidget {
-  const BottomMenuLayout({super.key});
+  final int? index;
+
+  const BottomMenuLayout({super.key, this.index});
 
   @override
   _BottomMenuLayoutState createState() => _BottomMenuLayoutState();
@@ -16,8 +18,8 @@ class _BottomMenuLayoutState extends State<BottomMenuLayout> {
   // Define the pages
   final List<Widget> _pages = [
     HomeStack(),
-    FriendsStack(),
     SendReactionStack(),
+    FriendsStack(),
   ];
 
   // Scaffold with BottomNavigationBar
@@ -35,19 +37,32 @@ class _BottomMenuLayoutState extends State<BottomMenuLayout> {
         onTap: _onTabTapped,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
+        type: BottomNavigationBarType.fixed,
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        iconSize: 30,
         items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+          BottomNavigationBarItem(icon: Icon(Icons.phone_android), label: ''),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_reaction_sharp),
-            label: "Friends",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: "Send Reaction",
+            label: '',
           ),
         ],
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Set the initial index if provided
+    if (widget.index != null) {
+      _currentIndex = widget.index!;
+      // Ensure the page is initialized
+    } else {
+      _currentIndex = 0; // Default to the first tab
+    }
   }
 
   // Handle tap on bottom navigation

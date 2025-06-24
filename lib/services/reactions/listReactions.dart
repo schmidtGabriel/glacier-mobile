@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:glacier/helpers/parseTimeStamp.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
+import 'package:glacier/services/user/getUser.dart';
 
 Future<String> handleVideo(data) async {
   try {
@@ -17,13 +18,21 @@ Future<String> handleVideo(data) async {
   }
 }
 
-Future<List> listReactions({required String userId}) async {
+Future<List> listReactions({
+  required String userId,
+  bool isSent = false,
+}) async {
   try {
-    final querySnapshot =
-        await FirebaseFirestore.instance
-            .collection('reactions')
-            .where('user', isEqualTo: userId)
-            .get();
+    Query<Map<String, dynamic>> query = FirebaseFirestore.instance.collection(
+      'reactions',
+    );
+    if (isSent) {
+      query = query.where('requested', isEqualTo: userId);
+    } else {
+      query = query.where('user', isEqualTo: userId);
+    }
+
+    final querySnapshot = await query.get();
 
     // Use async map and wait for all futures
     final res = await Future.wait(
@@ -34,6 +43,11 @@ Future<List> listReactions({required String userId}) async {
           ...data,
           'created_at': formatTimestamp(data['created_at']),
           'due_date': formatTimestamp(data['due_date']),
+          'requested':
+              data['requested'] != null
+                  ? await getUser(data['requested'])
+                  : null,
+          'user': data['user'] != null ? await getUser(data['user']) : null,
           'url': videoUrl,
         };
       }),

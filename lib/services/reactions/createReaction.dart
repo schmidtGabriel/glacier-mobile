@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 Future<String?> createReaction(data) async {
   final db = FirebaseFirestore.instance;
+  final user = FirebaseAuth.instance.currentUser;
 
   final docRef = db.collection('reactions');
 
@@ -12,6 +14,7 @@ Future<String?> createReaction(data) async {
       'created_at': FieldValue.serverTimestamp(),
       'status': '0', // Assuming '0' means pending
       'uuid': docSnapshot.id,
+      'requested': user?.uid ?? '',
     });
     return docSnapshot.id;
   } else {

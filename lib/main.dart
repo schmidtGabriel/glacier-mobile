@@ -66,13 +66,20 @@ class MyApp extends StatelessWidget {
               return MaterialPageRoute(builder: (_) => SignupPage());
 
             case '/':
+              if (args is Map<String, dynamic> && args.containsKey('index')) {
+                return MaterialPageRoute(
+                  builder:
+                      (_) => AuthGate(
+                        child: BottomMenuLayout(index: args['index']),
+                      ),
+                );
+              }
               return MaterialPageRoute(
-                builder: (_) => AuthGate(child: BottomMenuLayout()),
+                builder: (_) => AuthGate(child: BottomMenuLayout(index: 0)),
               );
 
             case '/reaction':
               if (args is Map<String, dynamic> && args.containsKey('uuid')) {
-                print(args['uuid']);
                 return MaterialPageRoute(
                   builder:
                       (_) => AuthGate(child: RecordPage(uuid: args['uuid'])),
