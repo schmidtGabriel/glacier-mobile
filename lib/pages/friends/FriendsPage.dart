@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
-import 'package:glacier/helpers/formatStatusInviteFriend.dart';
+import 'package:glacier/pages/friends/components/AcceptedFriendsList.dart';
+import 'package:glacier/pages/friends/components/PendingFriendsList.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/user/getPendingUserFriends.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
@@ -56,328 +57,14 @@ class _FriendsPageState extends State<FriendsPage>
                         child: TabBarView(
                           controller: _tabController,
                           children: [
-                            SingleChildScrollView(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(height: 16),
-                                    GestureDetector(
-                                      onTap: showInviteFriendDialog,
-                                      child: Container(
-                                        padding: EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.grey.withOpacity(
-                                                0.1,
-                                              ),
-                                              blurRadius: 4,
-                                              offset: Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            CircleAvatar(
-                                              radius: 24,
-                                              backgroundColor:
-                                                  Colors.grey.shade300,
-                                              child: Icon(
-                                                Icons.person_add,
-                                                color: Colors.grey.shade600,
-                                                size: 24,
-                                              ),
-                                            ),
-
-                                            SizedBox(width: 10),
-                                            Expanded(
-                                              child: Text('Invite new friend.'),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 16),
-                                    friends.isEmpty
-                                        ? Text(
-                                          "You haven't invited any friends yet.",
-                                          style:
-                                              Theme.of(
-                                                context,
-                                              ).textTheme.bodyMedium,
-                                        )
-                                        : ListView.separated(
-                                          shrinkWrap: true,
-                                          physics:
-                                              NeverScrollableScrollPhysics(),
-                                          itemCount: friends.length,
-                                          separatorBuilder:
-                                              (_, __) => SizedBox(height: 8),
-                                          itemBuilder: (context, index) {
-                                            final friendData = friends[index];
-                                            final invitedUser =
-                                                friendData['invited_user'];
-                                            final requestedUser =
-                                                friendData['requested_user'];
-
-                                            // Null safety check before accessing uuid
-                                            final friend =
-                                                (invitedUser != null &&
-                                                        invitedUser['uuid'] ==
-                                                            user?.uuid)
-                                                    ? requestedUser
-                                                    : invitedUser;
-
-                                            final name =
-                                                friend?['name'] ??
-                                                friends[index]['invited_email'] ??
-                                                'Unknown';
-                                            final email =
-                                                friend?['email'] ?? '';
-
-                                            return Container(
-                                              padding: EdgeInsets.all(16),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.grey
-                                                        .withOpacity(0.1),
-                                                    blurRadius: 4,
-                                                    offset: Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  CircleAvatar(
-                                                    radius: 24,
-                                                    backgroundColor:
-                                                        Colors.grey.shade300,
-                                                    child: Text(
-                                                      name.isNotEmpty
-                                                          ? name[0]
-                                                              .toUpperCase()
-                                                          : '?',
-                                                      style: TextStyle(
-                                                        fontSize: 20,
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  SizedBox(width: 10),
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          name,
-                                                          overflow:
-                                                              TextOverflow
-                                                                  .ellipsis,
-                                                        ),
-
-                                                        email.isEmpty
-                                                            ? SizedBox.shrink()
-                                                            : Text(
-                                                              email,
-                                                              style: TextStyle(
-                                                                color:
-                                                                    Colors
-                                                                        .grey
-                                                                        .shade700,
-                                                                fontSize: 14,
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic,
-                                                              ),
-                                                            ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Badge(
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                          vertical: 3,
-                                                          horizontal: 10,
-                                                        ),
-                                                    label: Text(
-                                                      formatStatusInviteFriend(
-                                                        friendData['status'],
-                                                      ),
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                    backgroundColor:
-                                                        colorStatusInviteFriend(
-                                                          friendData['status'],
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                  ],
-                                ),
-                              ),
+                            AcceptedFriendsList(
+                              friends: friends,
+                              user: user,
+                              onInviteFriend: showInviteFriendDialog,
                             ),
-
-                            SingleChildScrollView(
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    SizedBox(height: 16),
-
-                                    pendingFriends.isEmpty
-                                        ? Text(
-                                          "You haven't have new invites.",
-                                          style:
-                                              Theme.of(
-                                                context,
-                                              ).textTheme.bodyMedium,
-                                        )
-                                        : ListView.separated(
-                                          shrinkWrap: true,
-                                          physics:
-                                              NeverScrollableScrollPhysics(),
-                                          itemCount: pendingFriends.length,
-                                          separatorBuilder:
-                                              (_, __) => SizedBox(height: 8),
-                                          itemBuilder: (context, index) {
-                                            final friendData =
-                                                pendingFriends[index];
-
-                                            final requestedUser =
-                                                friendData['requested_user'];
-
-                                            // Null safety check before accessing uuid
-                                            final friend = requestedUser;
-
-                                            final name =
-                                                requestedUser?['name'] ??
-                                                friendData['invited_email'] ??
-                                                'Unknown';
-                                            final email =
-                                                friend?['email'] ?? '';
-
-                                            return Container(
-                                              padding: EdgeInsets.all(16),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: Colors.grey
-                                                        .withOpacity(0.1),
-                                                    blurRadius: 4,
-                                                    offset: Offset(0, 2),
-                                                  ),
-                                                ],
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  CircleAvatar(
-                                                    radius: 24,
-                                                    backgroundColor:
-                                                        Colors.grey.shade300,
-                                                    child: Text(
-                                                      name.isNotEmpty
-                                                          ? name[0]
-                                                              .toUpperCase()
-                                                          : '?',
-                                                      style: TextStyle(
-                                                        fontSize: 20,
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  SizedBox(width: 10),
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          name,
-                                                          overflow:
-                                                              TextOverflow
-                                                                  .ellipsis,
-                                                        ),
-
-                                                        email.isEmpty
-                                                            ? SizedBox.shrink()
-                                                            : Text(
-                                                              email,
-                                                              style: TextStyle(
-                                                                color:
-                                                                    Colors
-                                                                        .grey
-                                                                        .shade700,
-                                                                fontSize: 14,
-                                                                fontStyle:
-                                                                    FontStyle
-                                                                        .italic,
-                                                              ),
-                                                            ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      //add two buttons, one for accept and one for reject
-                                                      IconButton(
-                                                        icon: Icon(
-                                                          Icons.check,
-                                                          color: Colors.green,
-                                                        ),
-                                                        onPressed: () {
-                                                          // Handle accept friend request
-                                                          handleFriendRequest(
-                                                            1,
-                                                            friendData['uuid'],
-                                                          );
-                                                        },
-                                                      ),
-
-                                                      IconButton(
-                                                        icon: Icon(
-                                                          Icons.close,
-                                                          color: Colors.red,
-                                                        ),
-                                                        onPressed: () {
-                                                          // Handle reject friend request
-                                                          handleFriendRequest(
-                                                            -1,
-                                                            friendData['uuid'],
-                                                          );
-                                                        },
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          },
-                                        ),
-                                  ],
-                                ),
-                              ),
+                            PendingFriendsList(
+                              pendingFriends: pendingFriends,
+                              onHandleFriendRequest: handleFriendRequest,
                             ),
                           ],
                         ),
@@ -392,6 +79,7 @@ class _FriendsPageState extends State<FriendsPage>
   @override
   void dispose() {
     _dialogEmailController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -426,12 +114,12 @@ class _FriendsPageState extends State<FriendsPage>
           }
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text('Friend request accepted!')));
+          ).showSnackBar(SnackBar(content: Text('Friend request processed!')));
         })
         .catchError((error) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error accepting friend request'),
+              content: Text('Error processing friend request'),
               backgroundColor: Colors.red,
             ),
           );
@@ -446,11 +134,11 @@ class _FriendsPageState extends State<FriendsPage>
     loadUserData();
   }
 
-  Future<void> inviteFriendFromDialog() async {
+  Future<void> inviteFriendFromDialog(BuildContext dialogContext) async {
     final email = _dialogEmailController.text.trim();
     if (email.isEmpty) return;
 
-    Navigator.of(context).pop(); // Close dialog first
+    Navigator.of(dialogContext).pop(); // Close dialog first
     _dialogEmailController.clear();
 
     setState(() {
@@ -464,17 +152,12 @@ class _FriendsPageState extends State<FriendsPage>
     saveFriend(user.uuid, email)
         .then(
           (value) async => {
-            if (mounted)
-              {
-                setState(() {
-                  // No need to clear controller here as it's already cleared
-                }),
-              },
+            if (mounted) {setState(() {})},
             await getFriends(),
+            await getPendingUserFriends(),
             setState(() {
               isLoading = false;
             }),
-
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(value.message ?? 'Friend invited successfully!'),
@@ -526,10 +209,9 @@ class _FriendsPageState extends State<FriendsPage>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
+      builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text('Invite Friend'),
-
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,7 +226,7 @@ class _FriendsPageState extends State<FriendsPage>
                 autocorrect: false,
                 decoration: inputDecoration("Friend's Email"),
                 autofocus: true,
-                onSubmitted: (_) => inviteFriendFromDialog(),
+                onSubmitted: (_) => inviteFriendFromDialog(dialogContext),
               ),
             ],
           ),
@@ -552,13 +234,13 @@ class _FriendsPageState extends State<FriendsPage>
             TextButton(
               onPressed: () {
                 _dialogEmailController.clear();
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
               },
               child: Text('Cancel'),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              onPressed: inviteFriendFromDialog,
+              onPressed: () => inviteFriendFromDialog(dialogContext),
               child: Text('Invite', style: TextStyle(color: Colors.white)),
             ),
           ],

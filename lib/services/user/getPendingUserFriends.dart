@@ -9,8 +9,8 @@ Future<List> getPendingUserFriends() async {
     final querySnapshot =
         await FirebaseFirestore.instance
             .collection('friend_invitations')
-            .where(Filter('invited_email', isEqualTo: email))
-            .where(Filter('status', isEqualTo: 0))
+            .where('invited_email', isEqualTo: email)
+            .where('status', isEqualTo: 0)
             .get();
 
     List requested = await Future.wait(

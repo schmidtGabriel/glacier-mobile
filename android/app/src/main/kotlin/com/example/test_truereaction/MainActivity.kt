@@ -1,4 +1,4 @@
-package com.example.glacier
+package com.tryglacier.app
 
 import io.flutter.embedding.android.FlutterActivity
 
