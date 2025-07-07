@@ -48,6 +48,7 @@ unlinked_spec.ds
 **/android/app/debug
 **/android/app/profile
 **/android/app/release
+**/android/app/google-services.json
 
 # iOS/XCode related
 **/ios/**/*.mode1v3
@@ -85,6 +86,8 @@ unlinked_spec.ds
 **/Pods/
 **/macos/Flutter/GeneratedPluginRegistrant.swift
 **/macos/Flutter/ephemeral
+**/macos/Runner/GoogleService-Info.plist
+
 **/xcuserdata/
 
 # Windows related
@@ -134,5 +137,3 @@ analysis_benchmark.json
 !/dev/ci/**/Gemfile.lock
 
 lib/firebase_options.dart
-android/app/google-services.json
-macos/Runner/GoogleService-Info.plist
