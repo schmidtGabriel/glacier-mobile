@@ -14,7 +14,7 @@ class FirebaseStorageService {
       final url = await ref.getDownloadURL();
       return url;
     } catch (e) {
-      print('Erro ao buscar URL: $e');
+      // print('Erro ao buscar URL: $e');
       return '';
     }
   }

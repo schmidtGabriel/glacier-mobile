@@ -37,9 +37,68 @@ class _HomePageState extends State<HomePage>
                     children: [
                       Padding(
                         padding: const EdgeInsets.all(16.0),
-                        child: Text(
-                          'Hello ${user.name}',
-                          style: TextStyle(color: Colors.black, fontSize: 20),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.account_circle,
+                              size: 40,
+                              color: Colors.blue,
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Hello ${user.name}',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 20,
+                                ),
+                              ),
+                            ),
+
+                            GestureDetector(
+                              onTap: () async {
+                                bool? shouldSignOut = await showDialog<bool>(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text('Sign Out'),
+                                      content: Text(
+                                        'Are you sure you want to sign out?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.of(
+                                                context,
+                                              ).pop(false),
+                                          child: Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.of(
+                                                context,
+                                              ).pop(true),
+                                          child: Text('Sign Out'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+
+                                if (shouldSignOut == true) {
+                                  await FirebaseAuth.instance.signOut();
+                                  final prefs =
+                                      await SharedPreferences.getInstance();
+                                  await prefs.remove('user');
+                                }
+                              },
+                              child: Icon(
+                                Icons.logout,
+                                size: 24,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       TabBar(
@@ -60,28 +119,15 @@ class _HomePageState extends State<HomePage>
                           controller: _tabController,
                           children: [
                             // Requested Reactions Tab
-                            SingleChildScrollView(
-                              padding: const EdgeInsets.all(16.0),
-                              child: RequestedReactionsList(user: user),
-                            ),
+                            RequestedReactionsList(user: user),
+
                             // Sent Reactions Tab
-                            SingleChildScrollView(
-                              padding: const EdgeInsets.all(16.0),
-                              child: SentReactionsList(user: user),
-                            ),
+                            SentReactionsList(user: user),
                           ],
                         ),
                       ),
                     ],
                   ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            await FirebaseAuth.instance.signOut();
-            final prefs = await SharedPreferences.getInstance();
-            await prefs.remove('user');
-          },
-          child: Icon(Icons.logout),
         ),
       ),
     );

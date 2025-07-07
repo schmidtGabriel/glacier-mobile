@@ -5,15 +5,17 @@ import 'package:glacier/services/user/getUser.dart';
 Future<List> getPendingUserFriends() async {
   try {
     final email = FirebaseAuth.instance.currentUser?.email;
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
     if (email == null) return [];
     final querySnapshot =
         await FirebaseFirestore.instance
             .collection('friend_invitations')
-            .where('invited_email', isEqualTo: email)
             .where('status', isEqualTo: 0)
             .get();
 
-    List requested = await Future.wait(
+    List pendingUsers = [];
+    await Future.wait(
       querySnapshot.docs.map((doc) async {
         final data = doc.data();
 
@@ -26,24 +28,27 @@ Future<List> getPendingUserFriends() async {
             data['invited_user'] != null
                 ? await getUser(data['invited_user'])
                 : null;
+        // print('invited $invited');
+        // print('requested $requested');
 
-        if (requested == null) {
-          print('No valid users found for invitation: ${data['uuid']}');
-          return null;
+        if (requested != null) {
+          pendingUsers = [
+            ...pendingUsers,
+            {
+              'uuid': data['uuid'] ?? '',
+              'requested_user': requested,
+              'invited_user': invited,
+              'invited_email': data['invited_email'] ?? '',
+              'status': data['status'] ?? '',
+              'created_at': data['created_at']?.toDate().toIso8601String(),
+              'isRequested': userId == requested['uuid'],
+            },
+          ];
         }
-
-        return {
-          'uuid': data['uuid'] ?? '',
-          'requested_user': requested,
-          'invited_user': invited,
-          'invited_email': data['invited_email'] ?? '',
-          'status': data['status'] ?? '',
-          'created_at': data['created_at']?.toDate().toIso8601String(),
-        };
       }).toList(),
     );
-
-    return requested;
+    // print('Pending: $pendingUsers');
+    return pendingUsers;
   } catch (e) {
     print('Error fetching user friends: $e');
     return [];

@@ -8,6 +8,7 @@ import 'package:glacier/enums/ReactionVideoType.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/createReaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:toastification/toastification.dart';
 import 'package:video_player/video_player.dart';
 
 class SendReactionPage extends StatefulWidget {
@@ -24,6 +25,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
   List friends = [];
   bool isLoading = false;
   String _filePath = '';
+  String userId = '';
 
   final TextEditingController _videoUrlController = TextEditingController();
   final TextEditingController _videoDurationController =
@@ -80,6 +82,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
                           items:
                               friends.map<DropdownMenuItem<String>>((friend) {
                                 var item = friend['invited_user'];
+                                if (item['uuid'] == userId) {
+                                  item = friend['requested_user'];
+                                }
 
                                 return DropdownMenuItem<String>(
                                   value: item['uuid'].toString(),
@@ -276,6 +281,11 @@ class _SendReactionPageState extends State<SendReactionPage> {
     });
     final prefs = await SharedPreferences.getInstance();
     friends = jsonDecode(prefs.getString('friends') ?? '[]') as List;
+    final userJson = prefs.getString('user');
+    if (userJson != null) {
+      final user = jsonDecode(userJson);
+      userId = user['uuid'] ?? '';
+    }
 
     setState(() {
       isLoading = false;
@@ -287,33 +297,46 @@ class _SendReactionPageState extends State<SendReactionPage> {
     final videoDuration = _videoDurationController.text.trim();
 
     if (videoUrl.isEmpty || videoDuration.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Please upload a video first.")));
+      toastification.show(
+        title: Text('Warning'),
+        description: Text("Please upload a video first."),
+        autoCloseDuration: const Duration(seconds: 5),
+        type: ToastificationType.warning,
+        alignment: Alignment.bottomCenter,
+      );
+
       return;
     }
 
     if (selectedFriendId == null ||
         selectedVideoType == null ||
         _titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Please fill in all fields.")));
+      toastification.show(
+        title: Text('Warning'),
+        description: Text("Please fill in all fields."),
+        autoCloseDuration: const Duration(seconds: 5),
+        type: ToastificationType.warning,
+        alignment: Alignment.bottomCenter,
+      );
+
       return;
     }
 
     await createReaction({
       'user': selectedFriendId,
-      'url': videoUrl,
+      'video_url': videoUrl,
       'video_duration': videoDuration,
       'title': _titleController.text.trim(),
       'type_video': selectedVideoType,
     });
 
     clearTextFields();
-
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text("Reaction sent successfully!")));
+    toastification.show(
+      title: Text('Success'),
+      description: Text("Reaction sent successfully!"),
+      autoCloseDuration: const Duration(seconds: 5),
+      type: ToastificationType.success,
+      alignment: Alignment.bottomCenter,
+    );
   }
 }

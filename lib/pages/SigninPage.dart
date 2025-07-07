@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/services/auth/signin.dart';
+import 'package:toastification/toastification.dart';
 
 class SigninPage extends StatefulWidget {
   const SigninPage({super.key});
@@ -184,14 +185,18 @@ class _SigninPageState extends State<SigninPage> {
         _emailController.text.trim(),
         _passwordController.text.trim(),
       );
+
       // Navigate to home or next screen
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message ?? 'An error occurred';
-        print(_errorMessage);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Signup failed: $e')));
+        toastification.show(
+          title: Text('Sign-in failed.'),
+          description: Text(" ${_errorMessage.toString()}"),
+          autoCloseDuration: const Duration(seconds: 5),
+          type: ToastificationType.error,
+          alignment: Alignment.bottomCenter,
+        );
       });
     } finally {
       setState(() {

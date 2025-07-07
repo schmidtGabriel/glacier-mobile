@@ -10,6 +10,7 @@ Future<FriendInvitationResponse> saveFriend(
     if (userId.isEmpty || friendEmail.isEmpty) {
       print('User ID or friend email cannot be empty');
       return FriendInvitationResponse(
+        error: true,
         result: FriendInvitationResult.error,
         message: 'User ID and friend email cannot be empty',
       );
@@ -23,7 +24,8 @@ Future<FriendInvitationResponse> saveFriend(
     final currentUser = await usersRef.doc(userId).get();
     if (currentUser.exists && currentUser.data()?['email'] == friendEmail) {
       print('User cannot invite themselves');
-      throw FriendInvitationResponse(
+      return FriendInvitationResponse(
+        error: true,
         result: FriendInvitationResult.cannotInviteSelf,
         message: 'You cannot invite yourself',
       );
@@ -70,8 +72,8 @@ Future<FriendInvitationResponse> saveFriend(
     final existingInvitations = await existingInvitationsQuery.limit(1).get();
 
     if (existingInvitations.docs.isNotEmpty) {
-      print('Friend invitation already exists');
-      throw FriendInvitationResponse(
+      return FriendInvitationResponse(
+        error: true,
         result: FriendInvitationResult.alreadyExists,
         message: 'Friend invitation already exists',
       );
@@ -96,7 +98,8 @@ Future<FriendInvitationResponse> saveFriend(
     );
   } catch (e) {
     print('Error saving friend invitation: $e');
-    throw FriendInvitationResponse(
+    return FriendInvitationResponse(
+      error: true,
       result: FriendInvitationResult.error,
       message: 'Failed to send friend invitation: $e',
     );
@@ -107,11 +110,13 @@ class FriendInvitationResponse {
   final FriendInvitationResult result;
   final String? invitationId;
   final String? message;
+  final bool error;
 
   FriendInvitationResponse({
     required this.result,
     this.invitationId,
     this.message,
+    this.error = false,
   });
 }
 

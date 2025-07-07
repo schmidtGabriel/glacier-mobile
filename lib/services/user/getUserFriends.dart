@@ -9,6 +9,7 @@ Future<List> getUserFriends() async {
     final querySnapshot =
         await FirebaseFirestore.instance
             .collection('friend_invitations')
+            .where('status', isEqualTo: 1)
             .where(
               Filter.or(
                 Filter('requested_user', isEqualTo: uid),
@@ -17,7 +18,8 @@ Future<List> getUserFriends() async {
             )
             .get();
 
-    List requested = await Future.wait(
+    List friends = [];
+    await Future.wait(
       querySnapshot.docs.map((doc) async {
         final data = doc.data();
 
@@ -31,23 +33,23 @@ Future<List> getUserFriends() async {
                 ? await getUser(data['invited_user'])
                 : null;
 
-        if (requested == null && invited == null) {
-          print('No valid users found for invitation: ${data['uuid']}');
-          return null;
+        if (requested != null && invited != null) {
+          friends = [
+            ...friends,
+            {
+              'uuid': data['uuid'] ?? '',
+              'requested_user': requested,
+              'invited_user': invited,
+              'invited_email': data['invited_email'] ?? '',
+              'status': data['status'] ?? '',
+              'created_at': data['created_at']?.toDate().toIso8601String(),
+            },
+          ];
         }
-
-        return {
-          'uuid': data['uuid'] ?? '',
-          'requested_user': requested,
-          'invited_user': invited,
-          'invited_email': data['invited_email'] ?? '',
-          'status': data['status'] ?? '',
-          'created_at': data['created_at']?.toDate().toIso8601String(),
-        };
       }).toList(),
     );
 
-    return requested;
+    return friends;
   } catch (e) {
     print('Error fetching user friends: $e');
     return [];

@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "706633074898",
-    "project_id": "testtruereaction",
-    "storage_bucket": "testtruereaction.firebasestorage.app"
+    "project_number": "813458560199",
+    "project_id": "glacier-eb589",
+    "storage_bucket": "glacier-eb589.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:706633074898:android:2762d345b25a71ebec450b",
+        "mobilesdk_app_id": "1:813458560199:android:2acf114e927f0f9c3cdae2",
         "android_client_info": {
           "package_name": "com.tryglacier.app"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDdDLlptwpRUyw-z_9p6qTUJbaNVuqWPy4"
+          "current_key": "AIzaSyB5CLWgtagULAqebU_QmgG-vsZBtqPufmM"
         }
       ],
       "services": {

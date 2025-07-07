@@ -48,12 +48,19 @@ class AuthGate extends StatelessWidget {
   }
 
   Future<Map<String, dynamic>?> _checkUserDataAndFetch() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userString = prefs.getString('user');
+    final isAuth = FirebaseAuth.instance.currentUser != null;
+    if (isAuth) {
+      final prefs = await SharedPreferences.getInstance();
+      final userString = prefs.getString('user');
 
-    if (userString == null || userString.isEmpty) {
-      // No user data in SharedPreferences, fetch from Firestore
-      return await getUserData();
+      if (userString == null || userString.isEmpty) {
+        // No user data in SharedPreferences, fetch from Firestore
+        return await getUserData();
+      }
+    } else {
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.remove('user'); // Clear user data if not authenticated
+      });
     }
 
     // User data exists in SharedPreferences, no need to fetch

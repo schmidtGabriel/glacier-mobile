@@ -7,15 +7,15 @@ Future<String?> createReaction(data) async {
 
   final docRef = db.collection('reactions');
 
-  final docSnapshot = await docRef.add(data);
+  final docSnapshot = await docRef.add({
+    ...data,
+    "requested": user?.uid ?? '',
+    "status": "0",
+    "created_at": FieldValue.serverTimestamp(),
+  });
   if (docSnapshot.id.isNotEmpty) {
     print('Reaction created successfully with ID: ${docSnapshot.id}');
-    docRef.doc(docSnapshot.id).update({
-      'created_at': FieldValue.serverTimestamp(),
-      'status': '0', // Assuming '0' means pending
-      'uuid': docSnapshot.id,
-      'requested': user?.uid ?? '',
-    });
+    docRef.doc(docSnapshot.id).update({'uuid': docSnapshot.id});
     return docSnapshot.id;
   } else {
     print('Failed to create reaction.');

@@ -3,17 +3,40 @@ import 'package:glacier/helpers/parseTimeStamp.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/user/getUser.dart';
 
-Future<String> handleVideo(data) async {
+Future<String> handleRecord(data) async {
   try {
-    final service = FirebaseStorageService();
-    if (data['type_video'] == '3') {
-      String res = await service.getDownloadUrl(data['url']);
-      return res;
+    if (data['recorded_video'] != null || data['recorded_video'].isNotEmpty) {
+      final service = FirebaseStorageService();
+      String res = await service.getDownloadUrl(data['recorded_video']);
+      if (res.isNotEmpty) {
+        return res;
+      } else {
+        return '';
+      }
     } else {
-      return data['url'] ?? '';
+      return '';
     }
   } catch (e) {
-    print('Error fetching video URL: $e');
+    // print('Error fetching video URL: $e');
+    return '';
+  }
+}
+
+Future<String> handleVideo(data) async {
+  try {
+    if (data['video_url'] != null || data['video_url'].isNotEmpty) {
+      final service = FirebaseStorageService();
+      if (data['type_video'] == '3') {
+        String res = await service.getDownloadUrl(data['video_url']);
+        return res;
+      } else {
+        return data['video_url'] ?? '';
+      }
+    } else {
+      return '';
+    }
+  } catch (e) {
+    // print('Error fetching video URL: $e');
     return '';
   }
 }
@@ -39,6 +62,7 @@ Future<List> listReactions({
       querySnapshot.docs.map((doc) async {
         final data = doc.data();
         final videoUrl = await handleVideo(data);
+        final recordUrl = await handleRecord(data);
         return {
           ...data,
           'created_at': formatTimestamp(data['created_at']),
@@ -49,6 +73,7 @@ Future<List> listReactions({
                   : null,
           'user': data['user'] != null ? await getUser(data['user']) : null,
           'url': videoUrl,
+          'recordedUrl': recordUrl,
         };
       }),
     );

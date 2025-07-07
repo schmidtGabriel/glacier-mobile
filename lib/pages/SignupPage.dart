@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/services/auth/signup.dart';
+import 'package:glacier/services/auth/verifyEmail.dart';
+import 'package:toastification/toastification.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -250,11 +252,23 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   void _nextStep() {
-    if (_step == 0 && _formKey.currentState!.validate()) {
-      setState(() {
-        _step = 1;
-      });
-    }
+    verifyEmailAccount(_controllers['email']!.text).then((isRegistered) {
+      if (isRegistered) {
+        toastification.show(
+          title: Text('Ops.'),
+          description: Text("Email already registered."),
+          autoCloseDuration: const Duration(seconds: 5),
+          type: ToastificationType.warning,
+          alignment: Alignment.bottomCenter,
+        );
+      } else {
+        if (_step == 0 && _formKey.currentState!.validate()) {
+          setState(() {
+            _step = 1;
+          });
+        }
+      }
+    });
   }
 
   Future<void> _submit() async {
@@ -265,16 +279,29 @@ class _SignupPageState extends State<SignupPage> {
         'phone': _controllers['phone']!.text,
         'password': _controllers['password']!.text,
         'invited_friends': _invitedFriends,
+        'hasAccount': true,
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Signup successful!')));
+      toastification.show(
+        title: Text('Welcome!'),
+        description: Text("Signup successful!"),
+        autoCloseDuration: const Duration(seconds: 5),
+        type: ToastificationType.success,
+        alignment: Alignment.bottomCenter,
+      );
+
       Navigator.pop(context); // Navigate back after successful signup
     } catch (e) {
       print('Signup failed: $e');
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Signup failed: $e')));
+      toastification.show(
+        title: Text('Error.'),
+        description: Text(
+          'Signup failed: $e' ?? 'An error occurred during signup.',
+        ),
+        autoCloseDuration: const Duration(seconds: 5),
+        type: ToastificationType.error,
+        alignment: Alignment.bottomCenter,
+      );
+
       return;
     }
   }

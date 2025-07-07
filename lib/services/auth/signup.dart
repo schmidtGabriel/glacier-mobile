@@ -43,16 +43,26 @@ signup(data) async {
 
   final docRef = db.collection('users');
 
+  final existedUser =
+      await docRef.where('email', isEqualTo: data['email']).limit(1).get();
+
   try {
-    await docRef.doc(res.user!.uid).set({
+    var uuid =
+        existedUser.docs.isNotEmpty
+            ? existedUser.docs.first.data()['uuid']
+            : res.user!.uid;
+
+    await docRef.doc(uuid).set({
       'name': data['name'],
       'phone': data['phone'],
       'email': data['email'],
+      'hasAccount': data['hasAccount'] ?? false,
       'created_at': FieldValue.serverTimestamp(),
       'status': 0,
       'role': 10,
       'uuid': res.user!.uid,
     });
+
     print('User document created for ${res.user!.uid}');
     for (var friendEmail in data['invited_friends'] ?? []) {
       var reslt = await saveFriend(res.user!.uid, friendEmail);

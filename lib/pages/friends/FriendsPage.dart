@@ -10,6 +10,7 @@ import 'package:glacier/services/user/getUserFriends.dart';
 import 'package:glacier/services/user/saveFriend.dart';
 import 'package:glacier/services/user/updateFriendRequest.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:toastification/toastification.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({super.key});
@@ -112,16 +113,21 @@ class _FriendsPageState extends State<FriendsPage>
               isLoading = false;
             });
           }
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text('Friend request processed!')));
+          toastification.show(
+            title: Text('Success!'),
+            description: Text("Friend request processed!"),
+            autoCloseDuration: const Duration(seconds: 5),
+            type: ToastificationType.success,
+            alignment: Alignment.bottomCenter,
+          );
         })
         .catchError((error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error processing friend request'),
-              backgroundColor: Colors.red,
-            ),
+          toastification.show(
+            title: Text('Error.'),
+            description: Text("Processing friend failed!"),
+            autoCloseDuration: const Duration(seconds: 5),
+            type: ToastificationType.error,
+            alignment: Alignment.bottomCenter,
           );
         });
   }
@@ -132,6 +138,11 @@ class _FriendsPageState extends State<FriendsPage>
     _tabController = TabController(length: 2, vsync: this);
     getPendingFriends();
     loadUserData();
+
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.getBool('invite') ?? false ? showInviteFriendDialog() : null;
+      prefs.remove('invite'); // Clear invite flag after showing dialog
+    });
   }
 
   Future<void> inviteFriendFromDialog(BuildContext dialogContext) async {
@@ -158,19 +169,25 @@ class _FriendsPageState extends State<FriendsPage>
             setState(() {
               isLoading = false;
             }),
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(value.message ?? 'Friend invited successfully!'),
-              ),
+            toastification.show(
+              title: Text('Video initialization failed'),
+              description: Text('Error: ${value.message.toString()}'),
+              autoCloseDuration: const Duration(seconds: 5),
+              type:
+                  value.error
+                      ? ToastificationType.error
+                      : ToastificationType.success,
+              alignment: Alignment.bottomCenter,
             ),
           },
         )
         .catchError((error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.mensage ?? 'Error inviting friend'),
-              backgroundColor: Colors.red,
-            ),
+          toastification.show(
+            title: Text('Video initialization failed'),
+            description: Text('Error: ${error.message.toString()}'),
+            autoCloseDuration: const Duration(seconds: 5),
+            type: ToastificationType.error,
+            alignment: Alignment.bottomCenter,
           );
           setState(() {
             isLoading = false;
@@ -199,7 +216,7 @@ class _FriendsPageState extends State<FriendsPage>
     final prefs = await SharedPreferences.getInstance();
     Map<String, dynamic> userMap = jsonDecode(prefs.getString('user') ?? '{}');
     user = UserResource.fromJson(userMap);
-    await loadFriends();
+    await getFriends();
     setState(() {
       isLoading = false;
     });

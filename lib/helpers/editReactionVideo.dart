@@ -170,7 +170,7 @@ Future<String?> processVideo(
 
     // 1. Add watermark - use separate input and output files
     final watermarkCommand =
-        '-i $videoPath -i $watermark -filter_complex "[1:v]scale=iw*0.3:-1[wm];[0:v][wm]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/2" -codec:a copy $finalVideoPath';
+        '-i $videoPath -i $watermark -filter_complex "[1:v]scale=iw*0.4:-1[wm];[0:v][wm]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/1.5" -codec:a copy $finalVideoPath';
     final sessionWaterMark = await FFmpegKit.execute(watermarkCommand);
     final returnCodeWaterMark = await sessionWaterMark.getReturnCode();
     final watermarkLogs = await sessionWaterMark.getLogs();

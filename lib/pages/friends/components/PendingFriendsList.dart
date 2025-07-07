@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:glacier/helpers/formatStatusInviteFriend.dart';
 
 class PendingFriendsList extends StatelessWidget {
   final List pendingFriends;
@@ -31,13 +32,15 @@ class PendingFriendsList extends StatelessWidget {
                   separatorBuilder: (_, __) => SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final friendData = pendingFriends[index];
-                    final requestedUser = friendData['requested_user'];
+                    var isRequested = friendData['isRequested'] ?? false;
 
-                    // Null safety check before accessing uuid
-                    final friend = requestedUser;
+                    final friend =
+                        isRequested
+                            ? friendData['invited_user']
+                            : friendData['requested_user'];
 
                     final name =
-                        requestedUser?['name'] ??
+                        friend?['name'] ??
                         friendData['invited_email'] ??
                         'Unknown';
                     final email = friend?['email'] ?? '';
@@ -87,22 +90,45 @@ class PendingFriendsList extends StatelessWidget {
                               ],
                             ),
                           ),
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.check, color: Colors.green),
-                                onPressed: () {
-                                  onHandleFriendRequest(1, friendData['uuid']);
-                                },
+
+                          if (!isRequested) ...[
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.check, color: Colors.green),
+                                  onPressed: () {
+                                    onHandleFriendRequest(
+                                      1,
+                                      friendData['uuid'],
+                                    );
+                                  },
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.close, color: Colors.red),
+                                  onPressed: () {
+                                    onHandleFriendRequest(
+                                      -1,
+                                      friendData['uuid'],
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ] else ...[
+                            Badge(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 3,
+                                horizontal: 10,
                               ),
-                              IconButton(
-                                icon: Icon(Icons.close, color: Colors.red),
-                                onPressed: () {
-                                  onHandleFriendRequest(-1, friendData['uuid']);
-                                },
+                              label: Text(
+                                formatStatusInviteFriend(friendData['status']),
+                                style: TextStyle(color: Colors.white),
                               ),
-                            ],
-                          ),
+                              backgroundColor: colorStatusInviteFriend(
+                                friendData['status'],
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     );

@@ -41,46 +41,47 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDhC2dgQ6aC2dxA-VAG7OPqAsFCsP9Ab3c',
-    appId: '1:706633074898:web:658fb96c76ce177aec450b',
-    messagingSenderId: '706633074898',
-    projectId: 'testtruereaction',
-    authDomain: 'testtruereaction.firebaseapp.com',
-    storageBucket: 'testtruereaction.firebasestorage.app',
+    apiKey: 'AIzaSyAnmNzgkoFNKRKCC7ox_4nzqGskz2iPOz0',
+    appId: '1:813458560199:web:d5beef2f7cfd4cab3cdae2',
+    messagingSenderId: '813458560199',
+    projectId: 'glacier-eb589',
+    authDomain: 'glacier-eb589.firebaseapp.com',
+    storageBucket: 'glacier-eb589.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDdDLlptwpRUyw-z_9p6qTUJbaNVuqWPy4',
-    appId: '1:706633074898:android:2762d345b25a71ebec450b',
-    messagingSenderId: '706633074898',
-    projectId: 'testtruereaction',
-    storageBucket: 'testtruereaction.firebasestorage.app',
+    apiKey: 'AIzaSyB5CLWgtagULAqebU_QmgG-vsZBtqPufmM',
+    appId: '1:813458560199:android:2acf114e927f0f9c3cdae2',
+    messagingSenderId: '813458560199',
+    projectId: 'glacier-eb589',
+    storageBucket: 'glacier-eb589.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBUMGfnvvvTdBOaw6mZhav6o5UzrpmGUm8',
-    appId: '1:706633074898:ios:57528b236de41bccec450b',
-    messagingSenderId: '706633074898',
-    projectId: 'testtruereaction',
-    storageBucket: 'testtruereaction.firebasestorage.app',
-    iosBundleId: 'com.example.testTruereaction',
+    apiKey: 'AIzaSyCxjvXM8Hbd17OYmt9Y5bqtWXmOBVFxhk0',
+    appId: '1:813458560199:ios:cf700fee1130fe013cdae2',
+    messagingSenderId: '813458560199',
+    projectId: 'glacier-eb589',
+    storageBucket: 'glacier-eb589.firebasestorage.app',
+    iosBundleId: 'com.tryglacier.app',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBUMGfnvvvTdBOaw6mZhav6o5UzrpmGUm8',
-    appId: '1:706633074898:ios:57528b236de41bccec450b',
-    messagingSenderId: '706633074898',
-    projectId: 'testtruereaction',
-    storageBucket: 'testtruereaction.firebasestorage.app',
-    iosBundleId: 'com.example.testTruereaction',
+    apiKey: 'AIzaSyCxjvXM8Hbd17OYmt9Y5bqtWXmOBVFxhk0',
+    appId: '1:813458560199:ios:cf700fee1130fe013cdae2',
+    messagingSenderId: '813458560199',
+    projectId: 'glacier-eb589',
+    storageBucket: 'glacier-eb589.firebasestorage.app',
+    iosBundleId: 'com.tryglacier.app',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDhC2dgQ6aC2dxA-VAG7OPqAsFCsP9Ab3c',
-    appId: '1:706633074898:web:40a7a290e4d6ce24ec450b',
-    messagingSenderId: '706633074898',
-    projectId: 'testtruereaction',
-    authDomain: 'testtruereaction.firebaseapp.com',
-    storageBucket: 'testtruereaction.firebasestorage.app',
+    apiKey: 'AIzaSyAnmNzgkoFNKRKCC7ox_4nzqGskz2iPOz0',
+    appId: '1:813458560199:web:a7bf7d27eb48e8e43cdae2',
+    messagingSenderId: '813458560199',
+    projectId: 'glacier-eb589',
+    authDomain: 'glacier-eb589.firebaseapp.com',
+    storageBucket: 'glacier-eb589.firebasestorage.app',
   );
+
 }

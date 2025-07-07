@@ -8,7 +8,6 @@ Future<Map<String, dynamic>?> getUser(String uuid) async {
             .where('uuid', isEqualTo: uuid)
             .limit(1)
             .get();
-
     if (querySnapshot.docs.isNotEmpty) {
       return {
         'uuid': querySnapshot.docs.first.data()['uuid'],
