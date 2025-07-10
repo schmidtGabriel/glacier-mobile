@@ -1,9 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screen_recording/flutter_screen_recording.dart';
 import 'package:glacier/components/CameraPreviewWidget.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:glacier/services/reactions/getReaction.dart';
 import 'package:video_player/video_player.dart';
 
 class RecordPage extends StatefulWidget {
@@ -34,103 +32,99 @@ class _RecordPageState extends State<RecordPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ValueListenableBuilder<bool>(
-        valueListenable: ValueNotifier(_isLoading),
-        builder: (context, value, child) {
-          // Show full-screen loading indicator if loading
-          if (_isLoading) {
-            return Container(
-              color: Colors.white,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text(
-                      'Loading, please wait...',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-          if (_controllerVideo == null ||
-              !_controllerVideo!.value.isInitialized) {
-            return Center(child: Text('Video not available'));
-          }
-          return Column(
-            children: [
-              // Video Player section (70% height)
-              Expanded(
-                flex: 6,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Stack(
-                    children: [
-                      // Video Player
-                      SizedBox.expand(
-                        child: FittedBox(
-                          fit: BoxFit.cover,
-                          child: SizedBox(
-                            width: _controllerVideo!.value.size.width,
-                            height: _controllerVideo!.value.size.height,
-                            child: VideoPlayer(_controllerVideo!),
+    return _isLoading
+        ? Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Loading, please wait...', style: TextStyle(fontSize: 16)),
+              ],
+            ),
+          ),
+        )
+        : Scaffold(
+          body: ValueListenableBuilder<bool>(
+            valueListenable: ValueNotifier(_isLoading),
+            builder: (context, value, child) {
+              if (_controllerVideo == null ||
+                  !_controllerVideo!.value.isInitialized) {
+                return Center(
+                  child: Text('Video not available ${(widget.uuid)}'),
+                );
+              }
+              return Column(
+                children: [
+                  // Video Player section (70% height)
+                  Expanded(
+                    flex: 6,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: Stack(
+                        children: [
+                          // Video Player
+                          SizedBox.expand(
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width: _controllerVideo!.value.size.width,
+                                height: _controllerVideo!.value.size.height,
+                                child: VideoPlayer(_controllerVideo!),
+                              ),
+                            ),
                           ),
-                        ),
+
+                          // Play button overlay if video is paused
+                          if (_controllerVideo != null &&
+                              _controllerVideo!.value.isInitialized)
+                            ValueListenableBuilder<VideoPlayerValue>(
+                              valueListenable: _controllerVideo!,
+                              builder: (context, value, child) {
+                                if (value.isPlaying) {
+                                  return SizedBox.shrink();
+                                } else {
+                                  return Center(
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        _controllerVideo!.play();
+                                      },
+                                      child: Container(
+                                        padding: EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withOpacity(0.5),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.play_arrow,
+                                          color: Colors.white,
+                                          size: 48,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                            ),
+                        ],
                       ),
-
-                      // Play button overlay if video is paused
-                      if (_controllerVideo != null &&
-                          _controllerVideo!.value.isInitialized)
-                        ValueListenableBuilder<VideoPlayerValue>(
-                          valueListenable: _controllerVideo!,
-                          builder: (context, value, child) {
-                            if (value.isPlaying) {
-                              return SizedBox.shrink();
-                            } else {
-                              return Center(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    _controllerVideo!.play();
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.5),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.play_arrow,
-                                      color: Colors.white,
-                                      size: 48,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
 
-              // Camera Preview section (30% height)
-              Expanded(
-                flex: 4,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: CameraPreviewWidget(isFinished: isVideoFinished),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+                  // Camera Preview section (30% height)
+                  Expanded(
+                    flex: 4,
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: CameraPreviewWidget(isFinished: isVideoFinished),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
   }
 
   @override
@@ -149,9 +143,6 @@ class _RecordPageState extends State<RecordPage> {
   }
 
   Future<bool> _initializeVideo() async {
-    setState(() {
-      _isLoading = true; // Show loading indicator
-    });
     if (currentReaction == null) {
       print('No reaction data available');
       return false;
@@ -174,9 +165,6 @@ class _RecordPageState extends State<RecordPage> {
     _controllerVideo = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
     await _controllerVideo!.initialize();
     _controllerVideo!.setLooping(false);
-    setState(() {
-      _isLoading = false; // Show loading indicator
-    });
 
     _controllerVideo!.addListener(() async {
       final bool isFinished =
@@ -254,27 +242,27 @@ class _RecordPageState extends State<RecordPage> {
 
   // Load reaction by UUID
   Future<bool> _loadReactionByUuid() async {
-    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isLoading = true; // Show loading indicator
+    });
 
-    final reactionsString = prefs.getString('reactions');
-    if (reactionsString == null) {
+    currentReaction = await getReaction(widget.uuid ?? '');
+
+    if (currentReaction == null) {
+      print('No reaction found for UUID: ${widget.uuid}');
+      setState(() {
+        _isLoading = false; // Hide loading indicator
+      });
       return false;
     }
-    final List<dynamic> reactionsList = jsonDecode(reactionsString);
 
-    final reaction = reactionsList.firstWhere(
-      (item) => item['uuid'] == widget.uuid,
-      orElse: () => null,
-    );
-    if (reaction != null) {
-      setState(() {
-        currentReaction = Map<String, dynamic>.from(reaction);
-      });
-      await _initializeVideo();
+    await _initializeVideo();
 
-      return true;
-    }
-    return false; // Return false if no reaction is found
+    setState(() {
+      _isLoading = false; // Show loading indicator
+    });
+
+    return true;
   }
 
   // Show countdown dialog
@@ -361,21 +349,13 @@ class _RecordPageState extends State<RecordPage> {
       isRecording = true;
     });
     Navigator.pop(dialogContext); // Close the dialog
-    Future.delayed(Duration(seconds: 2));
+    Future.delayed(Duration(seconds: 3));
     FlutterScreenRecording.startRecordScreenAndAudio(
-          currentReaction != null
-              ? "${currentReaction?['title']}-${currentReaction?['user']}"
-                  .replaceAll(' ', '-')
-                  .trim()
-              : 'Video Title',
+          currentReaction != null ? "${widget.uuid}.mp4" : 'Video Title',
         )
         .then((result) {
           videoName =
-              currentReaction != null
-                  ? "${currentReaction?['title']}-${currentReaction?['user']}.mp4"
-                      .replaceAll(' ', '-')
-                      .trim()
-                  : 'Video Title';
+              currentReaction != null ? "${widget.uuid}.mp4" : 'Video Title';
         })
         .catchError((error) {
           print('Error starting screen recording');

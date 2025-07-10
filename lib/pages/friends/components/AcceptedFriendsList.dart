@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:glacier/helpers/formatStatusInviteFriend.dart';
+import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/resources/UserResource.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AcceptedFriendsList extends StatelessWidget {
   final List friends;
@@ -99,17 +100,7 @@ class AcceptedFriendsList extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Colors.grey.shade300,
-                            child: Text(
-                              name.isNotEmpty ? name[0].toUpperCase() : '?',
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                          UserAvatar(user: friend),
                           SizedBox(width: 10),
                           Expanded(
                             child: Column(
@@ -129,19 +120,42 @@ class AcceptedFriendsList extends StatelessWidget {
                               ],
                             ),
                           ),
-                          Badge(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 3,
-                              horizontal: 10,
-                            ),
-                            label: Text(
-                              formatStatusInviteFriend(friendData['status']),
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: colorStatusInviteFriend(
-                              friendData['status'],
+
+                          GestureDetector(
+                            onTap: () {
+                              SharedPreferences.getInstance().then((prefs) {
+                                prefs.setString('request_user', friend['uuid']);
+                              });
+                              Navigator.of(
+                                context,
+                                rootNavigator: true,
+                              ).pushReplacementNamed(
+                                '/',
+                                arguments: {'index': 1},
+                              );
+
+                              print('Send message to $name');
+                            },
+                            child: Icon(
+                              Icons.send,
+                              color: Colors.blue.shade600,
+                              size: 24,
                             ),
                           ),
+
+                          // Badge(
+                          //   padding: EdgeInsets.symmetric(
+                          //     vertical: 3,
+                          //     horizontal: 10,
+                          //   ),
+                          //   label: Text(
+                          //     formatStatusInviteFriend(friendData['status']),
+                          //     style: TextStyle(color: Colors.white),
+                          //   ),
+                          //   backgroundColor: colorStatusInviteFriend(
+                          //     friendData['status'],
+                          //   ),
+                          // ),
                         ],
                       ),
                     );

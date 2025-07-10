@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:glacier/gate/AuthGate.dart';
 import 'package:glacier/pages/home/HomePage.dart';
+import 'package:glacier/pages/home/ProfileEditPage.dart';
+import 'package:glacier/pages/home/ProfilePage.dart';
 import 'package:glacier/pages/home/ReactionDetailPage.dart';
 import 'package:glacier/pages/home/WatchVideoPage.dart';
 
@@ -24,6 +26,16 @@ class HomeStack extends StatelessWidget {
           case '/home':
             return MaterialPageRoute(
               builder: (_) => AuthGate(child: HomePage()),
+            );
+
+          case '/profile':
+            return MaterialPageRoute(
+              builder: (_) => AuthGate(child: ProfilePage()),
+            );
+
+          case '/profile-edit':
+            return MaterialPageRoute(
+              builder: (_) => AuthGate(child: ProfileEditPage()),
             );
           case '/reaction-detail':
             if (args is Map<String, dynamic> && args.containsKey('uuid')) {

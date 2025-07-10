@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:glacier/helpers/formatStatusReaction.dart';
 import 'package:glacier/services/reactions/cancelReaction.dart';
+import 'package:glacier/services/reactions/getReaction.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ReactionDetailPage extends StatefulWidget {
@@ -28,8 +29,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
     final createdAt = reaction?['created_at'] ?? 'No Date';
     final videoUrl = reaction?['url'] ?? '';
     final recordedUrl = reaction?['recordedUrl'] ?? '';
-    final videoDuration = reaction?['video_duration'] ?? '0';
-
+    final videoDuration = reaction?['video_duration'].round() ?? '0';
     return _isLoading
         ? Scaffold(body: Center(child: CircularProgressIndicator()))
         : Scaffold(
@@ -362,7 +362,10 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                         Navigator.of(
                           context,
                           rootNavigator: true,
-                        ).pushNamed('/reaction', arguments: reaction);
+                        ).pushNamed('/reaction', arguments: reaction).then((_) {
+                          // Optionally, you can refresh the state or navigate back
+                          _loadReactionByUuid();
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue[600],
@@ -526,7 +529,6 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
     });
     final prefs = await SharedPreferences.getInstance();
 
-    final reactionsString = prefs.getString('reactions');
     final userString = prefs.getString('user');
     if (userString != null) {
       user = jsonDecode(userString);
@@ -534,25 +536,19 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
       user = null; // Handle case where user data is not available
     }
 
-    if (reactionsString == null) {
-      return false;
-    }
-    final List<dynamic> reactionsList = jsonDecode(reactionsString);
+    var currentReaction = await getReaction(widget.uuid ?? '');
 
-    var currentReaction = reactionsList.firstWhere(
-      (item) => item['uuid'] == widget.uuid,
-      orElse: () => null,
-    );
     if (currentReaction != null) {
       setState(() {
         reaction = Map<String, dynamic>.from(currentReaction);
-        _isLoading = false;
+        _isLoading = false; // Hide loading indicator
       });
-
       return true;
     }
+    print('No reaction found for UUID: ${widget.uuid}');
+
     setState(() {
-      _isLoading = false;
+      _isLoading = false; // Hide loading indicator
     });
     return false; // Return false if no reaction is found
   }

@@ -2,12 +2,14 @@ class UserResource {
   final String uuid;
   final String name;
   final String email;
+  final String profilePic;
   final DateTime? createdAt;
 
   UserResource({
     required this.uuid,
     required this.name,
     required this.email,
+    this.profilePic = '',
     this.createdAt,
   });
 
@@ -17,6 +19,7 @@ class UserResource {
       uuid: json['uuid'],
       name: json['name'],
       email: json['email'],
+      profilePic: json['profile_picture'] ?? '',
       createdAt:
           json['created_at'] != null
               ? DateTime.parse(json['created_at'])
@@ -30,6 +33,7 @@ class UserResource {
       'uuid': uuid,
       'name': name,
       'email': email,
+      'profile_picture': profilePic,
       'created_at': createdAt?.toIso8601String(),
     };
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/helpers/formatStatusInviteFriend.dart';
 
 class PendingFriendsList extends StatelessWidget {
@@ -60,17 +61,7 @@ class PendingFriendsList extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          CircleAvatar(
-                            radius: 24,
-                            backgroundColor: Colors.grey.shade300,
-                            child: Text(
-                              name.isNotEmpty ? name[0].toUpperCase() : '?',
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                          UserAvatar(user: friend),
                           SizedBox(width: 10),
                           Expanded(
                             child: Column(

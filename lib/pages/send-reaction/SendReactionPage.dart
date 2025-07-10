@@ -22,9 +22,11 @@ class _SendReactionPageState extends State<SendReactionPage> {
   String? uuid;
   String? email;
   String? name;
+
   List friends = [];
   bool isLoading = false;
   String _filePath = '';
+  int _duration = 0;
   String userId = '';
 
   final TextEditingController _videoUrlController = TextEditingController();
@@ -138,7 +140,6 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
                               if (result != null &&
                                   result.files.single.path != null) {
-                                _filePath = result.files.single.path!;
                                 await uploadService
                                     .uploadVideo(
                                       result.files.single.path!,
@@ -149,26 +150,34 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                       },
                                     )
                                     .then((value) async {
-                                      final filePath =
-                                          result.files.single.path!;
-                                      _videoUrlController.text =
+                                      final file = result.files.single.path!;
+                                      _filePath =
                                           'videos/${result.files.single.name}';
+
+                                      _videoUrlController
+                                          .text = await FirebaseStorageService()
+                                          .getDownloadUrl(_filePath);
 
                                       final videoController =
                                           VideoPlayerController.file(
-                                            File(filePath),
+                                            File(result.files.single.path!),
                                           );
                                       await videoController.initialize();
-                                      final duration =
-                                          videoController.value.duration;
+
+                                      _duration =
+                                          videoController
+                                              .value
+                                              .duration
+                                              .inSeconds;
                                       _videoDurationController.text =
-                                          "${duration.inSeconds}s";
+                                          "${_duration}s";
+
                                       videoController.dispose();
                                       setState(() {
                                         _uploadProgress = 0.0;
                                       });
 
-                                      File(_filePath).delete();
+                                      File(file).delete();
                                     });
                               }
                             },
@@ -287,16 +296,25 @@ class _SendReactionPageState extends State<SendReactionPage> {
       userId = user['uuid'] ?? '';
     }
 
+    SharedPreferences.getInstance().then((prefs) {
+      var friendId = prefs.getString('request_user');
+
+      if (friendId != null) {
+        selectedFriendId = friendId;
+        prefs.remove('request_user');
+      }
+    });
+
     setState(() {
       isLoading = false;
     });
   }
 
   Future<void> _sendReaction() async {
-    final videoUrl = _videoUrlController.text.trim();
-    final videoDuration = _videoDurationController.text.trim();
+    final videoUrl = _filePath.trim();
+    final videoDuration = _duration;
 
-    if (videoUrl.isEmpty || videoDuration.isEmpty) {
+    if (videoUrl.isEmpty || _videoUrlController.text.trim().isEmpty) {
       toastification.show(
         title: Text('Warning'),
         description: Text("Please upload a video first."),
@@ -324,7 +342,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
     await createReaction({
       'user': selectedFriendId,
-      'video_url': videoUrl,
+      'video': videoUrl,
       'video_duration': videoDuration,
       'title': _titleController.text.trim(),
       'type_video': selectedVideoType,

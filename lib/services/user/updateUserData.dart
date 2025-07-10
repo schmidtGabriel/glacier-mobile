@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:glacier/helpers/saveUserInfo.dart';
 
 Future<Map<String, dynamic>?> updateUserData(data) async {
   try {
@@ -10,12 +11,12 @@ Future<Map<String, dynamic>?> updateUserData(data) async {
     final docSnapshot = await docRef.get();
 
     if (docSnapshot.exists) {
-      await docRef.update({
-        'fcm_token': data['fcm_token'],
-        'apns_token': data['apns_token'],
-      });
+      await docRef.update(data);
 
       final updatedDoc = await docRef.get();
+
+      await saveUserInfo(updatedDoc.data());
+
       return updatedDoc.data();
     } else {
       return null;

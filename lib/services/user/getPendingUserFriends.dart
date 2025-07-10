@@ -12,6 +12,13 @@ Future<List> getPendingUserFriends() async {
         await FirebaseFirestore.instance
             .collection('friend_invitations')
             .where('status', isEqualTo: 0)
+            .where(
+              Filter.or(
+                Filter('requested_user', isEqualTo: userId),
+                Filter('invited_email', isEqualTo: email),
+                Filter('invited_user', isEqualTo: userId),
+              ),
+            )
             .get();
 
     List pendingUsers = [];

@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:glacier/services/user/updateUserData.dart';
 import 'package:path/path.dart';
 
 class FirebaseStorageService {
@@ -16,6 +17,44 @@ class FirebaseStorageService {
     } catch (e) {
       // print('Erro ao buscar URL: $e');
       return '';
+    }
+  }
+
+  /// Uploads a video file to Firebase Storage
+  Future<String?> uploadProfilePic(
+    String photoPath, {
+    void Function(dynamic progress, dynamic total)? onProgress,
+  }) async {
+    try {
+      final videoFile = File(photoPath);
+
+      if (!videoFile.existsSync()) {
+        print('Video file does not exist at path: $photoPath');
+        return null;
+      }
+
+      // Upload screen recording
+      final fileName = basename(photoPath);
+      final storageRef = _storage.ref().child('profile/$fileName');
+
+      UploadTask uploadTask = storageRef.putFile(videoFile);
+
+      // Listen to progress
+      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
+        final sent = snapshot.bytesTransferred;
+        final total = snapshot.totalBytes;
+        onProgress!(sent, total);
+      });
+
+      TaskSnapshot snapshot = await uploadTask;
+
+      await updateUserData({'profile_picture': 'profile/$fileName'});
+
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    } catch (e) {
+      print('Upload failed: $e');
+      return null;
     }
   }
 
@@ -94,7 +133,6 @@ class FirebaseStorageService {
     }
   }
 
-  /// Uploads a video file to Firebase Storage
   Future<String?> uploadVideo(
     String videoPath, {
     void Function(dynamic progress, dynamic total)? onProgress,

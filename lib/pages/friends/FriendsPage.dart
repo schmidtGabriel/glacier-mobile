@@ -85,22 +85,23 @@ class _FriendsPageState extends State<FriendsPage>
   }
 
   Future<void> getFriends() async {
-    List friends = await getUserFriends();
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('friends', jsonEncode(friends));
-    loadFriends();
+    try {
+      friends = await getUserFriends();
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setString('friends', jsonEncode(friends));
+    } catch (e) {
+      print('Error fetching friends: $e');
+      friends = [];
+    }
   }
 
   Future<void> getPendingFriends() async {
-    setState(() {
-      isLoading = true;
-    });
-    pendingFriends = await getPendingUserFriends();
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('pending_friends', jsonEncode(pendingFriends));
-    setState(() {
-      isLoading = false;
-    });
+    try {
+      pendingFriends = await getPendingUserFriends();
+    } catch (e) {
+      print('Error fetching pending friends: $e');
+      pendingFriends = [];
+    }
   }
 
   Future<void> handleFriendRequest(status, uuid) async {
@@ -132,12 +133,24 @@ class _FriendsPageState extends State<FriendsPage>
         });
   }
 
+  Future<void> initFriends() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    await getFriends();
+    await getPendingFriends();
+    setState(() {
+      isLoading = false;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    getPendingFriends();
     loadUserData();
+    initFriends();
 
     SharedPreferences.getInstance().then((prefs) {
       prefs.getBool('invite') ?? false ? showInviteFriendDialog() : null;
@@ -194,19 +207,6 @@ class _FriendsPageState extends State<FriendsPage>
           });
           return error;
         });
-  }
-
-  Future<void> loadFriends() async {
-    final prefs = await SharedPreferences.getInstance();
-    final friendsPrefs = prefs.getString('friends');
-    if (friendsPrefs != null) {
-      friends = jsonDecode(friendsPrefs);
-    } else {
-      friends = [];
-    }
-    setState(() {
-      isLoading = false;
-    });
   }
 
   Future<void> loadUserData() async {

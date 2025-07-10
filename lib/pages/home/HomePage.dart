@@ -39,18 +39,47 @@ class _HomePageState extends State<HomePage>
                         padding: const EdgeInsets.all(16.0),
                         child: Row(
                           children: [
-                            Icon(
-                              Icons.account_circle,
-                              size: 40,
-                              color: Colors.blue,
-                            ),
-                            SizedBox(width: 10),
                             Expanded(
-                              child: Text(
-                                'Hello ${user.name}',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 20,
+                              child: GestureDetector(
+                                onTap: () {
+                                  Navigator.of(
+                                    context,
+                                  ).pushNamed('/profile').then((_) {
+                                    // Reload user data after returning from profile page
+                                    loadUserData();
+                                  });
+                                },
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 24,
+                                      backgroundColor: Colors.grey.shade300,
+                                      backgroundImage:
+                                          user.profilePic.isNotEmpty
+                                              ? NetworkImage(user.profilePic)
+                                              : null,
+                                      child:
+                                          user.profilePic.isEmpty
+                                              ? Text(
+                                                user.name.isNotEmpty
+                                                    ? user.name[0].toUpperCase()
+                                                    : '?',
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  color: Colors.white,
+                                                ),
+                                              )
+                                              : null,
+                                    ),
+                                    SizedBox(width: 10),
+                                    Text(
+                                      'Hello ${user.name}',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 20,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -87,9 +116,14 @@ class _HomePageState extends State<HomePage>
 
                                 if (shouldSignOut == true) {
                                   await FirebaseAuth.instance.signOut();
-                                  final prefs =
-                                      await SharedPreferences.getInstance();
-                                  await prefs.remove('user');
+                                  SharedPreferences.getInstance().then((
+                                    prefs,
+                                  ) async {
+                                    await prefs.remove('user');
+                                    await prefs.remove('friends');
+                                    await prefs.remove('invite');
+                                    await prefs.remove('reactions');
+                                  });
                                 }
                               },
                               child: Icon(
@@ -160,7 +194,6 @@ class _HomePageState extends State<HomePage>
     Map<String, dynamic> userMap = await jsonDecode(
       prefs.getString('user') ?? '{}',
     );
-
     user = UserResource.fromJson(userMap);
 
     loadFriends();

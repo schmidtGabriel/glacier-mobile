@@ -4,6 +4,7 @@ import 'package:glacier/services/user/updateUserData.dart';
 FirebaseMessaging messaging = FirebaseMessaging.instance;
 
 void initFCM() async {
+  print('Initializing Firebase Cloud Messaging...');
   // Request permission
   NotificationSettings settings = await messaging.requestPermission(
     alert: true,
@@ -11,6 +12,7 @@ void initFCM() async {
     sound: true,
   );
 
+  // Handle foreground messages
   if (settings.authorizationStatus == AuthorizationStatus.authorized) {
     String? token = await messaging.getToken();
     String? apnsToken = await messaging.getAPNSToken();

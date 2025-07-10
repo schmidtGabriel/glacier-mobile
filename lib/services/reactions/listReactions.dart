@@ -8,6 +8,7 @@ Future<String> handleRecord(data) async {
     if (data['recorded_video'] != null || data['recorded_video'].isNotEmpty) {
       final service = FirebaseStorageService();
       String res = await service.getDownloadUrl(data['recorded_video']);
+
       if (res.isNotEmpty) {
         return res;
       } else {
@@ -24,13 +25,13 @@ Future<String> handleRecord(data) async {
 
 Future<String> handleVideo(data) async {
   try {
-    if (data['video_url'] != null || data['video_url'].isNotEmpty) {
+    if (data['video'] != null || data['video'].isNotEmpty) {
       final service = FirebaseStorageService();
       if (data['type_video'] == '3') {
-        String res = await service.getDownloadUrl(data['video_url']);
+        String res = await service.getDownloadUrl(data['video']);
         return res;
       } else {
-        return data['video_url'] ?? '';
+        return data['video'] ?? '';
       }
     } else {
       return '';

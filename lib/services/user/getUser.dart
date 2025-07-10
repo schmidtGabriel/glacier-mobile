@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:glacier/services/FirebaseStorageService.dart';
 
 Future<Map<String, dynamic>?> getUser(String uuid) async {
   try {
@@ -18,6 +19,12 @@ Future<Map<String, dynamic>?> getUser(String uuid) async {
                 .data()['created_at']
                 ?.toDate()
                 .toIso8601String(),
+        'profile_picture':
+            querySnapshot.docs.first.data()['profile_picture'] != null
+                ? await FirebaseStorageService().getDownloadUrl(
+                  querySnapshot.docs.first.data()['profile_picture'],
+                )
+                : '',
       };
     } else {
       return null;

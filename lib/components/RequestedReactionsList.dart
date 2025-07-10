@@ -31,6 +31,7 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
           onRefresh: loadReactions,
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
+            physics: AlwaysScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -134,13 +135,14 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                 if (reaction['status'] == '0')
                                   GestureDetector(
                                     onTap: () {
-                                      Navigator.of(
-                                        context,
-                                        rootNavigator: true,
-                                      ).pushNamed(
-                                        '/reaction',
-                                        arguments: reaction,
-                                      );
+                                      Navigator.of(context, rootNavigator: true)
+                                          .pushNamed(
+                                            '/reaction',
+                                            arguments: reaction,
+                                          )
+                                          .then((_) {
+                                            loadReactions();
+                                          });
                                     },
                                     child: Container(
                                       padding: EdgeInsets.symmetric(
@@ -211,7 +213,7 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            'Duration: ${reaction['video_duration'] ?? '0'}',
+                                            'Duration: ${reaction['video_duration'].round() ?? '0'}s',
                                             style:
                                                 Theme.of(
                                                   context,
@@ -225,10 +227,14 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
 
                                 GestureDetector(
                                   onTap: () {
-                                    Navigator.of(context).pushNamed(
-                                      '/reaction-detail',
-                                      arguments: reaction,
-                                    );
+                                    Navigator.of(context)
+                                        .pushNamed(
+                                          '/reaction-detail',
+                                          arguments: reaction,
+                                        )
+                                        .then((_) {
+                                          loadReactions();
+                                        });
                                   },
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.end,

@@ -19,94 +19,76 @@ class _WatchVideoPageState extends State<WatchVideoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.white, elevation: 1),
-      body: ValueListenableBuilder<bool>(
-        valueListenable: ValueNotifier(_isLoading),
-        builder: (context, value, child) {
-          // Show full-screen loading indicator if loading
-          if (_isLoading) {
-            return Container(
-              color: Colors.white,
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text(
-                      'Loading, please wait...',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-          if (_controllerVideo == null ||
-              !_controllerVideo!.value.isInitialized) {
-            return Center(child: Text('Video not available'));
-          }
-          return Column(
-            children: [
-              Expanded(
-                flex: 1,
-                child: SizedBox(
-                  width: double.infinity,
-                  child: Stack(
-                    children: [
-                      // Video Player
-                      SizedBox.expand(
-                        child: FittedBox(
-                          fit: BoxFit.cover,
-                          child: SizedBox(
-                            width: _controllerVideo!.value.size.width,
-                            height: _controllerVideo!.value.size.height,
-                            child: VideoPlayer(_controllerVideo!),
-                          ),
-                        ),
-                      ),
+    return _isLoading
+        ? Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 16),
+                Text('Loading, please wait...', style: TextStyle(fontSize: 16)),
+              ],
+            ),
+          ),
+        )
+        : Scaffold(
+          appBar: AppBar(backgroundColor: Colors.transparent),
+          body: ValueListenableBuilder<bool>(
+            valueListenable: ValueNotifier(_isLoading),
+            builder: (context, value, child) {
+              // Show full-screen loading indicator if loading
 
-                      // Play button overlay if video is paused
-                      if (_controllerVideo != null &&
-                          _controllerVideo!.value.isInitialized)
-                        ValueListenableBuilder<VideoPlayerValue>(
-                          valueListenable: _controllerVideo!,
-                          builder: (context, value, child) {
-                            if (value.isPlaying) {
-                              return SizedBox.shrink();
-                            } else {
-                              return Center(
-                                child: GestureDetector(
-                                  onTap: () {
-                                    _controllerVideo!.play();
-                                  },
-                                  child: Container(
-                                    padding: EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.5),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.play_arrow,
-                                      color: Colors.white,
-                                      size: 48,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                          },
-                        ),
-                    ],
+              if (_controllerVideo == null ||
+                  !_controllerVideo!.value.isInitialized) {
+                return Center(child: Text('Video not available'));
+              }
+              return Stack(
+                children: [
+                  // Video Player
+                  Center(
+                    child: AspectRatio(
+                      aspectRatio: _controllerVideo!.value.aspectRatio,
+                      child: VideoPlayer(_controllerVideo!),
+                    ),
                   ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
+
+                  // Play button overlay if video is paused
+                  if (_controllerVideo != null &&
+                      _controllerVideo!.value.isInitialized)
+                    ValueListenableBuilder<VideoPlayerValue>(
+                      valueListenable: _controllerVideo!,
+                      builder: (context, value, child) {
+                        if (value.isPlaying) {
+                          return SizedBox.shrink();
+                        } else {
+                          return Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                _controllerVideo!.play();
+                              },
+                              child: Container(
+                                padding: EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.5),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.play_arrow,
+                                  color: Colors.white,
+                                  size: 48,
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                ],
+              );
+            },
+          ),
+        );
   }
 
   @override

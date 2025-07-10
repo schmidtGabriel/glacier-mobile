@@ -8,7 +8,7 @@ Future<void> updateReaction(videoName, uuid) async {
   if (docSnapshot.exists) {
     await docRef.update({
       'recorded_video': 'records/$videoName',
-      'selfie_video': 'records/selfie-$videoName',
+      'selfie_video': 'reactions/$videoName',
       'status': '1',
     });
     print('Reaction updated successfully');

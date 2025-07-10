@@ -1,31 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:glacier/services/handleInvitation.dart';
 import 'package:glacier/services/user/saveFriend.dart';
-
-handleInvitations(email, uid) async {
-  final db = FirebaseFirestore.instance;
-  final docFriendRef = db.collection('friend_invitations');
-
-  try {
-    var friends =
-        await docFriendRef.where('friend_email', isEqualTo: email).get();
-
-    if (friends.docs.isNotEmpty) {
-      friends.docs.forEach((doc) async {
-        if (doc['status'] == 0) {
-          await docFriendRef.doc(doc.id).update({
-            'invited_user': uid,
-            'status': 1,
-          });
-        }
-      });
-      return;
-    }
-  } catch (error) {
-    print('Error checking existing friend invitations: $error');
-    return;
-  }
-}
 
 signup(data) async {
   final FirebaseAuth auth = FirebaseAuth.instance;

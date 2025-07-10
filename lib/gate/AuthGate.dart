@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/pages/SigninPage.dart';
+import 'package:glacier/services/getFCMToken.dart';
 import 'package:glacier/services/user/getUserData.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,8 +21,8 @@ class AuthGate extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         } else if (snapshot.hasData) {
-          return FutureBuilder(
-            future: _checkUserDataAndFetch(),
+          return FutureBuilder<bool>(
+            future: _ensureUserDataExists(),
             builder: (context, futureSnapshot) {
               if (futureSnapshot.connectionState == ConnectionState.done) {
                 if (futureSnapshot.hasError) {
@@ -47,23 +48,26 @@ class AuthGate extends StatelessWidget {
     );
   }
 
-  Future<Map<String, dynamic>?> _checkUserDataAndFetch() async {
+  Future<bool> _ensureUserDataExists() async {
     final isAuth = FirebaseAuth.instance.currentUser != null;
     if (isAuth) {
+      initFCM();
+
       final prefs = await SharedPreferences.getInstance();
       final userString = prefs.getString('user');
 
+      // Only fetch user data if it doesn't exist in SharedPreferences
       if (userString == null || userString.isEmpty) {
-        // No user data in SharedPreferences, fetch from Firestore
-        return await getUserData();
+        await getUserData();
       }
+
+      return true; // User data now exists
     } else {
       SharedPreferences.getInstance().then((prefs) {
         prefs.remove('user'); // Clear user data if not authenticated
       });
     }
 
-    // User data exists in SharedPreferences, no need to fetch
-    return null;
+    return false;
   }
 }
