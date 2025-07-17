@@ -1,15 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
-import 'package:glacier/enums/ReactionVideoType.dart';
+import 'package:glacier/pages/home/PreviewVideoPage.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/createReaction.dart';
+import 'package:photo_manager/photo_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
-import 'package:video_player/video_player.dart';
 
 class SendReactionPage extends StatefulWidget {
   const SendReactionPage({super.key});
@@ -29,13 +29,13 @@ class _SendReactionPageState extends State<SendReactionPage> {
   int _duration = 0;
   String userId = '';
 
-  final TextEditingController _videoUrlController = TextEditingController();
   final TextEditingController _videoDurationController =
       TextEditingController();
 
   final TextEditingController _titleController = TextEditingController();
   String? selectedFriendId;
   String? selectedVideoType;
+  AssetEntity? _selectedVideo;
 
   final uploadService = FirebaseStorageService();
 
@@ -59,6 +59,73 @@ class _SendReactionPageState extends State<SendReactionPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (_selectedVideo != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: FutureBuilder<Uint8List?>(
+                                  future: _selectedVideo?.thumbnailDataWithSize(
+                                    ThumbnailSize(200, 200),
+                                  ),
+                                  builder: (_, snapshot) {
+                                    final thumb = snapshot.data;
+                                    if (thumb == null)
+                                      return Container(color: Colors.grey);
+                                    return GestureDetector(
+                                      onTap: () async {
+                                        final selectedVideo =
+                                            await Navigator.push<AssetEntity?>(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) =>
+                                                        PreviewVideoPage(
+                                                          localVideo:
+                                                              _selectedVideo!,
+                                                          hasConfirmButton:
+                                                              false,
+                                                        ),
+                                              ),
+                                            );
+                                        if (selectedVideo != null) {
+                                          // var path = await selectedVideo.file;
+                                          Navigator.of(
+                                            context,
+                                          ).pop(selectedVideo);
+                                        }
+                                      },
+                                      child: AspectRatio(
+                                        aspectRatio: 16 / 9,
+
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            Image.memory(
+                                              thumb,
+                                              fit: BoxFit.cover,
+                                            ),
+                                            Positioned(
+                                              bottom: 4,
+                                              right: 4,
+                                              child: Icon(
+                                                Icons.play_circle_fill,
+                                                color: Colors.white70,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ),
+
+                        SizedBox(height: 16),
                         Text(
                           "Title",
                           style: Theme.of(context).textTheme.labelLarge,
@@ -107,110 +174,60 @@ class _SendReactionPageState extends State<SendReactionPage> {
                         ),
                         SizedBox(height: 16),
 
-                        Text(
-                          "Video Type",
-                          style: Theme.of(context).textTheme.labelLarge,
-                        ),
-                        SizedBox(height: 8),
+                        // if (selectedVideoType == "3") ...[
+                        //   SizedBox(height: 16),
+                        //   ElevatedButton.icon(
+                        //     onPressed: () async {
+                        //       final result = await FilePicker.platform
+                        //           .pickFiles(type: FileType.video);
 
-                        DropdownButtonFormField<String>(
-                          value: selectedVideoType,
-                          items:
-                              ReactionVideoType.map((type) {
-                                return DropdownMenuItem(
-                                  value: type['value'].toString(),
-                                  child: Text(type['label'] as String),
-                                );
-                              }).toList(),
+                        //       if (result != null &&
+                        //           result.files.single.path != null) {
+                        //         await uploadService
+                        //             .uploadVideo(
+                        //               result.files.single.path!,
+                        //               onProgress: (sent, total) {
+                        //                 setState(() {
+                        //                   _uploadProgress = sent / total;
+                        //                 });
+                        //               },
+                        //             )
+                        //             .then((value) async {
+                        //               final file = result.files.single.path!;
+                        //               _filePath =
+                        //                   'videos/${result.files.single.name}';
 
-                          onChanged: (value) {
-                            setState(() {
-                              selectedVideoType = value;
-                            });
-                          },
-                          decoration: inputDecoration("Select video type"),
-                        ),
+                        //               _videoUrlController
+                        //                   .text = await FirebaseStorageService()
+                        //                   .getDownloadUrl(_filePath);
 
-                        if (selectedVideoType == "3") ...[
-                          SizedBox(height: 16),
-                          ElevatedButton.icon(
-                            onPressed: () async {
-                              final result = await FilePicker.platform
-                                  .pickFiles(type: FileType.video);
+                        //               final videoController =
+                        //                   VideoPlayerController.file(
+                        //                     File(result.files.single.path!),
+                        //                   );
+                        //               await videoController.initialize();
 
-                              if (result != null &&
-                                  result.files.single.path != null) {
-                                await uploadService
-                                    .uploadVideo(
-                                      result.files.single.path!,
-                                      onProgress: (sent, total) {
-                                        setState(() {
-                                          _uploadProgress = sent / total;
-                                        });
-                                      },
-                                    )
-                                    .then((value) async {
-                                      final file = result.files.single.path!;
-                                      _filePath =
-                                          'videos/${result.files.single.name}';
+                        //               _duration =
+                        //                   videoController
+                        //                       .value
+                        //                       .duration
+                        //                       .inSeconds;
+                        //               _videoDurationController.text =
+                        //                   "${_duration}s";
 
-                                      _videoUrlController
-                                          .text = await FirebaseStorageService()
-                                          .getDownloadUrl(_filePath);
+                        //               videoController.dispose();
+                        //               setState(() {
+                        //                 _uploadProgress = 0.0;
+                        //               });
 
-                                      final videoController =
-                                          VideoPlayerController.file(
-                                            File(result.files.single.path!),
-                                          );
-                                      await videoController.initialize();
-
-                                      _duration =
-                                          videoController
-                                              .value
-                                              .duration
-                                              .inSeconds;
-                                      _videoDurationController.text =
-                                          "${_duration}s";
-
-                                      videoController.dispose();
-                                      setState(() {
-                                        _uploadProgress = 0.0;
-                                      });
-
-                                      File(file).delete();
-                                    });
-                              }
-                            },
-                            icon: Icon(Icons.upload),
-                            label: Text("Upload Video"),
-                          ),
-                        ],
-
-                        if (_uploadProgress > 0) ...[
-                          SizedBox(height: 8),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: LinearProgressIndicator(
-                              value: _uploadProgress,
-                            ),
-                          ),
-                        ],
-
-                        SizedBox(height: 16),
-
-                        Text(
-                          "Video Path",
-                          style: Theme.of(context).textTheme.labelLarge,
-                        ),
-                        SizedBox(height: 8),
-
-                        TextField(
-                          controller: _videoUrlController,
-                          readOnly: selectedVideoType == "3" ? true : false,
-                          decoration: inputDecoration(
-                            "Video URL",
-                          ).copyWith(hintText: "Path of uploaded video"),
-                        ),
+                        //               File(file).delete();
+                        //             });
+                        //       }
+                        //     },
+                        //     icon: Icon(Icons.upload),
+                        //     label: Text("Upload Video"),
+                        //   ),
+                        // ],
                         SizedBox(height: 16),
 
                         Text(
@@ -226,6 +243,16 @@ class _SendReactionPageState extends State<SendReactionPage> {
                             "Video Duration",
                           ).copyWith(hintText: "Duration in seconds"),
                         ),
+
+                        if (_uploadProgress > 0) ...[
+                          SizedBox(height: 8),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: LinearProgressIndicator(
+                              value: _uploadProgress,
+                            ),
+                          ),
+                        ],
 
                         SizedBox(height: 16),
 
@@ -262,9 +289,12 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
   clearTextFields() {
     setState(() {
-      _videoUrlController.clear();
       _videoDurationController.clear();
       _titleController.clear();
+      _selectedVideo = null;
+      _filePath = '';
+      _duration = 0;
+      isLoading = false;
       selectedFriendId = null;
       selectedVideoType = null;
     });
@@ -272,7 +302,6 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
   @override
   void dispose() {
-    _videoUrlController.dispose();
     _videoDurationController.dispose();
     _titleController.dispose();
     super.dispose();
@@ -281,6 +310,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
   @override
   void initState() {
     super.initState();
+
     loadFriends();
   }
 
@@ -288,6 +318,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
     setState(() {
       isLoading = true;
     });
+
     final prefs = await SharedPreferences.getInstance();
     friends = jsonDecode(prefs.getString('friends') ?? '[]') as List;
     final userJson = prefs.getString('user');
@@ -305,16 +336,76 @@ class _SendReactionPageState extends State<SendReactionPage> {
       }
     });
 
+    Future.delayed(Duration(seconds: 3));
     setState(() {
       isLoading = false;
     });
+
+    final videoPath = await Navigator.of(
+      context,
+      rootNavigator: true,
+    ).pushNamed('/gallery');
+
+    if (videoPath != null) {
+      _selectedVideo = videoPath as AssetEntity?;
+      final file = await (videoPath as AssetEntity).file;
+      setState(() {
+        _videoDurationController.text = '${_selectedVideo?.duration}s' ?? '0s';
+        _duration = _selectedVideo?.duration ?? 0;
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> uploadVideo() async {
+    if (_selectedVideo == null) {
+      toastification.show(
+        title: Text('Warning'),
+        description: Text("Please select a video first."),
+        autoCloseDuration: const Duration(seconds: 5),
+        type: ToastificationType.warning,
+        alignment: Alignment.bottomCenter,
+      );
+      return;
+    }
+
+    File? file = await _selectedVideo?.file;
+    String filePath = file?.path ?? '';
+
+    await uploadService
+        .uploadVideo(
+          filePath,
+          onProgress: (sent, total) {
+            setState(() {
+              _uploadProgress = sent / total;
+            });
+          },
+        )
+        .then((value) async {
+          final file = filePath;
+          _filePath = value?['filePath'] ?? '';
+
+          setState(() {
+            _uploadProgress = 0.0;
+          });
+
+          File(file).delete();
+
+          return value;
+        });
   }
 
   Future<void> _sendReaction() async {
+    await uploadVideo();
+
     final videoUrl = _filePath.trim();
     final videoDuration = _duration;
 
-    if (videoUrl.isEmpty || _videoUrlController.text.trim().isEmpty) {
+    if (videoUrl.isEmpty) {
       toastification.show(
         title: Text('Warning'),
         description: Text("Please upload a video first."),
@@ -326,9 +417,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
       return;
     }
 
-    if (selectedFriendId == null ||
-        selectedVideoType == null ||
-        _titleController.text.trim().isEmpty) {
+    if (selectedFriendId == null || _titleController.text.trim().isEmpty) {
       toastification.show(
         title: Text('Warning'),
         description: Text("Please fill in all fields."),
@@ -339,14 +428,16 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
       return;
     }
-
     await createReaction({
       'user': selectedFriendId,
+      'invited_email': 'g.avilasouza@gmail.com',
+      'is_friend': true,
       'video': videoUrl,
       'video_duration': videoDuration,
       'title': _titleController.text.trim(),
-      'type_video': selectedVideoType,
+      'type_video': '3',
     });
+    print('Reaction sent successfully!');
 
     clearTextFields();
     toastification.show(

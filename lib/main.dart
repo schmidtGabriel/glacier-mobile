@@ -8,8 +8,10 @@ import 'package:glacier/gate/AuthGate.dart';
 import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/pages/SignupPage.dart';
 import 'package:glacier/pages/TakePictureScreen.dart';
+import 'package:glacier/pages/VideoPickerScreen.dart';
 import 'package:glacier/pages/home/RecordPage.dart';
 import 'package:glacier/pages/home/RecordedVideoPage.dart';
+import 'package:glacier/pages/home/WatchVideoPage.dart';
 import 'package:glacier/services/auth/logReaction.dart';
 import 'package:toastification/toastification.dart';
 
@@ -134,6 +136,20 @@ class MyApp extends StatelessWidget {
                       (_) => AuthGate(
                         child: TakePictureScreen(camera: args['camera']),
                       ),
+                );
+              }
+              return _errorRoute();
+
+            case '/gallery':
+              return MaterialPageRoute(
+                builder: (_) => AuthGate(child: VideoPickerScreen()),
+              );
+
+            case '/watch-video':
+              if (args is Map<String, dynamic> && args.containsKey('url')) {
+                return MaterialPageRoute(
+                  builder:
+                      (_) => AuthGate(child: WatchVideoPage(url: args['url'])),
                 );
               }
               return _errorRoute();

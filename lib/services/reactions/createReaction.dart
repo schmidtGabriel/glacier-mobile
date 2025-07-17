@@ -7,12 +7,16 @@ Future<String?> createReaction(data) async {
 
   final docRef = db.collection('reactions');
 
+  final status =
+      (data['user'] != null && data['is_friend'] == true) ? '0' : '-1';
+
   final docSnapshot = await docRef.add({
     ...data,
     "requested": user?.uid ?? '',
-    "status": "0",
+    "status": status,
     "created_at": FieldValue.serverTimestamp(),
   });
+
   if (docSnapshot.id.isNotEmpty) {
     print('Reaction created successfully with ID: ${docSnapshot.id}');
     docRef.doc(docSnapshot.id).update({'uuid': docSnapshot.id});

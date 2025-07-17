@@ -109,19 +109,22 @@ class _WatchVideoPageState extends State<WatchVideoPage> {
       _isLoading = true; // Show loading indicator
     });
 
-    final videoUrl = widget.url?.toString().trim();
-    if (videoUrl == null || videoUrl.isEmpty) {
-      print('Invalid or missing video URL');
-      return false;
+    if (widget.url != null) {
+      final videoUrl = widget.url?.toString().trim();
+      if (videoUrl == null || videoUrl.isEmpty) {
+        print('Invalid or missing video URL');
+        return false;
+      }
+
+      if (_controllerVideo != null) {
+        await _controllerVideo!.dispose();
+      }
+
+      _controllerVideo = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+      await _controllerVideo!.initialize();
+      _controllerVideo!.setLooping(false);
     }
 
-    if (_controllerVideo != null) {
-      await _controllerVideo!.dispose();
-    }
-
-    _controllerVideo = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
-    await _controllerVideo!.initialize();
-    _controllerVideo!.setLooping(false);
     setState(() {
       _isLoading = false; // Show loading indicator
     });

@@ -133,7 +133,7 @@ class FirebaseStorageService {
     }
   }
 
-  Future<String?> uploadVideo(
+  Future<Map<String, String>?> uploadVideo(
     String videoPath, {
     void Function(dynamic progress, dynamic total)? onProgress,
   }) async {
@@ -147,7 +147,8 @@ class FirebaseStorageService {
 
       // Upload screen recording
       final fileName = basename(videoPath);
-      final storageRef = _storage.ref().child('videos/$fileName');
+      final filePath = 'videos/$fileName';
+      final storageRef = _storage.ref().child(filePath);
 
       UploadTask uploadTask = storageRef.putFile(videoFile);
 
@@ -162,7 +163,7 @@ class FirebaseStorageService {
 
       // Get the screen recording download URL
       final downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
+      return {'url': downloadUrl, 'filePath': filePath};
     } catch (e) {
       print('Upload failed: $e');
       return null;

@@ -11,10 +11,7 @@ handleInvitations(email, uid) async {
     if (friends.docs.isNotEmpty) {
       friends.docs.forEach((doc) async {
         if (doc['status'] == 0) {
-          await docFriendRef.doc(doc.id).update({
-            'invited_user': uid,
-            'status': 1,
-          });
+          await docFriendRef.doc(doc.id).update({'invited_user': uid});
         }
       });
       return;

@@ -394,7 +394,10 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                     height: 50,
                     child: ElevatedButton.icon(
                       onPressed:
-                          () => Navigator.of(context).pushNamed(
+                          () => Navigator.of(
+                            context,
+                            rootNavigator: true,
+                          ).pushNamed(
                             '/watch-video',
                             arguments: {'url': recordedUrl},
                           ),
@@ -426,7 +429,10 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                     height: 50,
                     child: ElevatedButton.icon(
                       onPressed:
-                          () => Navigator.of(context).pushNamed(
+                          () => Navigator.of(
+                            context,
+                            rootNavigator: true,
+                          ).pushNamed(
                             '/watch-video',
                             arguments: {'url': videoUrl},
                           ),

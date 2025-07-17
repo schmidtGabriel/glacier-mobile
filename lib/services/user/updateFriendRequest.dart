@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:glacier/services/handleReactions.dart';
 
 Future<bool> updateFriendRequest(int status, String uuid) async {
   try {
@@ -14,6 +15,9 @@ Future<bool> updateFriendRequest(int status, String uuid) async {
 
     if (docSnapshot.exists) {
       await docRef.update({'invited_user': user?.uid, 'status': status});
+
+      await handleReactions(docSnapshot.data()?['requested_user']);
+
       requested = true; // or any appropriate value to indicate success
       print('Friend Inviting updated successfully');
     } else {

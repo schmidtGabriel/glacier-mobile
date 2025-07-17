@@ -4,7 +4,6 @@ import 'package:glacier/pages/home/HomePage.dart';
 import 'package:glacier/pages/home/ProfileEditPage.dart';
 import 'package:glacier/pages/home/ProfilePage.dart';
 import 'package:glacier/pages/home/ReactionDetailPage.dart';
-import 'package:glacier/pages/home/WatchVideoPage.dart';
 
 class HomeStack extends StatelessWidget {
   const HomeStack({super.key});
@@ -43,15 +42,6 @@ class HomeStack extends StatelessWidget {
                 builder:
                     (_) =>
                         AuthGate(child: ReactionDetailPage(uuid: args['uuid'])),
-              );
-            }
-            return _errorRoute();
-
-          case '/watch-video':
-            if (args is Map<String, dynamic> && args.containsKey('url')) {
-              return MaterialPageRoute(
-                builder:
-                    (_) => AuthGate(child: WatchVideoPage(url: args['url'])),
               );
             }
             return _errorRoute();

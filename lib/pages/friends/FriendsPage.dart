@@ -24,7 +24,8 @@ class _FriendsPageState extends State<FriendsPage>
   UserResource? user;
   List friends = [];
   List pendingFriends = [];
-  bool isLoading = true;
+  bool isLoading = false;
+  bool isLoadingDialog = false;
   late TabController _tabController;
 
   final _dialogEmailController = TextEditingController();
@@ -89,6 +90,7 @@ class _FriendsPageState extends State<FriendsPage>
       friends = await getUserFriends();
       final prefs = await SharedPreferences.getInstance();
       prefs.setString('friends', jsonEncode(friends));
+      setState(() {});
     } catch (e) {
       print('Error fetching friends: $e');
       friends = [];
@@ -98,6 +100,7 @@ class _FriendsPageState extends State<FriendsPage>
   Future<void> getPendingFriends() async {
     try {
       pendingFriends = await getPendingUserFriends();
+      setState(() {});
     } catch (e) {
       print('Error fetching pending friends: $e');
       pendingFriends = [];
@@ -158,15 +161,15 @@ class _FriendsPageState extends State<FriendsPage>
     });
   }
 
-  Future<void> inviteFriendFromDialog(BuildContext dialogContext) async {
+  Future<void> inviteFriendFromDialog(
+    BuildContext dialogContext,
+    StateSetter setDialogState,
+  ) async {
     final email = _dialogEmailController.text.trim();
     if (email.isEmpty) return;
 
-    Navigator.of(dialogContext).pop(); // Close dialog first
-    _dialogEmailController.clear();
-
-    setState(() {
-      isLoading = true;
+    setDialogState(() {
+      isLoadingDialog = true;
     });
 
     final prefs = await SharedPreferences.getInstance();
@@ -178,32 +181,40 @@ class _FriendsPageState extends State<FriendsPage>
           (value) async => {
             if (mounted) {setState(() {})},
             await getFriends(),
-            await getPendingUserFriends(),
-            setState(() {
-              isLoading = false;
-            }),
+            await getPendingFriends(),
+
             toastification.show(
-              title: Text('Video initialization failed'),
-              description: Text('Error: ${value.message.toString()}'),
+              title: Text(value.error == true ? 'Error!' : 'Success!'),
+              description: Text(
+                value.error == true
+                    ? 'Error: ${value.message.toString()}'
+                    : 'A friend request has been sent to $email.',
+              ),
               autoCloseDuration: const Duration(seconds: 5),
               type:
-                  value.error
+                  value.error == true
                       ? ToastificationType.error
                       : ToastificationType.success,
               alignment: Alignment.bottomCenter,
             ),
+
+            Navigator.of(dialogContext).pop(),
+            _dialogEmailController.clear(),
+            setDialogState(() {
+              isLoadingDialog = false;
+            }),
           },
         )
         .catchError((error) {
           toastification.show(
-            title: Text('Video initialization failed'),
+            title: Text('Friend Request failed'),
             description: Text('Error: ${error.message.toString()}'),
             autoCloseDuration: const Duration(seconds: 5),
             type: ToastificationType.error,
             alignment: Alignment.bottomCenter,
           );
-          setState(() {
-            isLoading = false;
+          setDialogState(() {
+            isLoadingDialog = false;
           });
           return error;
         });
@@ -226,41 +237,72 @@ class _FriendsPageState extends State<FriendsPage>
     showDialog(
       context: context,
       barrierDismissible: false,
+
       builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Text('Invite Friend'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Send an invitation to a friend by entering their email address.',
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              title: Text('Invite Friend'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Send an invitation to a friend by entering their email address.',
+                  ),
+                  SizedBox(height: 16),
+                  TextField(
+                    controller: _dialogEmailController,
+                    keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                    decoration: inputDecoration("Friend's Email"),
+                    autofocus: true,
+                    onSubmitted:
+                        (_) => inviteFriendFromDialog(
+                          dialogContext,
+                          setDialogState,
+                        ),
+                  ),
+                ],
               ),
-              SizedBox(height: 16),
-              TextField(
-                controller: _dialogEmailController,
-                keyboardType: TextInputType.emailAddress,
-                autocorrect: false,
-                decoration: inputDecoration("Friend's Email"),
-                autofocus: true,
-                onSubmitted: (_) => inviteFriendFromDialog(dialogContext),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                _dialogEmailController.clear();
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text('Cancel'),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-              onPressed: () => inviteFriendFromDialog(dialogContext),
-              child: Text('Invite', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    _dialogEmailController.clear();
+                    Navigator.of(dialogContext).pop();
+                  },
+                  child: Text('Cancel'),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                  onPressed:
+                      isLoadingDialog
+                          ? null
+                          : () => inviteFriendFromDialog(
+                            dialogContext,
+                            setDialogState,
+                          ),
+                  child:
+                      isLoadingDialog
+                          ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                          )
+                          : Text(
+                            'Invite',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
