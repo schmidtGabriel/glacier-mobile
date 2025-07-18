@@ -398,8 +398,8 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                             context,
                             rootNavigator: true,
                           ).pushNamed(
-                            '/watch-video',
-                            arguments: {'url': recordedUrl},
+                            '/preview-video',
+                            arguments: {'videoPath': recordedUrl},
                           ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.yellow[800],
@@ -433,8 +433,8 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                             context,
                             rootNavigator: true,
                           ).pushNamed(
-                            '/watch-video',
-                            arguments: {'url': videoUrl},
+                            '/preview-video',
+                            arguments: {'videoPath': videoUrl},
                           ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green[600],

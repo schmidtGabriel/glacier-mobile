@@ -3,7 +3,9 @@ import 'package:glacier/gate/AuthGate.dart';
 import 'package:glacier/pages/friends/FriendsPage.dart';
 
 class FriendsStack extends StatelessWidget {
-  const FriendsStack({super.key});
+  final int? segment;
+
+  const FriendsStack({super.key, this.segment});
 
   // This widget is the root of your application.
   @override
@@ -21,7 +23,7 @@ class FriendsStack extends StatelessWidget {
         switch (settings.name) {
           case '/friends':
             return MaterialPageRoute(
-              builder: (_) => AuthGate(child: FriendsPage()),
+              builder: (_) => AuthGate(child: FriendsPage(segment: segment)),
             );
 
           default:

@@ -13,7 +13,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 
 class FriendsPage extends StatefulWidget {
-  const FriendsPage({super.key});
+  final int? segment;
+
+  const FriendsPage({super.key, this.segment});
 
   @override
   State<FriendsPage> createState() => _FriendsPageState();
@@ -152,6 +154,7 @@ class _FriendsPageState extends State<FriendsPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.index = widget.segment ?? 0;
     loadUserData();
     initFriends();
 

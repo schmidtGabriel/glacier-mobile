@@ -5,8 +5,9 @@ import 'package:glacier/pages/send-reaction/SendReactionStack.dart';
 
 class BottomMenuLayout extends StatefulWidget {
   final int? index;
+  final int? segment;
 
-  const BottomMenuLayout({super.key, this.index});
+  const BottomMenuLayout({super.key, this.index, this.segment});
 
   @override
   _BottomMenuLayoutState createState() => _BottomMenuLayoutState();
@@ -14,13 +15,8 @@ class BottomMenuLayout extends StatefulWidget {
 
 class _BottomMenuLayoutState extends State<BottomMenuLayout> {
   int _currentIndex = 0;
-
   // Define the pages
-  final List<Widget> _pages = [
-    HomeStack(),
-    SendReactionStack(),
-    FriendsStack(),
-  ];
+  final List<Widget> _pages = [];
 
   // Scaffold with BottomNavigationBar
   @override
@@ -56,6 +52,13 @@ class _BottomMenuLayoutState extends State<BottomMenuLayout> {
   @override
   void initState() {
     super.initState();
+
+    _pages.addAll([
+      HomeStack(),
+      SendReactionStack(),
+      FriendsStack(segment: widget.segment),
+    ]);
+
     // Set the initial index if provided
     if (widget.index != null) {
       _currentIndex = widget.index!;

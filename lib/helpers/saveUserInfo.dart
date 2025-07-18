@@ -11,9 +11,12 @@ saveUserInfo(user) async {
     'email': user['email'],
     'phone': user['phone'],
     'created_at': user['created_at']?.toDate().toIso8601String(),
-    'profile_picture': await FirebaseStorageService().getDownloadUrl(
-      user['profile_picture'],
-    ),
+    'profile_picture':
+        user.containsKey('profile_picture')
+            ? await FirebaseStorageService().getDownloadUrl(
+              user['profile_picture'],
+            )
+            : '',
     'status': user['status'] ?? 0,
     'role': user['role'] ?? 10,
   };

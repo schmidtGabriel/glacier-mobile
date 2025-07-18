@@ -3,6 +3,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:glacier/components/BottomMenuLayout.dart';
+import 'package:glacier/components/PreviewVideoPage.dart';
 import 'package:glacier/firebase_options.dart';
 import 'package:glacier/gate/AuthGate.dart';
 import 'package:glacier/pages/SigninPage.dart';
@@ -11,7 +12,6 @@ import 'package:glacier/pages/TakePictureScreen.dart';
 import 'package:glacier/pages/VideoPickerScreen.dart';
 import 'package:glacier/pages/home/RecordPage.dart';
 import 'package:glacier/pages/home/RecordedVideoPage.dart';
-import 'package:glacier/pages/home/WatchVideoPage.dart';
 import 'package:glacier/services/auth/logReaction.dart';
 import 'package:toastification/toastification.dart';
 
@@ -42,11 +42,29 @@ void main() async {
     print('🔔 Notification data: ${message.data}');
 
     print('🔔 Notification reaction: ${message.data['reaction']}');
-    logReaction(message.data['reaction'], message.data);
-    navigatorKey.currentState?.pushNamed(
-      '/reaction',
-      arguments: {'uuid': message.data['reaction']},
-    );
+
+    if (message.data.containsKey('reaction')) {
+      logReaction(message.data['reaction'], message.data);
+      navigatorKey.currentState?.pushNamed(
+        '/reaction',
+        arguments: {'uuid': message.data['reaction']},
+      );
+    }
+
+    if (message.data.containsKey('page')) {
+      switch (message.data['page']) {
+        case 'pending-friends':
+          navigatorKey.currentState?.pushNamed(
+            '/',
+            arguments: {'index': 1, 'segment': 1},
+          );
+          break;
+
+        default:
+          print('Unknown page: ${message.data['page']}');
+      }
+    }
+
     print('🟢 Notification clicked and opened the app');
   });
 
@@ -97,7 +115,10 @@ class MyApp extends StatelessWidget {
                 return MaterialPageRoute(
                   builder:
                       (_) => AuthGate(
-                        child: BottomMenuLayout(index: args['index']),
+                        child: BottomMenuLayout(
+                          index: args['index'],
+                          segment: args['segment'],
+                        ),
                       ),
                 );
               }
@@ -145,11 +166,17 @@ class MyApp extends StatelessWidget {
                 builder: (_) => AuthGate(child: VideoPickerScreen()),
               );
 
-            case '/watch-video':
-              if (args is Map<String, dynamic> && args.containsKey('url')) {
+            case '/preview-video':
+              if (args is Map<String, dynamic>) {
                 return MaterialPageRoute(
                   builder:
-                      (_) => AuthGate(child: WatchVideoPage(url: args['url'])),
+                      (_) => AuthGate(
+                        child: PreviewVideoPage(
+                          localVideo: args['localVideo'],
+                          videoPath: args['videoPath'],
+                          hasConfirmButton: args['hasConfirmButton'] ?? false,
+                        ),
+                      ),
                 );
               }
               return _errorRoute();

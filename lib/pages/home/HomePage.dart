@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:glacier/components/RequestedReactionsList.dart';
-import 'package:glacier/components/SentReactionsList.dart';
+import 'package:glacier/pages/home/components/RequestedReactionsList.dart';
+import 'package:glacier/pages/home/components/SentReactionsList.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -194,6 +194,9 @@ class _HomePageState extends State<HomePage>
     Map<String, dynamic> userMap = await jsonDecode(
       prefs.getString('user') ?? '{}',
     );
+
+    print(userMap);
+
     user = UserResource.fromJson(userMap);
 
     loadFriends();

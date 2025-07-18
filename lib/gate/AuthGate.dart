@@ -55,7 +55,6 @@ class AuthGate extends StatelessWidget {
 
       final prefs = await SharedPreferences.getInstance();
       final userString = prefs.getString('user');
-
       // Only fetch user data if it doesn't exist in SharedPreferences
       if (userString == null || userString.isEmpty) {
         await getUserData();

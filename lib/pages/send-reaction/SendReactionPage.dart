@@ -4,7 +4,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
-import 'package:glacier/pages/home/PreviewVideoPage.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/createReaction.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -76,26 +75,16 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                       return Container(color: Colors.grey);
                                     return GestureDetector(
                                       onTap: () async {
-                                        final selectedVideo =
-                                            await Navigator.push<AssetEntity?>(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (context) =>
-                                                        PreviewVideoPage(
-                                                          localVideo:
-                                                              _selectedVideo!,
-                                                          hasConfirmButton:
-                                                              false,
-                                                        ),
-                                              ),
-                                            );
-                                        if (selectedVideo != null) {
-                                          // var path = await selectedVideo.file;
-                                          Navigator.of(
-                                            context,
-                                          ).pop(selectedVideo);
-                                        }
+                                        Navigator.of(
+                                          context,
+                                          rootNavigator: true,
+                                        ).pushNamed(
+                                          '/preview-video',
+                                          arguments: {
+                                            'localVideo': _selectedVideo,
+                                            'hasConfirmButton': false,
+                                          },
+                                        );
                                       },
                                       child: AspectRatio(
                                         aspectRatio: 16 / 9,
