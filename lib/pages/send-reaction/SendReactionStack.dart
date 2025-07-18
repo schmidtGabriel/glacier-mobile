@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:glacier/gate/AuthGate.dart';
-import 'package:glacier/pages/send-reaction/SendReactionPage.dart';
+import 'package:glacier/pages/GalleryScreen.dart';
 
 class SendReactionStack extends StatelessWidget {
   const SendReactionStack({super.key});
@@ -21,7 +21,7 @@ class SendReactionStack extends StatelessWidget {
         switch (settings.name) {
           case '/send-reaction':
             return MaterialPageRoute(
-              builder: (_) => AuthGate(child: SendReactionPage()),
+              builder: (_) => AuthGate(child: GalleryScreen()),
             );
 
           default:

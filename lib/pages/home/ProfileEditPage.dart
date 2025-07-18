@@ -4,10 +4,9 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:glacier/helpers/formatDate.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
-import 'package:glacier/services/user/getUserData.dart';
+import 'package:glacier/services/user/getMe.dart';
 import 'package:glacier/services/user/updateUserData.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
@@ -292,7 +291,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                   ),
                                   SizedBox(width: 12),
                                   Text(
-                                    formatDate(user?.createdAt),
+                                    user?.createdAt ?? '',
                                     style: TextStyle(
                                       fontSize: 16,
                                       color: Colors.grey[700],
@@ -511,7 +510,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 profilePictureUrl = value ?? '';
               });
 
-              await getUserData();
+              await getMe();
               File(imagePath).delete(); // Clean up temp file
             });
       }
@@ -549,7 +548,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
               profilePictureUrl = value ?? '';
             });
 
-            await getUserData();
+            await getMe();
 
             File(file).delete();
           });

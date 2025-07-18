@@ -3,7 +3,7 @@ class UserResource {
   final String name;
   final String email;
   final String profilePic;
-  final DateTime? createdAt;
+  final String? createdAt;
 
   UserResource({
     required this.uuid,
@@ -20,10 +20,10 @@ class UserResource {
       name: json['name'],
       email: json['email'],
       profilePic: json['profile_picture'] ?? '',
-      createdAt:
-          json['created_at'] != null
-              ? DateTime.parse(json['created_at'])
-              : null,
+      // createdAt:
+      //     json['created_at'] != null
+      //         ? DateTime.parse(json['created_at'])
+      //         : null,
     );
   }
 
@@ -34,7 +34,7 @@ class UserResource {
       'name': name,
       'email': email,
       'profile_picture': profilePic,
-      'created_at': createdAt?.toIso8601String(),
+      'created_at': createdAt,
     };
   }
 }

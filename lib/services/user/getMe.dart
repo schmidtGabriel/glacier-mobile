@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:glacier/helpers/saveUserInfo.dart';
 
-Future<Map<String, dynamic>?> getUserData() async {
+Future<Map<String, dynamic>?> getMe() async {
   try {
     final uid = FirebaseAuth.instance.currentUser?.uid;
 

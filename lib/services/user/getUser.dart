@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:glacier/helpers/parseTimeStamp.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 
 Future<Map<String, dynamic>?> getUser(String uuid) async {
@@ -10,15 +11,12 @@ Future<Map<String, dynamic>?> getUser(String uuid) async {
             .limit(1)
             .get();
     if (querySnapshot.docs.isNotEmpty) {
+      var data = querySnapshot.docs.first.data();
       return {
-        'uuid': querySnapshot.docs.first.data()['uuid'],
-        'name': querySnapshot.docs.first.data()['name'],
-        'email': querySnapshot.docs.first.data()['email'],
-        'created_at':
-            querySnapshot.docs.first
-                .data()['created_at']
-                ?.toDate()
-                .toIso8601String(),
+        'uuid': data['uuid'],
+        'name': data['name'],
+        'email': data['email'],
+        'created_at': formatTimestamp(data['created_at']),
         'profile_picture':
             querySnapshot.docs.first.data()['profile_picture'] != null
                 ? await FirebaseStorageService().getDownloadUrl(

@@ -7,8 +7,7 @@ Future<String?> createReaction(data) async {
 
   final docRef = db.collection('reactions');
 
-  final status =
-      (data['user'] != null && data['is_friend'] == true) ? '0' : '-1';
+  final status = (data['user'] != null) ? '0' : '-1';
 
   final docSnapshot = await docRef.add({
     ...data,

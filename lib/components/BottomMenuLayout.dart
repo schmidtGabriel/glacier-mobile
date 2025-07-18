@@ -70,8 +70,12 @@ class _BottomMenuLayoutState extends State<BottomMenuLayout> {
 
   // Handle tap on bottom navigation
   void _onTabTapped(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
+    if (index == 1) {
+      Navigator.of(context, rootNavigator: true).pushNamed('/gallery');
+    } else {
+      setState(() {
+        _currentIndex = index;
+      });
+    }
   }
 }

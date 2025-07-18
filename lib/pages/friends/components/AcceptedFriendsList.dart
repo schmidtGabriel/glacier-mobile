@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/resources/UserResource.dart';
@@ -69,21 +71,9 @@ class AcceptedFriendsList extends StatelessWidget {
                   separatorBuilder: (_, __) => SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final friendData = friends[index];
-                    final invitedUser = friendData['invited_user'];
-                    final requestedUser = friendData['requested_user'];
-
-                    // Null safety check before accessing uuid
-                    final friend =
-                        (invitedUser != null &&
-                                invitedUser['uuid'] == user?.uuid)
-                            ? requestedUser
-                            : invitedUser;
-
-                    final name =
-                        friend?['name'] ??
-                        friends[index]['invited_email'] ??
-                        'Unknown';
-                    final email = friend?['email'] ?? '';
+                    final friend = friendData.friend ?? {};
+                    final name = friend.name ?? '';
+                    final email = friend?.email ?? '';
 
                     return Container(
                       padding: EdgeInsets.all(16),
@@ -124,17 +114,15 @@ class AcceptedFriendsList extends StatelessWidget {
                           GestureDetector(
                             onTap: () {
                               SharedPreferences.getInstance().then((prefs) {
-                                prefs.setString('request_user', friend['uuid']);
+                                prefs.setString(
+                                  'request_user',
+                                  jsonEncode(friend.toJson()),
+                                );
                               });
                               Navigator.of(
                                 context,
                                 rootNavigator: true,
-                              ).pushReplacementNamed(
-                                '/',
-                                arguments: {'index': 1},
-                              );
-
-                              print('Send message to $name');
+                              ).pushReplacementNamed('/gallery');
                             },
                             child: Icon(
                               Icons.send,

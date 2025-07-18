@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:glacier/helpers/parseTimeStamp.dart';
 import 'package:glacier/services/user/getUser.dart';
 
 Future<List> getPendingUserFriends() async {
@@ -47,7 +48,7 @@ Future<List> getPendingUserFriends() async {
               'invited_user': invited,
               'invited_email': data['invited_email'] ?? '',
               'status': data['status'] ?? '',
-              'created_at': data['created_at']?.toDate().toIso8601String(),
+              'created_at': formatTimestamp(data['created_at']),
               'isRequested': userId == requested['uuid'],
             },
           ];

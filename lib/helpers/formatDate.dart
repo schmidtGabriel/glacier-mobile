@@ -1,6 +1,5 @@
 String formatDate(DateTime? date) {
   if (date == null) return 'Unknown';
-
   final months = [
     'Jan',
     'Feb',

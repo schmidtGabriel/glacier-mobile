@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:glacier/helpers/formatDate.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -206,7 +205,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                     ),
                                     SizedBox(height: 4),
                                     Text(
-                                      formatDate(user?.createdAt),
+                                      user?.createdAt ?? '',
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,

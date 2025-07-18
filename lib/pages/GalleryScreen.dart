@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:glacier/components/PreviewVideoPage.dart';
 import 'package:glacier/components/VideoGallery/AlbumGridView.dart';
 import 'package:glacier/components/VideoGallery/VideoGridView.dart';
+import 'package:glacier/pages/send-reaction/SendReactionPage.dart';
 import 'package:photo_manager/photo_manager.dart';
 
-class VideoPickerScreen extends StatefulWidget {
-  const VideoPickerScreen({super.key});
+class GalleryScreen extends StatefulWidget {
+  const GalleryScreen({super.key});
 
   @override
-  _VideoPickerScreenState createState() => _VideoPickerScreenState();
+  _GalleryScreenState createState() => _GalleryScreenState();
 }
 
-class _VideoPickerScreenState extends State<VideoPickerScreen> {
+class _GalleryScreenState extends State<GalleryScreen> {
   List<AssetEntity> _videos = [];
   final List<AssetPathEntity> _albums = [];
   bool _showAlbums = true;
@@ -20,7 +21,14 @@ class _VideoPickerScreenState extends State<VideoPickerScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: true,
+      onPopInvoked: (didPop) {
+        if (didPop) {
+          Navigator.of(
+            context,
+          ).pushReplacementNamed('/', arguments: {'index': 0});
+        }
+      },
       child: Scaffold(
         appBar: PreferredSize(
           preferredSize: Size.fromHeight(
@@ -31,11 +39,11 @@ class _VideoPickerScreenState extends State<VideoPickerScreen> {
               AppBar(
                 title: Text('Gallery'),
 
-                leading: BackButton(
+                leading: CloseButton(
                   onPressed: () {
                     Navigator.of(
                       context,
-                    ).pushNamed('/', arguments: {'index': 0});
+                    ).pushReplacementNamed('/', arguments: {'index': 0});
                   },
                 ),
                 actions: [
@@ -110,19 +118,31 @@ class _VideoPickerScreenState extends State<VideoPickerScreen> {
                 : VideoGridView(
                   videos: _videos,
                   previewVideo: (video) async {
-                    final selectedVideo = await Navigator.push<AssetEntity?>(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (context) => PreviewVideoPage(
-                              localVideo: video,
-                              hasConfirmButton: true,
-                            ),
-                      ),
-                    );
+                    final selectedVideo =
+                        await Navigator.push<Map<String, dynamic>?>(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => PreviewVideoPage(
+                                  localVideo: video,
+                                  hasConfirmButton: true,
+                                ),
+                          ),
+                        );
+
                     if (selectedVideo != null) {
                       // var path = await selectedVideo.file;
-                      Navigator.of(context).pop(selectedVideo);
+                      // Navigator.of(context).pop(selectedVideo);
+                      await Navigator.push<AssetEntity?>(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (context) => SendReactionPage(
+                                video: selectedVideo['video'],
+                                duration: selectedVideo['duration'],
+                              ),
+                        ),
+                      );
                     }
                   },
                 ),

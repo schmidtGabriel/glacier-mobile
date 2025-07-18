@@ -38,8 +38,8 @@ class _UserAvatarState extends State<UserAvatar> {
   void initState() {
     super.initState();
     if (widget.user != null) {
-      picture = widget.user['profile_picture'] ?? '';
-      name = widget.user['name'] ?? '';
+      picture = widget.user.profilePic ?? '';
+      name = widget.user.name ?? '';
     }
   }
 }

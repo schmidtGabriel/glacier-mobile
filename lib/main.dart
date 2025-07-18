@@ -6,10 +6,10 @@ import 'package:glacier/components/BottomMenuLayout.dart';
 import 'package:glacier/components/PreviewVideoPage.dart';
 import 'package:glacier/firebase_options.dart';
 import 'package:glacier/gate/AuthGate.dart';
+import 'package:glacier/pages/GalleryScreen.dart';
 import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/pages/SignupPage.dart';
 import 'package:glacier/pages/TakePictureScreen.dart';
-import 'package:glacier/pages/VideoPickerScreen.dart';
 import 'package:glacier/pages/home/RecordPage.dart';
 import 'package:glacier/pages/home/RecordedVideoPage.dart';
 import 'package:glacier/services/auth/logReaction.dart';
@@ -163,7 +163,7 @@ class MyApp extends StatelessWidget {
 
             case '/gallery':
               return MaterialPageRoute(
-                builder: (_) => AuthGate(child: VideoPickerScreen()),
+                builder: (_) => AuthGate(child: GalleryScreen()),
               );
 
             case '/preview-video':

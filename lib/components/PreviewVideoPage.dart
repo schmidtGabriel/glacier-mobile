@@ -71,7 +71,11 @@ class _PreviewVideoPageState extends State<PreviewVideoPage> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (_controllerVideo != null) {
-                        Navigator.of(context).pop(widget.localVideo);
+                        Navigator.of(context).pop({
+                          'video': widget.localVideo,
+                          'duration':
+                              _controllerVideo?.value.duration.inSeconds ?? 0,
+                        });
                       }
                     },
                     style: ElevatedButton.styleFrom(

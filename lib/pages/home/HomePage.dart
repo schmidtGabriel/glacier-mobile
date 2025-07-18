@@ -190,12 +190,11 @@ class _HomePageState extends State<HomePage>
     setState(() {
       isLoading = true;
     });
+
     final prefs = await SharedPreferences.getInstance();
     Map<String, dynamic> userMap = await jsonDecode(
       prefs.getString('user') ?? '{}',
     );
-
-    print(userMap);
 
     user = UserResource.fromJson(userMap);
 

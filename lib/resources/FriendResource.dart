@@ -1,39 +1,36 @@
 class FriendResource {
   final String uuid;
-  final UserFriend requestedUser;
-  final UserFriend invitedUser;
-  final DateTime? createdAt;
+  final UserFriend? requestedUser;
+  final UserFriend? invitedUser;
+  final String? createdAt;
+  final UserFriend? friend;
 
   FriendResource({
     required this.uuid,
-    required this.requestedUser,
-    required this.invitedUser,
+    this.requestedUser,
+    this.invitedUser,
     this.createdAt,
+    this.friend,
   });
 
   factory FriendResource.fromJson(Map<String, dynamic> json) {
     return FriendResource(
       uuid: json['uuid'] ?? '',
-      requestedUser: UserFriend.fromJson(json['requested_user'] ?? {}),
-      invitedUser: UserFriend.fromJson(json['invited_user'] ?? {}),
-      createdAt:
-          json['created_at'] != null
-              ? DateTime.parse(json['created_at'])
-              : null,
+      // requestedUser: UserFriend.fromJson(json['requested_user'] ?? {}),
+      // invitedUser: UserFriend.fromJson(json['invited_user'] ?? {}),
+      createdAt: json['created_at'],
+      friend:
+          json['friend'] != null ? UserFriend.fromJson(json['friend']) : null,
     );
-  }
-
-  /// Returns the friend user (not the current user)
-  UserFriend getFriend(String currentUserId) {
-    return invitedUser.uuid == currentUserId ? requestedUser : invitedUser;
   }
 
   Map<String, dynamic> toJson() {
     return {
       'uuid': uuid,
-      'requested_user': requestedUser.toJson(),
-      'invited_user': invitedUser.toJson(),
-      'created_at': createdAt?.toIso8601String(),
+      'requested_user': requestedUser?.toJson(),
+      'invited_user': invitedUser?.toJson(),
+      'friend': friend?.toJson(),
+      'created_at': createdAt,
     };
   }
 }
@@ -42,12 +39,14 @@ class UserFriend {
   final String uuid;
   final String name;
   final String email;
-  final DateTime? createdAt;
+  final String profilePic;
+  final String? createdAt;
 
   UserFriend({
     required this.uuid,
     required this.name,
     required this.email,
+    this.profilePic = '',
     this.createdAt,
   });
 
@@ -56,10 +55,7 @@ class UserFriend {
       uuid: json['uuid'] ?? '',
       name: json['name'] ?? '',
       email: json['email'] ?? '',
-      createdAt:
-          json['created_at'] != null
-              ? DateTime.parse(json['created_at'])
-              : null,
+      profilePic: json['profile_picture'] ?? '',
     );
   }
 
@@ -68,7 +64,7 @@ class UserFriend {
       'uuid': uuid,
       'name': name,
       'email': email,
-      'created_at': createdAt?.toIso8601String(),
+      'profile_picture': profilePic,
     };
   }
 }

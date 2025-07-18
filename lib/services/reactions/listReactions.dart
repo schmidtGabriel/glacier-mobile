@@ -51,9 +51,23 @@ Future<List> listReactions({
       'reactions',
     );
     if (isSent) {
-      query = query.where('requested', isEqualTo: userId);
+      query = query
+          .where('requested', isEqualTo: userId)
+          .where(
+            Filter.or(
+              Filter('status', isEqualTo: '0'),
+              Filter('status', isEqualTo: '1'),
+            ),
+          );
     } else {
-      query = query.where('user', isEqualTo: userId);
+      query = query
+          .where('user', isEqualTo: userId)
+          .where(
+            Filter.or(
+              Filter('status', isEqualTo: '0'),
+              Filter('status', isEqualTo: '1'),
+            ),
+          );
     }
 
     final querySnapshot = await query.get();

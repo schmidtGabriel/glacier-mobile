@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/services/getFCMToken.dart';
-import 'package:glacier/services/user/getUserData.dart';
+import 'package:glacier/services/user/getMe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthGate extends StatelessWidget {
@@ -57,7 +57,7 @@ class AuthGate extends StatelessWidget {
       final userString = prefs.getString('user');
       // Only fetch user data if it doesn't exist in SharedPreferences
       if (userString == null || userString.isEmpty) {
-        await getUserData();
+        await getMe();
       }
 
       return true; // User data now exists

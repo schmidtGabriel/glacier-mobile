@@ -1,6 +1,21 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-String formatTimestamp(dynamic timestamp) {
+final months = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+String formatTimestamp(dynamic timestamp, {bool isShortFormat = false}) {
   try {
     DateTime date;
     if (timestamp is String) {
@@ -9,6 +24,10 @@ String formatTimestamp(dynamic timestamp) {
       date = timestamp.toDate();
     } else {
       return 'Invalid date';
+    }
+
+    if (isShortFormat) {
+      return '${months[date.month - 1]} ${date.day}, ${date.year}';
     }
 
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')} '

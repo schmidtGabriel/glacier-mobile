@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:glacier/helpers/parseTimeStamp.dart';
+import 'package:glacier/resources/FriendResource.dart';
 import 'package:glacier/services/user/getUser.dart';
 
 Future<List> getUserFriends() async {
@@ -18,37 +20,36 @@ Future<List> getUserFriends() async {
             )
             .get();
 
-    List friends = [];
+    List<FriendResource> friends = [];
     await Future.wait(
       querySnapshot.docs.map((doc) async {
         final data = doc.data();
 
-        final requested =
-            data['requested_user'] != null
-                ? await getUser(data['requested_user'])
-                : null;
+        Map<String, dynamic>? friend;
+        if (data['requested_user'] != null && data['requested_user'] != uid) {
+          friend = await getUser(data['requested_user']);
+        } else if (data['invited_user'] != null &&
+            data['invited_user'] != uid) {
+          friend = await getUser(data['invited_user']);
+        } else {
+          friend = null; // Skip if both users are the current user
+        }
+        // print('Requested: ${requested?['uuid']}, Invited: ${invited?['uuid']}, Current User: $uid');
 
-        final invited =
-            data['invited_user'] != null
-                ? await getUser(data['invited_user'])
-                : null;
-
-        if (requested != null && invited != null) {
+        if (friend != null) {
           friends = [
             ...friends,
-            {
+            FriendResource.fromJson({
               'uuid': data['uuid'] ?? '',
-              'requested_user': requested,
-              'invited_user': invited,
               'invited_email': data['invited_email'] ?? '',
               'status': data['status'] ?? '',
-              'created_at': data['created_at']?.toDate().toIso8601String(),
-            },
+              'friend': friend,
+              'created_at': formatTimestamp(data['created_at']),
+            }),
           ];
         }
       }).toList(),
     );
-
     return friends;
   } catch (e) {
     print('Error fetching user friends: $e');
