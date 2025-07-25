@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/pages/home/components/RequestedReactionsList.dart';
 import 'package:glacier/pages/home/components/SentReactionsList.dart';
 import 'package:glacier/resources/UserResource.dart';
@@ -51,33 +52,29 @@ class _HomePageState extends State<HomePage>
                                 },
                                 child: Row(
                                   children: [
-                                    CircleAvatar(
-                                      radius: 24,
-                                      backgroundColor: Colors.grey.shade300,
-                                      backgroundImage:
-                                          user.profilePic.isNotEmpty
-                                              ? NetworkImage(user.profilePic)
-                                              : null,
-                                      child:
-                                          user.profilePic.isEmpty
-                                              ? Text(
-                                                user.name.isNotEmpty
-                                                    ? user.name[0].toUpperCase()
-                                                    : '?',
-                                                style: TextStyle(
-                                                  fontSize: 20,
-                                                  color: Colors.white,
-                                                ),
-                                              )
-                                              : null,
-                                    ),
-                                    SizedBox(width: 10),
-                                    Text(
-                                      'Hello ${user.name}',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 20,
-                                      ),
+                                    UserAvatar(user: user, size: 48),
+                                    SizedBox(width: 4),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Hello ${user.name}',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 20,
+                                          ),
+                                        ),
+
+                                        Text(
+                                          user.email ?? '',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade700,
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -137,7 +134,7 @@ class _HomePageState extends State<HomePage>
                       ),
                       TabBar(
                         controller: _tabController,
-                        tabs: [Tab(text: 'Requested'), Tab(text: 'Sent')],
+                        tabs: [Tab(text: 'Received'), Tab(text: 'Sent')],
                         labelColor: Colors.blue,
                         unselectedLabelColor: Colors.grey,
                         dividerColor: Colors.transparent,

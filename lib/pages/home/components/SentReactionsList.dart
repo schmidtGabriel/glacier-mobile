@@ -42,7 +42,7 @@ class _SentReactionsListState extends State<SentReactionsList> {
                       Navigator.of(
                         context,
                         rootNavigator: true,
-                      ).pushReplacementNamed('/', arguments: {'index': 1});
+                      ).pushReplacementNamed('/gallery');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey[800],
@@ -83,7 +83,6 @@ class _SentReactionsListState extends State<SentReactionsList> {
                   itemBuilder: (context, index) {
                     final reaction = reactions[index];
                     final title = reaction['title'] ?? 'No Name';
-                    final createdBy = reaction['requested'];
                     final user = reaction['user'];
                     return Container(
                       decoration: BoxDecoration(
@@ -159,7 +158,7 @@ class _SentReactionsListState extends State<SentReactionsList> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            'Sent to: ${user['name'] ?? '0'}',
+                                            'Sent to: ${user.name ?? '0'}',
                                             style:
                                                 Theme.of(
                                                   context,

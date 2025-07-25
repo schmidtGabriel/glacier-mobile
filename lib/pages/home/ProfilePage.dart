@@ -25,10 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
         title: Text(
           'Profile',
           style: TextStyle(
@@ -39,11 +36,13 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         centerTitle: true,
       ),
+
       body:
           isLoading
               ? Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
                 padding: EdgeInsets.all(20),
+
                 child: Column(
                   children: [
                     SizedBox(height: 20),

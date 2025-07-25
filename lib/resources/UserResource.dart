@@ -1,3 +1,5 @@
+import 'package:glacier/helpers/formatDate.dart';
+
 class UserResource {
   final String uuid;
   final String name;
@@ -20,10 +22,11 @@ class UserResource {
       name: json['name'],
       email: json['email'],
       profilePic: json['profile_picture'] ?? '',
-      // createdAt:
-      //     json['created_at'] != null
-      //         ? DateTime.parse(json['created_at'])
-      //         : null,
+      createdAt: formatDate(
+        json['created_at'] is String
+            ? json['created_at']
+            : json['created_at']?.toString(),
+      ),
     );
   }
 

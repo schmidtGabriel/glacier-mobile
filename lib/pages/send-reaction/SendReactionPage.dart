@@ -3,13 +3,14 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:glacier/components/PreviewVideoPage.dart';
+import 'package:glacier/components/Button.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/helpers/updateRecentFriends.dart';
+import 'package:glacier/pages/PreviewVideoPage.dart';
 import 'package:glacier/pages/UserInvite.dart';
 import 'package:glacier/pages/UserList.dart';
-import 'package:glacier/resources/FriendResource.dart';
+import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/createReaction.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -33,13 +34,14 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
   List friends = [];
   bool isLoading = false;
+  bool isLoadingSubmit = false;
   String _filePath = '';
   int _duration = 0;
   String userId = '';
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  UserFriend? selectedFriend;
+  UserResource? selectedFriend;
   String? selectedFriendEmail;
   String? selectedVideoType;
   AssetEntity? _selectedVideo;
@@ -126,15 +128,6 @@ class _SendReactionPageState extends State<SendReactionPage> {
                           ),
                         ),
 
-                      if (_uploadProgress > 0) ...[
-                        SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8.0),
-                          child: LinearProgressIndicator(
-                            value: _uploadProgress,
-                          ),
-                        ),
-                      ],
                       SizedBox(height: 16),
 
                       Text(
@@ -174,7 +167,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
                         child: ElevatedButton(
                           onPressed: () async {
                             final selectedUser =
-                                await Navigator.push<UserFriend>(
+                                await Navigator.push<UserResource>(
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) => UserList(),
@@ -196,7 +189,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
                             ),
                           ),
                           child: const Text(
-                            'Find user',
+                            'Find friend',
                             style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         ),
@@ -318,26 +311,26 @@ class _SendReactionPageState extends State<SendReactionPage> {
                           ),
                         ],
                         SizedBox(height: 24),
+                        if (_uploadProgress > 0) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: LinearProgressIndicator(
+                              value: _uploadProgress,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                        ],
                         isLoading
                             ? const Center(child: CircularProgressIndicator())
-                            : SizedBox(
-                              height: 50,
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _sendReaction,
-
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.0),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Submit Reaction',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: Colors.white,
-                                  ),
+                            : Button(
+                              isLoading: isLoadingSubmit,
+                              loadingLabel: 'Sending...',
+                              onPressed: _sendReaction,
+                              label: 'Send Reaction',
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12.0),
                                 ),
                               ),
                             ),
@@ -393,7 +386,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     selectedFriend =
         prefs.getString('request_user') != null
-            ? UserFriend.fromJson(jsonDecode(prefs.getString('request_user')!))
+            ? UserResource.fromJson(
+              jsonDecode(prefs.getString('request_user')!),
+            )
             : null;
     _selectedVideo = widget.video;
     _duration = widget.duration;
@@ -442,6 +437,10 @@ class _SendReactionPageState extends State<SendReactionPage> {
   }
 
   Future<void> _sendReaction() async {
+    setState(() {
+      isLoadingSubmit = true;
+    });
+
     await uploadVideo();
 
     final videoUrl = _filePath.trim();
@@ -473,7 +472,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
     }
     await createReaction({
       'user': selectedFriend?.uuid,
-      'invited_email': selectedFriendEmail ?? '',
+      'invited_to': selectedFriendEmail ?? '',
       'is_friend': true,
       'video': videoUrl,
       'video_duration': videoDuration,
@@ -483,7 +482,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
     });
 
     if (selectedFriend != null) {
-      updateRecentFriends(selectedFriend?.toJson());
+      await updateRecentFriends(selectedFriend?.toJson());
     }
 
     print('Reaction sent successfully!');
@@ -495,6 +494,11 @@ class _SendReactionPageState extends State<SendReactionPage> {
       type: ToastificationType.success,
       alignment: Alignment.bottomCenter,
     );
+
+    clearTextFields();
+    setState(() {
+      isLoadingSubmit = false;
+    });
 
     // Navigate away before clearing fields to avoid widget lifecycle issues
     Navigator.of(context).pushReplacementNamed('/', arguments: {'index': 0});

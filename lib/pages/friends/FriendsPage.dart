@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/pages/friends/components/AcceptedFriendsList.dart';
 import 'package:glacier/pages/friends/components/PendingFriendsList.dart';
+import 'package:glacier/resources/FriendResource.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/user/getPendingUserFriends.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
@@ -24,8 +25,8 @@ class FriendsPage extends StatefulWidget {
 class _FriendsPageState extends State<FriendsPage>
     with SingleTickerProviderStateMixin {
   UserResource? user;
-  List friends = [];
-  List pendingFriends = [];
+  List<FriendResource> friends = [];
+  List<FriendResource> pendingFriends = [];
   bool isLoading = false;
   bool isLoadingDialog = false;
   late TabController _tabController;
@@ -255,17 +256,26 @@ class _FriendsPageState extends State<FriendsPage>
                     'Send an invitation to a friend by entering their email address.',
                   ),
                   SizedBox(height: 16),
-                  TextField(
+                  TextFormField(
                     controller: _dialogEmailController,
                     keyboardType: TextInputType.emailAddress,
                     autocorrect: false,
                     decoration: inputDecoration("Friend's Email"),
+                    validator: (value) {
+                      //validate if the value is an email or phone number
+                      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                      final phoneRegex = RegExp(r'^\+?[1-9]\d{1,14}$');
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter an email address';
+                      }
+                      if (!emailRegex.hasMatch(value) &&
+                          !phoneRegex.hasMatch(value)) {
+                        return 'Please enter a valid email address or phone number';
+                      }
+                      return null;
+                    },
                     autofocus: true,
-                    onSubmitted:
-                        (_) => inviteFriendFromDialog(
-                          dialogContext,
-                          setDialogState,
-                        ),
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                   ),
                 ],
               ),

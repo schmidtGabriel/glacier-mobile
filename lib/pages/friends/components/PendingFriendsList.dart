@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/helpers/formatStatusInviteFriend.dart';
+import 'package:glacier/resources/FriendResource.dart';
 
 class PendingFriendsList extends StatelessWidget {
-  final List pendingFriends;
+  final List<FriendResource> pendingFriends;
   final Function(int, String) onHandleFriendRequest;
 
   const PendingFriendsList({
@@ -32,19 +33,11 @@ class PendingFriendsList extends StatelessWidget {
                   itemCount: pendingFriends.length,
                   separatorBuilder: (_, __) => SizedBox(height: 8),
                   itemBuilder: (context, index) {
+                    print('Pending friend data: ${pendingFriends[index]}');
                     final friendData = pendingFriends[index];
-                    var isRequested = friendData['isRequested'] ?? false;
-
-                    final friend =
-                        isRequested
-                            ? friendData['invited_user']
-                            : friendData['requested_user'];
-
-                    final name =
-                        friend?['name'] ??
-                        friendData['invited_email'] ??
-                        'Unknown';
-                    final email = friend?['email'] ?? '';
+                    final friend = friendData.friend ?? {};
+                    final name = friendData.friend?.name ?? '';
+                    final email = friendData.friend?.email ?? '';
 
                     return Container(
                       padding: EdgeInsets.all(16),
@@ -82,25 +75,19 @@ class PendingFriendsList extends StatelessWidget {
                             ),
                           ),
 
-                          if (!isRequested) ...[
+                          if (friendData.isRequested == false) ...[
                             Row(
                               children: [
                                 IconButton(
                                   icon: Icon(Icons.check, color: Colors.green),
                                   onPressed: () {
-                                    onHandleFriendRequest(
-                                      1,
-                                      friendData['uuid'],
-                                    );
+                                    onHandleFriendRequest(1, friendData.uuid);
                                   },
                                 ),
                                 IconButton(
                                   icon: Icon(Icons.close, color: Colors.red),
                                   onPressed: () {
-                                    onHandleFriendRequest(
-                                      -1,
-                                      friendData['uuid'],
-                                    );
+                                    onHandleFriendRequest(-1, friendData.uuid);
                                   },
                                 ),
                               ],
@@ -112,11 +99,13 @@ class PendingFriendsList extends StatelessWidget {
                                 horizontal: 10,
                               ),
                               label: Text(
-                                formatStatusInviteFriend(friendData['status']),
+                                formatStatusInviteFriend(
+                                  friendData.status ?? 0,
+                                ),
                                 style: TextStyle(color: Colors.white),
                               ),
                               backgroundColor: colorStatusInviteFriend(
-                                friendData['status'],
+                                friendData.status ?? 0,
                               ),
                             ),
                           ],

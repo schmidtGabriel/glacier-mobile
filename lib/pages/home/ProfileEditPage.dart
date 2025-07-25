@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:glacier/components/Button.dart';
+import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/user/getMe.dart';
@@ -34,11 +36,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-
         title: Text(
           'Edit Profile',
           style: TextStyle(
@@ -177,31 +175,16 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                             SizedBox(height: 8),
                             TextFormField(
                               controller: _nameController,
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey[300]!,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey[300]!,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.blue),
-                                ),
-                                prefixIcon: Icon(
+                              decoration: inputDecoration(
+                                'Enter your name',
+                                Icon(
                                   Icons.person_outline,
                                   color: Colors.grey[600],
                                 ),
-                                hintText: 'Enter your name',
-                                filled: true,
-                                fillColor: Colors.grey[50],
                               ),
+                              onTapOutside: (event) {
+                                FocusScope.of(context).unfocus();
+                              },
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
                                   return 'Name is required';
@@ -224,38 +207,23 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                             SizedBox(height: 8),
                             TextFormField(
                               controller: _emailController,
-                              decoration: InputDecoration(
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey[300]!,
-                                  ),
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey[300]!,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.blue),
-                                ),
-                                prefixIcon: Icon(
+                              decoration: inputDecoration(
+                                'Enter your email',
+                                Icon(
                                   Icons.email_outlined,
                                   color: Colors.grey[600],
                                 ),
-                                hintText: 'Enter your email',
-                                filled: true,
-                                fillColor: Colors.grey[50],
                               ),
                               keyboardType: TextInputType.emailAddress,
+                              onTapOutside: (event) {
+                                FocusScope.of(context).unfocus();
+                              },
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
                                   return 'Email is required';
                                 }
                                 if (!RegExp(
-                                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                  r'^[\w\-\.+]+@([\w\-]+\.)+[\w\-]{2,4}$',
                                 ).hasMatch(value)) {
                                   return 'Please enter a valid email';
                                 }
@@ -307,53 +275,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       SizedBox(height: 40),
 
                       // Save Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: isSaving ? null : _saveProfile,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 2,
-                          ),
-                          child:
-                              isSaving
-                                  ? Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                      ),
-                                      SizedBox(width: 12),
-                                      Text(
-                                        'Saving...',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                  : Text(
-                                    'Save Changes',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                        ),
+                      Button(
+                        label: 'Save Changes',
+                        isLoading: isSaving,
+                        onPressed: _saveProfile,
                       ),
                     ],
                   ),

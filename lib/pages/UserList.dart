@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
+import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/helpers/updateRecentFriends.dart';
 import 'package:glacier/resources/FriendResource.dart';
+import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,16 +30,12 @@ class _UserListState extends State<UserList> {
       appBar: AppBar(
         centerTitle: false,
         title: TextField(
-          decoration: InputDecoration(
-            hintText: 'Search friends...',
-            fillColor: Colors.white,
-            filled: true,
-            contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
-            ),
+          decoration: inputDecoration('Search Friends').copyWith(
+            contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 5),
           ),
+          onTapOutside: (event) {
+            FocusScope.of(context).unfocus();
+          },
           onChanged: (value) {
             // Implement search functionality here
             // For now, we will just print the search term
@@ -72,86 +70,88 @@ class _UserListState extends State<UserList> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      friends.isEmpty
-                          ? Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: Text(
-                              "You haven't invited any friends yet.",
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          )
-                          : Text(
-                            'Recent Friends',
-                            style: Theme.of(context).textTheme.titleLarge,
+                      if (friends.isEmpty) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 16.0),
+                          child: Text(
+                            "You haven't invited any friends yet.",
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                      SizedBox(height: 8),
-                      recentFriends.isEmpty
-                          ? Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: Text(
+                        ),
+                      ] else ...[
+                        Text(
+                          'Recent Friends',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        SizedBox(height: 8),
+                        recentFriends.isEmpty
+                            ? Text(
                               'No recent friends found.',
                               style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          )
-                          : ListView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: recentFriends.length,
-                            itemBuilder: (context, index) {
-                              final friend = recentFriends[index];
-                              return ListTile(
-                                onTap: () {
-                                  Navigator.of(context).pop(friend);
-                                },
-                                leading: UserAvatar(user: friend),
-                                title: Text(friend.name ?? ''),
-                                subtitle: Text(friend.email ?? ''),
-                                trailing: IconButton(
-                                  icon: Icon(Icons.delete),
-                                  onPressed: () {
-                                    updateRecentFriends(
-                                      friend.toJson(),
-                                      isDelete: true,
-                                    );
-                                    setState(() {
-                                      recentFriends.removeAt(index);
-                                    });
+                            )
+                            : ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: recentFriends.length,
+                              itemBuilder: (context, index) {
+                                final friend = UserResource.fromJson(
+                                  recentFriends[index],
+                                );
+                                return ListTile(
+                                  onTap: () {
+                                    Navigator.of(context).pop(friend);
                                   },
-                                ),
-                              );
-                            },
-                          ),
-                      Text(
-                        'All Friends',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      SizedBox(height: 8),
-
-                      filteredFriends.isEmpty
-                          ? Padding(
-                            padding: const EdgeInsets.only(bottom: 16.0),
-                            child: Text(
-                              'No friends found.',
-                              style: Theme.of(context).textTheme.bodyMedium,
+                                  leading: UserAvatar(user: friend),
+                                  title: Text(friend.name ?? ''),
+                                  subtitle: Text(friend.email ?? ''),
+                                  trailing: IconButton(
+                                    icon: Icon(Icons.delete),
+                                    onPressed: () {
+                                      updateRecentFriends(
+                                        friend.toJson(),
+                                        isDelete: true,
+                                      );
+                                      setState(() {
+                                        recentFriends.removeAt(index);
+                                      });
+                                    },
+                                  ),
+                                );
+                              },
                             ),
-                          )
-                          : ListView.builder(
-                            shrinkWrap: true,
-                            physics: NeverScrollableScrollPhysics(),
-                            itemCount: filteredFriends.length,
-                            itemBuilder: (context, index) {
-                              final friendData = filteredFriends[index];
-                              final friend = friendData.friend;
-                              return ListTile(
-                                onTap: () {
-                                  Navigator.of(context).pop(friend);
-                                },
-                                leading: UserAvatar(user: friend),
-                                title: Text(friend?.name ?? ''),
-                                subtitle: Text(friend?.email ?? ''),
-                              );
-                            },
-                          ),
+                        SizedBox(height: 10),
+                        Text(
+                          'All Friends',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        SizedBox(height: 8),
+
+                        filteredFriends.isEmpty
+                            ? Padding(
+                              padding: const EdgeInsets.only(bottom: 16.0),
+                              child: Text(
+                                'No friends found.',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            )
+                            : ListView.builder(
+                              shrinkWrap: true,
+                              physics: NeverScrollableScrollPhysics(),
+                              itemCount: filteredFriends.length,
+                              itemBuilder: (context, index) {
+                                final friendData = filteredFriends[index];
+                                final friend = friendData.friend;
+                                return ListTile(
+                                  onTap: () {
+                                    Navigator.of(context).pop(friend);
+                                  },
+                                  leading: UserAvatar(user: friend),
+                                  title: Text(friend?.name ?? ''),
+                                  subtitle: Text(friend?.email ?? ''),
+                                );
+                              },
+                            ),
+                      ],
                     ],
                   ),
                 ),
@@ -178,12 +178,11 @@ class _UserListState extends State<UserList> {
     try {
       friends = (await getUserFriends()).cast<FriendResource>();
       filteredFriends = friends;
-      final prefs = await SharedPreferences.getInstance();
-      prefs.setString('friends', jsonEncode(friends));
-
-      recentFriends = jsonDecode(prefs.getString('recent_friends') ?? '[]');
-      print(recentFriends);
-      setState(() {});
+      SharedPreferences.getInstance().then((pref) {
+        pref.setString('friends', jsonEncode(friends));
+        recentFriends = jsonDecode(pref.getString('recent_friends') ?? '[]');
+        setState(() {});
+      });
     } catch (e) {
       print('Error fetching friends: $e');
       friends = [];

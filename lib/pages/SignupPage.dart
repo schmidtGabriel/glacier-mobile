@@ -7,7 +7,9 @@ import 'package:glacier/services/auth/verifyEmail.dart';
 import 'package:toastification/toastification.dart';
 
 class SignupPage extends StatefulWidget {
-  const SignupPage({super.key});
+  final String email;
+
+  const SignupPage({super.key, this.email = ''});
 
   @override
   _SignupPageState createState() => _SignupPageState();
@@ -107,6 +109,15 @@ class _SignupPageState extends State<SignupPage> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill email if provided
+    if (widget.email.isNotEmpty) {
+      _controllers['email']!.text = widget.email;
+    }
+  }
+
   void _addFriend() {
     final email = _friendEmailController.text.trim();
     if (email.isNotEmpty && !_invitedFriends.contains(email)) {
@@ -169,16 +180,10 @@ class _SignupPageState extends State<SignupPage> {
               TextFormField(
                 controller: _controllers['password'],
                 obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  filled: true,
-                  fillColor: Colors.white,
-                  enabledBorder: const OutlineInputBorder(
-                    // width: 0.0 produces a thin "hairline" border
-                    borderSide: BorderSide(color: Colors.grey, width: 0.0),
-                  ),
-                  border: OutlineInputBorder(),
-                  suffixIcon: IconButton(
+                decoration: inputDecoration(
+                  "Password",
+                  null,
+                  IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_off
@@ -191,6 +196,7 @@ class _SignupPageState extends State<SignupPage> {
                     },
                   ),
                 ),
+
                 onTapOutside: (event) {
                   FocusScope.of(context).unfocus();
                 },
@@ -219,11 +225,10 @@ class _SignupPageState extends State<SignupPage> {
         SizedBox(height: 24),
         TextField(
           controller: _friendEmailController,
-          decoration: inputDecoration("Friend's Email").copyWith(
-            suffixIcon: IconButton(
-              icon: Icon(Icons.add),
-              onPressed: _addFriend,
-            ),
+          decoration: inputDecoration(
+            "Friend's Email",
+            null,
+            IconButton(icon: Icon(Icons.add), onPressed: _addFriend),
           ),
           onTapOutside: (event) {
             FocusScope.of(context).unfocus();

@@ -137,3 +137,6 @@ analysis_benchmark.json
 !/dev/ci/**/Gemfile.lock
 
 lib/firebase_options.dart
+
+apple-app-site-association
+.well-known

@@ -1,19 +1,12 @@
-String formatDate(DateTime? date) {
-  if (date == null) return 'Unknown';
-  final months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
+import 'package:intl/intl.dart';
 
-  return '${months[date.month - 1]} ${date.day}, ${date.year}';
+String formatDate(String? date) {
+  if (date == null || date.isEmpty) return 'N/A';
+  try {
+    final parsedDate = DateTime.parse(date);
+    return DateFormat('MM/dd/yyyy').format(parsedDate);
+  } catch (e) {
+    // print('Error parsing date: $e');
+    return date;
+  }
 }

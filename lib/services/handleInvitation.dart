@@ -6,7 +6,7 @@ handleInvitations(email, uid) async {
 
   try {
     var friends =
-        await docFriendRef.where('invited_email', isEqualTo: email).get();
+        await docFriendRef.where('invited_to', isEqualTo: email).get();
 
     if (friends.docs.isNotEmpty) {
       friends.docs.forEach((doc) async {

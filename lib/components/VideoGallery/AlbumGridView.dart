@@ -154,7 +154,7 @@ class _AlbumGridViewState extends State<AlbumGridView> {
       isLoading = true;
     });
 
-    Future.delayed(Duration(milliseconds: 500), () async {
+    Future.delayed(Duration(milliseconds: 300), () async {
       setState(() {
         isLoading = false;
       });

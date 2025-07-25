@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:glacier/components/Button.dart';
 import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/services/auth/signin.dart';
 import 'package:toastification/toastification.dart';
@@ -75,19 +76,10 @@ class _SigninPageState extends State<SigninPage> {
                             TextFormField(
                               controller: _passwordController,
                               obscureText: _obscurePassword,
-                              decoration: InputDecoration(
-                                labelText: 'Password',
-                                filled: true,
-                                fillColor: Colors.white,
-                                enabledBorder: const OutlineInputBorder(
-                                  // width: 0.0 produces a thin "hairline" border
-                                  borderSide: BorderSide(
-                                    color: Colors.grey,
-                                    width: 0.0,
-                                  ),
-                                ),
-                                border: OutlineInputBorder(),
-                                suffixIcon: IconButton(
+                              decoration: inputDecoration(
+                                'Password',
+                                null,
+                                IconButton(
                                   icon: Icon(
                                     _obscurePassword
                                         ? Icons.visibility_off
@@ -111,31 +103,11 @@ class _SigninPageState extends State<SigninPage> {
                               },
                             ),
                             const SizedBox(height: 24),
-                            _isLoading
-                                ? const Center(
-                                  child: CircularProgressIndicator(),
-                                )
-                                : SizedBox(
-                                  height: 50,
-                                  child: ElevatedButton(
-                                    onPressed: _signIn,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.blueAccent,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(
-                                          12.0,
-                                        ),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      'Sign In',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                ),
+                            Button(
+                              label: 'Sign In',
+                              isLoading: _isLoading,
+                              onPressed: _signIn,
+                            ),
                             const SizedBox(height: 16),
                             Center(
                               child: GestureDetector(

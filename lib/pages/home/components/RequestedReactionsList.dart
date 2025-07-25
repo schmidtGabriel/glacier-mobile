@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/helpers/formatStatusReaction.dart';
 import 'package:glacier/services/reactions/listReactions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -112,24 +113,30 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                               ),
                             ),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      createdBy?['name'] ?? 'Unknown',
-                                      style:
-                                          Theme.of(
-                                            context,
-                                          ).textTheme.titleMedium,
-                                    ),
-                                    Text(
-                                      reaction['created_at'] ?? 'No Date',
-                                      style:
-                                          Theme.of(context).textTheme.bodySmall,
-                                    ),
-                                  ],
+                                UserAvatar(user: createdBy, size: 32),
+                                SizedBox(width: 8),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        createdBy?.name ?? 'Unknown',
+                                        style:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.titleMedium,
+                                      ),
+                                      Text(
+                                        reaction['created_at'] ?? 'No Date',
+                                        style:
+                                            Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
+                                      ),
+                                    ],
+                                  ),
                                 ),
 
                                 if (reaction['status'] == '0')

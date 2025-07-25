@@ -84,7 +84,7 @@ Future<FriendInvitationResponse> saveFriend(
     await newInvitationRef.set({
       'uuid': newInvitationRef.id,
       'requested_user': userId,
-      'invited_email': friendEmail,
+      'invited_to': friendEmail,
       'invited_user': friendId,
       'created_at': FieldValue.serverTimestamp(),
       'status': 0, // 0 = pending

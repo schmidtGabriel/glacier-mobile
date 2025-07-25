@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/pages/SigninPage.dart';
-import 'package:glacier/services/getFCMToken.dart';
 import 'package:glacier/services/user/getMe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,8 +50,6 @@ class AuthGate extends StatelessWidget {
   Future<bool> _ensureUserDataExists() async {
     final isAuth = FirebaseAuth.instance.currentUser != null;
     if (isAuth) {
-      initFCM();
-
       final prefs = await SharedPreferences.getInstance();
       final userString = prefs.getString('user');
       // Only fetch user data if it doesn't exist in SharedPreferences

@@ -2,9 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:glacier/helpers/parseTimeStamp.dart';
 import 'package:glacier/resources/FriendResource.dart';
+import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/user/getUser.dart';
 
-Future<List> getUserFriends() async {
+Future<List<FriendResource>> getUserFriends() async {
   try {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return [];
@@ -25,7 +26,7 @@ Future<List> getUserFriends() async {
       querySnapshot.docs.map((doc) async {
         final data = doc.data();
 
-        Map<String, dynamic>? friend;
+        UserResource? friend;
         if (data['requested_user'] != null && data['requested_user'] != uid) {
           friend = await getUser(data['requested_user']);
         } else if (data['invited_user'] != null &&
@@ -41,7 +42,7 @@ Future<List> getUserFriends() async {
             ...friends,
             FriendResource.fromJson({
               'uuid': data['uuid'] ?? '',
-              'invited_email': data['invited_email'] ?? '',
+              'invited_to': data['invited_to'] ?? '',
               'status': data['status'] ?? '',
               'friend': friend,
               'created_at': formatTimestamp(data['created_at']),

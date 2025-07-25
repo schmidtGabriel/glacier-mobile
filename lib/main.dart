@@ -3,16 +3,17 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:glacier/components/BottomMenuLayout.dart';
-import 'package:glacier/components/PreviewVideoPage.dart';
 import 'package:glacier/firebase_options.dart';
 import 'package:glacier/gate/AuthGate.dart';
-import 'package:glacier/pages/GalleryScreen.dart';
+import 'package:glacier/pages/PreviewVideoPage.dart';
 import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/pages/SignupPage.dart';
 import 'package:glacier/pages/TakePictureScreen.dart';
 import 'package:glacier/pages/home/RecordPage.dart';
 import 'package:glacier/pages/home/RecordedVideoPage.dart';
+import 'package:glacier/pages/send-reaction/GalleryScreen.dart';
 import 'package:glacier/services/auth/logReaction.dart';
+import 'package:glacier/services/getFCMToken.dart';
 import 'package:toastification/toastification.dart';
 
 void main() async {
@@ -26,8 +27,10 @@ void main() async {
       statusBarBrightness: Brightness.light, // For iOS
     ),
   );
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  initFCM();
+
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) {
@@ -36,36 +39,25 @@ void main() async {
     );
   });
 
+  // Handle notification clicks when app is in background or foreground
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    print('🔔 Notification clicked: ${message.notification?.title}');
+    print(
+      '🔔 Notification clicked (app in background): ${message.notification?.title}',
+    );
+    _handleNotificationData(message);
+  });
 
-    print('🔔 Notification data: ${message.data}');
-
-    print('🔔 Notification reaction: ${message.data['reaction']}');
-
-    if (message.data.containsKey('reaction')) {
-      logReaction(message.data['reaction'], message.data);
-      navigatorKey.currentState?.pushNamed(
-        '/reaction',
-        arguments: {'uuid': message.data['reaction']},
+  // Handle notification clicks when app is terminated and opened via notification
+  FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) {
+    if (message != null) {
+      print(
+        '🔔 App opened from notification (terminated state): ${message.notification?.title}',
       );
+      // Delay handling to ensure the navigator is ready
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleNotificationData(message);
+      });
     }
-
-    if (message.data.containsKey('page')) {
-      switch (message.data['page']) {
-        case 'pending-friends':
-          navigatorKey.currentState?.pushNamed(
-            '/',
-            arguments: {'index': 1, 'segment': 1},
-          );
-          break;
-
-        default:
-          print('Unknown page: ${message.data['page']}');
-      }
-    }
-
-    print('🟢 Notification clicked and opened the app');
   });
 
   runApp(const MyApp());
@@ -76,6 +68,42 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   print("Handling a background message: ${message.messageId}");
+}
+
+void _handleNotificationData(RemoteMessage message) {
+  print('🔔 Handling notification data: ${message.data}');
+  print('🔔 Notification title: ${message.notification?.title}');
+  print('🔔 Notification body: ${message.notification?.body}');
+
+  logReaction('', message.data);
+
+  // Check if we have a reaction UUID to navigate to
+  if (message.data.containsKey('reaction') &&
+      message.data['reaction'] != null) {
+    print('🔔 Navigating to reaction: ${message.data['reaction']}');
+    navigatorKey.currentState?.pushNamed(
+      '/reaction',
+      arguments: {'uuid': message.data['reaction']},
+    );
+  }
+
+  // Check if we have a specific page to navigate to
+  if (message.data.containsKey('page') && message.data['page'] != null) {
+    print('🔔 Navigating to page: ${message.data['page']}');
+    switch (message.data['page']) {
+      case 'pending-friends':
+        navigatorKey.currentState?.pushNamed(
+          '/',
+          arguments: {'index': 2, 'segment': 1},
+        );
+        break;
+
+      default:
+        print('Unknown page: ${message.data['page']}');
+    }
+  }
+
+  print('🟢 Notification handled successfully');
 }
 
 class MyApp extends StatelessWidget {
@@ -104,11 +132,31 @@ class MyApp extends StatelessWidget {
         onGenerateRoute: (RouteSettings settings) {
           final args = settings.arguments;
 
-          switch (settings.name) {
+          // Handle deep links - extract path and query parameters from full URL
+          String routeName = settings.name ?? '/';
+          Map<String, String> queryParams = {};
+          print('🔗 Original Route: $routeName');
+
+          if (routeName.contains('?')) {
+            try {
+              final uri = Uri.parse(routeName);
+              routeName = uri.path.isEmpty ? '/' : uri.path;
+              queryParams = Map<String, String>.from(uri.queryParameters);
+            } catch (e) {
+              print('🔗 Error parsing URL: $e');
+              routeName = '/';
+            }
+          } else {
+            queryParams = {};
+          }
+
+          switch (routeName) {
             case '/login':
               return MaterialPageRoute(builder: (_) => SigninPage());
             case '/signup':
-              return MaterialPageRoute(builder: (_) => SignupPage());
+              return MaterialPageRoute(
+                builder: (_) => SignupPage(email: queryParams['email'] ?? ''),
+              );
 
             case '/':
               if (args is Map<String, dynamic> && args.containsKey('index')) {

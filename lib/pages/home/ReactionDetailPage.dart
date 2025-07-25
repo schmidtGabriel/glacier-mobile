@@ -174,7 +174,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                                   ),
                                 ),
                                 Text(
-                                  createdBy?['name'] ?? 'Unknown',
+                                  createdBy?.name ?? 'Unknown',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -222,7 +222,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                                     ),
                                   ),
                                   Text(
-                                    assignedUser['name'] ?? 'Unknown',
+                                    assignedUser?.name ?? 'Unknown',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w600,
@@ -348,7 +348,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                       ),
 
                       if (videoUrl.isNotEmpty &&
-                          user?['uuid'] == createdBy['uuid']) ...[
+                          user?['uuid'] == createdBy.uuid) ...[
                         SizedBox(height: 16),
                         Divider(color: Colors.grey[200]),
                         SizedBox(height: 16),
@@ -396,7 +396,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
 
                 // Action Buttons
                 if (status == '0' &&
-                    user?['uuid'] != createdBy['uuid'] &&
+                    user?['uuid'] != createdBy.uuid &&
                     videoUrl.isNotEmpty) ...[
                   SizedBox(
                     width: double.infinity,
@@ -411,11 +411,16 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                           _loadReactionByUuid();
                         });
                       },
+
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[600],
-                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.blue.shade50,
+                        foregroundColor: Colors.blue,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: Colors.blue.shade400,
+                            width: 2,
+                          ),
                         ),
                         elevation: 2,
                       ),
@@ -465,8 +470,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                   ),
                 ],
 
-                if (videoUrl.isNotEmpty &&
-                    user?['uuid'] == createdBy['uuid']) ...[
+                if (videoUrl.isNotEmpty && user?['uuid'] == createdBy.uuid) ...[
                   SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
@@ -500,7 +504,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                   ),
                 ],
 
-                if (status == '0' && user?['uuid'] == createdBy['uuid']) ...[
+                if (status == '0' && user?['uuid'] == createdBy.uuid) ...[
                   SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
@@ -587,7 +591,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
     }
 
     var currentReaction = await getReaction(widget.uuid ?? '');
-
+    print(currentReaction);
     if (currentReaction != null) {
       setState(() {
         reaction = Map<String, dynamic>.from(currentReaction);

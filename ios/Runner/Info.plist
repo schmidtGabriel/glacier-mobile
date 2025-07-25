@@ -48,6 +48,8 @@
 		<string>remote-notification</string>
 		<string>fetch</string>
 	</array>
+	<key>FlutterDeepLinkingEnabled</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -62,6 +64,19 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-	</array>
+	</array><key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>tryglacier</string>
+    </array>
+  </dict>
+</array>
+
+<key>NSUserActivityTypes</key>
+<array>
+  <string>NSUserActivityTypeBrowsingWeb</string>
+</array>
 </dict>
 </plist>

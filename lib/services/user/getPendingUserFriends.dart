@@ -1,12 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:glacier/helpers/parseTimeStamp.dart';
+import 'package:glacier/resources/FriendResource.dart';
+import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/user/getUser.dart';
 
-Future<List> getPendingUserFriends() async {
+Future<List<FriendResource>> getPendingUserFriends() async {
   try {
     final email = FirebaseAuth.instance.currentUser?.email;
-    final userId = FirebaseAuth.instance.currentUser?.uid;
+    final uid = FirebaseAuth.instance.currentUser?.uid;
 
     if (email == null) return [];
     final querySnapshot =
@@ -15,42 +17,39 @@ Future<List> getPendingUserFriends() async {
             .where('status', isEqualTo: 0)
             .where(
               Filter.or(
-                Filter('requested_user', isEqualTo: userId),
-                Filter('invited_email', isEqualTo: email),
-                Filter('invited_user', isEqualTo: userId),
+                Filter('requested_user', isEqualTo: uid),
+                Filter('invited_to', isEqualTo: email),
+                Filter('invited_user', isEqualTo: uid),
               ),
             )
             .get();
 
-    List pendingUsers = [];
+    List<FriendResource> pendingUsers = [];
     await Future.wait(
       querySnapshot.docs.map((doc) async {
         final data = doc.data();
 
-        final requested =
-            data['requested_user'] != null
-                ? await getUser(data['requested_user'])
-                : null;
+        UserResource? friend;
+        if (data['requested_user'] != null && data['requested_user'] != uid) {
+          friend = await getUser(data['requested_user']);
+        } else if (data['invited_user'] != null &&
+            data['invited_user'] != uid) {
+          friend = await getUser(data['invited_user']);
+        } else {
+          friend = null; // Skip if both users are the current user
+        }
 
-        final invited =
-            data['invited_user'] != null
-                ? await getUser(data['invited_user'])
-                : null;
-        // print('invited $invited');
-        // print('requested $requested');
-
-        if (requested != null) {
+        if (friend != null) {
           pendingUsers = [
             ...pendingUsers,
-            {
+            FriendResource.fromJson({
               'uuid': data['uuid'] ?? '',
-              'requested_user': requested,
-              'invited_user': invited,
-              'invited_email': data['invited_email'] ?? '',
+              'invited_to': data['invited_to'] ?? '',
               'status': data['status'] ?? '',
+              'friend': friend,
               'created_at': formatTimestamp(data['created_at']),
-              'isRequested': userId == requested['uuid'],
-            },
+              'isRequested': uid == data['requested_user'] ? true : false,
+            }),
           ];
         }
       }).toList(),

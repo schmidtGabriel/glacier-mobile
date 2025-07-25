@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:glacier/gate/AuthGate.dart';
-import 'package:glacier/pages/GalleryScreen.dart';
+import 'package:glacier/pages/send-reaction/GalleryScreen.dart';
 
 class SendReactionStack extends StatelessWidget {
   const SendReactionStack({super.key});

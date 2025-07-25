@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:glacier/components/PreviewVideoPage.dart';
 import 'package:glacier/components/VideoGallery/AlbumGridView.dart';
 import 'package:glacier/components/VideoGallery/VideoGridView.dart';
+import 'package:glacier/pages/PreviewVideoPage.dart';
 import 'package:glacier/pages/send-reaction/SendReactionPage.dart';
 import 'package:photo_manager/photo_manager.dart';
 
@@ -15,8 +15,10 @@ class GalleryScreen extends StatefulWidget {
 class _GalleryScreenState extends State<GalleryScreen> {
   List<AssetEntity> _videos = [];
   final List<AssetPathEntity> _albums = [];
-  bool _showAlbums = true;
-  String? _currentAlbumName;
+  bool _showAlbums = false;
+  String? _currentAlbumName = 'Recents';
+  String pageTitle = 'Gallery';
+  bool isLoading = true;
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +39,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
           child: Column(
             children: [
               AppBar(
-                title: Text('Gallery'),
+                title: Text(pageTitle),
 
                 leading: CloseButton(
                   onPressed: () {
@@ -47,35 +49,39 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   },
                 ),
                 actions: [
-                  IconButton(
-                    icon: Icon(
-                      _showAlbums ? Icons.video_collection : Icons.folder,
-                    ),
-                    onPressed: () async {
-                      if (!_showAlbums && _albums.isEmpty) {
-                        await _loadAlbums();
-                      }
-                      if (_showAlbums) {
-                        // switching to show all videos
-                        List<AssetEntity> allVideos = [];
-                        for (var album in _albums) {
-                          final albumVideos = await album.getAssetListPaged(
-                            page: 0,
-                            size: 100,
-                          );
-                          allVideos.addAll(albumVideos);
+                  if (_currentAlbumName == null && !isLoading) ...[
+                    IconButton(
+                      icon: Icon(
+                        _showAlbums ? Icons.video_collection : Icons.folder,
+                      ),
+                      onPressed: () async {
+                        if (!_showAlbums && _albums.isEmpty) {
+                          await _loadAlbums();
                         }
-                        setState(() {
-                          _videos = allVideos;
-                          _showAlbums = false;
-                        });
-                      } else {
-                        setState(() {
-                          _showAlbums = true;
-                        });
-                      }
-                    },
-                  ),
+                        if (_showAlbums) {
+                          // switching to show all videos
+                          List<AssetEntity> allVideos = [];
+                          for (var album in _albums) {
+                            final albumVideos = await album.getAssetListPaged(
+                              page: 0,
+                              size: 100,
+                            );
+                            allVideos.addAll(albumVideos);
+                          }
+                          setState(() {
+                            _videos = allVideos;
+                            _showAlbums = false;
+                            pageTitle = 'All Videos';
+                          });
+                        } else {
+                          setState(() {
+                            _showAlbums = true;
+                            pageTitle = 'Gallery';
+                          });
+                        }
+                      },
+                    ),
+                  ],
                 ],
               ),
               if (_currentAlbumName != null)
@@ -113,7 +119,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
                   albums: _albums,
                   openAlbum: (album) => openAlbum(album),
                 )
-                : _videos.isEmpty || _albums.isEmpty
+                : isLoading
                 ? Center(child: CircularProgressIndicator())
                 : VideoGridView(
                   videos: _videos,
@@ -176,6 +182,10 @@ class _GalleryScreenState extends State<GalleryScreen> {
       return;
     }
 
+    setState(() {
+      isLoading = true;
+    });
+
     // Get all albums/folders with videos
     List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
       type: RequestType.video,
@@ -198,6 +208,14 @@ class _GalleryScreenState extends State<GalleryScreen> {
       setState(() {
         _videos = allVideos;
       });
+    } else {
+      final ab = albums.firstWhere((album) => album.name == 'Recents');
+
+      openAlbum(ab);
     }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 }

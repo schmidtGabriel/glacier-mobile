@@ -2,11 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
+import 'package:glacier/resources/FriendResource.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AcceptedFriendsList extends StatelessWidget {
-  final List friends;
+  final List<FriendResource> friends;
   final UserResource? user;
   final VoidCallback onInviteFriend;
 
@@ -71,9 +72,9 @@ class AcceptedFriendsList extends StatelessWidget {
                   separatorBuilder: (_, __) => SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final friendData = friends[index];
-                    final friend = friendData.friend ?? {};
-                    final name = friend.name ?? '';
-                    final email = friend?.email ?? '';
+                    final UserResource friend = friendData.friend!;
+                    final name = friend.name;
+                    final email = friend.email;
 
                     return Container(
                       padding: EdgeInsets.all(16),

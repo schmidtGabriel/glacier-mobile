@@ -12,6 +12,8 @@ Future<void> sendInviteEmail(String to) async {
             '<h1>Hi there,</h1>'
             '<p>Welcome to Glacier! We\'re excited to have you on board.</p>'
             '<p>This is just a quick confirmation to make sure your email setup is working properly. If you received this message, everything is up and running!</p>'
+            '<p>To be part of this exciting journey, please install our app and make your registration by clicking the link below:</p>'
+            '<p><a href="https://tryglacier.com/signup?email=$to">Sign Up</a></p>'
             '<p>Best regards,<br>'
             'The Glacier Team</p>',
       },
