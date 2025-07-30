@@ -5,19 +5,11 @@ import 'package:glacier/pages/send-reaction/GalleryScreen.dart';
 class SendReactionStack extends StatelessWidget {
   const SendReactionStack({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Send Reaction',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
+    return Navigator(
       initialRoute: '/send-reaction',
       onGenerateRoute: (RouteSettings settings) {
-        final args = settings.arguments;
-
         switch (settings.name) {
           case '/send-reaction':
             return MaterialPageRoute(

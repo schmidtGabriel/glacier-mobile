@@ -1,9 +1,14 @@
 import 'dart:convert';
 
 import 'package:camera/camera.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:glacier/components/UserAvatar.dart';
+import 'package:glacier/providers/theme_provider.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
+import 'package:glacier/themes/theme_extensions.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -24,17 +29,43 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final currentMode = themeProvider.themeMode;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
           'Profile',
-          style: TextStyle(
-            color: Colors.black,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
         ),
         centerTitle: true,
+        actions: [
+          PopupMenuButton<ThemeMode>(
+            initialValue: currentMode,
+            icon: const Icon(Icons.color_lens),
+            onSelected: (mode) {
+              themeProvider.setThemeMode(mode);
+            },
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem(
+                    value: ThemeMode.light,
+                    child: Text('Light ☀️'),
+                  ),
+                  const PopupMenuItem(
+                    value: ThemeMode.dark,
+                    child: Text('Dark 🌙'),
+                  ),
+                  const PopupMenuItem(
+                    value: ThemeMode.system,
+                    child: Text('System ⚙️'),
+                  ),
+                ],
+          ),
+        ],
       ),
 
       body:
@@ -48,34 +79,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     SizedBox(height: 20),
 
                     // User Avatar with Camera Icon
-                    Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 60,
-                          backgroundColor: Colors.grey.shade300,
-                          child:
-                              user!.profilePic.isNotEmpty
-                                  ? ClipOval(
-                                    child: Image.network(
-                                      user!.profilePic,
-                                      width: 120,
-                                      height: 120,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                  : Text(
-                                    user?.name.isNotEmpty == true
-                                        ? user!.name[0].toUpperCase()
-                                        : '?',
-                                    style: TextStyle(
-                                      fontSize: 48,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                        ),
-                      ],
-                    ),
+                    UserAvatar(user: user, size: 100),
 
                     if (_uploadProgress > 0) ...[
                       SizedBox(height: 10),
@@ -90,18 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            spreadRadius: 1,
-                            blurRadius: 8,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                      decoration: ThemeContainers.card(context),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -110,7 +103,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             children: [
                               Icon(
                                 Icons.person_outline,
-                                color: Colors.grey[600],
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                 size: 24,
                               ),
                               SizedBox(width: 16),
@@ -120,8 +116,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                   children: [
                                     Text(
                                       'Name',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall?.copyWith(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -129,10 +126,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                     SizedBox(height: 4),
                                     Text(
                                       user?.name ?? 'Unknown',
-                                      style: TextStyle(
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.copyWith(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
                                       ),
                                     ),
                                   ],
@@ -148,7 +146,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             children: [
                               Icon(
                                 Icons.email_outlined,
-                                color: Colors.grey[600],
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                 size: 24,
                               ),
                               SizedBox(width: 16),
@@ -158,8 +159,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                   children: [
                                     Text(
                                       'Email',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall?.copyWith(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -167,10 +169,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                     SizedBox(height: 4),
                                     Text(
                                       user?.email ?? 'Unknown',
-                                      style: TextStyle(
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.copyWith(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
                                       ),
                                     ),
                                   ],
@@ -186,7 +189,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             children: [
                               Icon(
                                 Icons.calendar_today_outlined,
-                                color: Colors.grey[600],
+                                color:
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
                                 size: 24,
                               ),
                               SizedBox(width: 16),
@@ -196,8 +202,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                   children: [
                                     Text(
                                       'Member Since',
-                                      style: TextStyle(
-                                        color: Colors.grey[600],
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall?.copyWith(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -205,10 +212,11 @@ class _ProfilePageState extends State<ProfilePage> {
                                     SizedBox(height: 4),
                                     Text(
                                       user?.createdAt ?? '',
-                                      style: TextStyle(
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodyMedium?.copyWith(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
                                       ),
                                     ),
                                   ],
@@ -222,7 +230,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
                     SizedBox(height: 40),
 
-                    // Edit Profile Button (placeholder)
+                    // Edit Profile Button
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -234,20 +242,84 @@ class _ProfilePageState extends State<ProfilePage> {
                             loadUserData(); // Reload user data after edit
                           });
                         },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
+                        // Using theme's elevatedButtonTheme
                         child: Text(
                           'Edit Profile',
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
+                        ),
+                      ),
+                    ),
+
+                    GestureDetector(
+                      onTap: () async {
+                        bool? shouldSignOut = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('Sign Out'),
+                              content: Text(
+                                'Are you sure you want to sign out?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.of(context).pop(false),
+                                  child: Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.of(context).pop(true),
+                                  child: Text('Sign Out'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+
+                        if (shouldSignOut == true) {
+                          await FirebaseAuth.instance.signOut();
+                          SharedPreferences.getInstance().then((prefs) async {
+                            await prefs.remove('user');
+                            await prefs.remove('friends');
+                            await prefs.remove('invite');
+                            await prefs.remove('reactions');
+                            Navigator.pushNamedAndRemoveUntil(
+                              context,
+                              '/',
+                              (route) => false,
+                            );
+                          });
+                        }
+                      },
+                      child: Container(
+                        margin: EdgeInsets.only(top: 20),
+                        padding: EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 24,
+                        ),
+
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Sign Out',
+                              style: TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(
+                              Icons.logout,
+                              color: Colors.redAccent,
+                              size: 24,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -285,33 +357,5 @@ class _ProfilePageState extends State<ProfilePage> {
         isLoading = false;
       });
     }
-  }
-
-  Widget _buildImageOption({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 60,
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: Colors.blue, size: 30),
-          ),
-          SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-          ),
-        ],
-      ),
-    );
   }
 }

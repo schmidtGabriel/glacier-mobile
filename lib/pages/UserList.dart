@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
-import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/helpers/updateRecentFriends.dart';
 import 'package:glacier/resources/FriendResource.dart';
 import 'package:glacier/resources/UserResource.dart';
@@ -30,7 +29,8 @@ class _UserListState extends State<UserList> {
       appBar: AppBar(
         centerTitle: false,
         title: TextField(
-          decoration: inputDecoration('Search Friends').copyWith(
+          decoration: InputDecoration(
+            labelText: 'Search Friends',
             contentPadding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 5),
           ),
           onTapOutside: (event) {

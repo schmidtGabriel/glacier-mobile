@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:glacier/components/decorations/inputDecoration.dart';
 
 class UserInvite extends StatefulWidget {
   const UserInvite({super.key});
@@ -34,7 +33,9 @@ class _UserInviteState extends State<UserInvite> {
             SizedBox(height: 8),
             TextField(
               controller: _inviteController,
-              decoration: inputDecoration("Enter email or phone number"),
+              decoration: InputDecoration(
+                labelText: "Enter email or phone number",
+              ),
               onTapOutside: (event) {
                 FocusScope.of(context).unfocus();
               },

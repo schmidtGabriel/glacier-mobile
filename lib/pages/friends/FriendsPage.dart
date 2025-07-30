@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/pages/friends/components/AcceptedFriendsList.dart';
 import 'package:glacier/pages/friends/components/PendingFriendsList.dart';
 import 'package:glacier/resources/FriendResource.dart';
@@ -246,7 +245,6 @@ class _FriendsPageState extends State<FriendsPage>
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              backgroundColor: Colors.white,
               title: Text('Invite Friend'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -260,7 +258,7 @@ class _FriendsPageState extends State<FriendsPage>
                     controller: _dialogEmailController,
                     keyboardType: TextInputType.emailAddress,
                     autocorrect: false,
-                    decoration: inputDecoration("Friend's Email"),
+                    decoration: InputDecoration(labelText: "Friend's Email"),
                     validator: (value) {
                       //validate if the value is an email or phone number
                       final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');

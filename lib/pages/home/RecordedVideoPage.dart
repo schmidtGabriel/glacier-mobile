@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:glacier/helpers/editReactionVideo.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/updateReaction.dart';
@@ -34,158 +35,337 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
   @override
   Widget build(BuildContext context) {
     return _isLoading || _controller == null
-        ? Scaffold(body: Center(child: CircularProgressIndicator()))
-        : Scaffold(
-          appBar: AppBar(),
-          backgroundColor: Colors.white,
-          body: Column(
-            children: [
-              Expanded(
-                child: Container(
-                  margin: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: FutureBuilder(
-                      future: _initializeVideoPlayerFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.done &&
-                            _controller != null) {
-                          return SizedBox(
-                            width: double.infinity,
-                            height: double.infinity,
-                            child: FittedBox(
-                              fit: BoxFit.contain,
-                              child: SizedBox(
-                                width: _controller!.value.size.width,
-                                height: _controller!.value.size.height,
-                                child: VideoPlayer(_controller!),
-                              ),
-                            ),
-                          );
-                        } else {
-                          return Center(child: CircularProgressIndicator());
-                        }
-                      },
-                    ),
+        ? Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    Colors.blue.shade600,
                   ),
+                  strokeWidth: 3,
                 ),
-              ),
-              if (_controller != null)
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.8),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
-                    ),
-                  ),
-                  child: ValueListenableBuilder<VideoPlayerValue>(
-                    valueListenable: _controller!,
-                    builder: (context, value, child) {
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {
-                                _controller?.pause();
-                                Navigator.of(context).pop(true);
-                              },
-                              icon: Icon(
-                                Icons.replay,
-                                color: Colors.white,
-                                size: 20,
-                              ),
-                              label: Text(
-                                'Try again',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.blue.shade800,
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
+                SizedBox(height: 20),
+                Text(
+                  'Processing your video...',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+        )
+        : Scaffold(
+          body: SafeArea(
+            child: Stack(
+              children: [
+                Column(
+                  children: [
+                    Expanded(
+                      flex: 4, // Give more space to video
+                      child: Container(
+                        margin: EdgeInsets.fromLTRB(
+                          8,
+                          8,
+                          8,
+                          4,
+                        ), // Reduced margins
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: Offset(0, 5),
                             ),
-                          ),
-                          SizedBox(width: 5),
-                          ValueListenableBuilder<VideoPlayerValue>(
-                            valueListenable: _controller!,
-                            builder: (context, value, child) {
-                              return ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  shape: CircleBorder(),
-                                  padding: EdgeInsets.all(15),
-                                  elevation: 5,
-                                ),
-                                onPressed: () {
-                                  if (value.isPlaying) {
-                                    _controller?.pause();
-                                  } else {
-                                    _controller?.play();
-                                  }
-                                },
-                                child: Icon(
-                                  value.isPlaying
-                                      ? Icons.pause
-                                      : Icons.play_arrow,
-                                  color: Colors.black,
-                                  size: 24,
-                                ),
-                              );
-                            },
-                          ),
-                          SizedBox(width: 5),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: _isLoading ? null : onSend,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green.shade800,
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 12,
-                                  horizontal: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                              ),
-                              child:
-                                  _isLoading
-                                      ? SizedBox(
-                                        width: 20,
-                                        height: 20,
-                                        child: CircularProgressIndicator(
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            child: FutureBuilder(
+                              future: _initializeVideoPlayerFuture,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState ==
+                                        ConnectionState.done &&
+                                    _controller != null) {
+                                  return Stack(
+                                    children: [
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: double.infinity,
+                                        child: FittedBox(
+                                          fit: BoxFit.contain,
+                                          child: SizedBox(
+                                            width:
+                                                _controller!.value.size.width,
+                                            height:
+                                                _controller!.value.size.height,
+                                            child: VideoPlayer(_controller!),
+                                          ),
+                                        ),
+                                      ),
+                                      // Video progress indicator
+                                      Positioned(
+                                        bottom: 0,
+                                        left: 0,
+                                        right: 0,
+                                        child: SizedBox(
+                                          height: 4,
+                                          child: ValueListenableBuilder<
+                                            VideoPlayerValue
+                                          >(
+                                            valueListenable: _controller!,
+                                            builder: (context, value, child) {
+                                              return LinearProgressIndicator(
+                                                value:
+                                                    value
+                                                                .duration
+                                                                .inMilliseconds >
+                                                            0
+                                                        ? value
+                                                                .position
+                                                                .inMilliseconds /
+                                                            value
+                                                                .duration
+                                                                .inMilliseconds
+                                                        : 0.0,
+                                                backgroundColor: Colors.white
+                                                    .withOpacity(0.3),
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(Colors.blue.shade600),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                } else {
+                                  return Center(
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        CircularProgressIndicator(
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
                                                 Colors.white,
                                               ),
-                                          strokeWidth: 2.0,
                                         ),
-                                      )
-                                      : Text(
-                                        'Send Record',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 16,
+                                        SizedBox(height: 16),
+                                        Text(
+                                          'Loading video...',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 16,
+                                          ),
                                         ),
-                                      ),
+                                      ],
+                                    ),
+                                  );
+                                }
+                              },
                             ),
                           ),
-                        ],
-                      );
+                        ),
+                      ),
+                    ),
+                    if (_controller != null)
+                      Card(
+                        margin: EdgeInsets.fromLTRB(
+                          8,
+                          4,
+                          8,
+                          8,
+                        ), // Reduced margins
+                        child: Padding(
+                          padding: const EdgeInsets.all(16), // Reduced padding
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Video duration info - more compact
+                              ValueListenableBuilder<VideoPlayerValue>(
+                                valueListenable: _controller!,
+                                builder: (context, value, child) {
+                                  final position = value.position;
+                                  final duration = value.duration;
+
+                                  return Text(
+                                    '${_formatDuration(position)} / ${_formatDuration(duration)}',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 13, // Slightly smaller
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  );
+                                },
+                              ),
+                              SizedBox(height: 16), // Reduced spacing
+                              // Control buttons
+                              Row(
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        HapticFeedback.lightImpact();
+                                        _controller?.pause();
+                                        Navigator.of(context).pop(true);
+                                      },
+                                      icon: Icon(
+                                        Icons.refresh_rounded,
+                                        color: Colors.white,
+                                        size: 18, // Smaller icon
+                                      ),
+                                      label: Text(
+                                        'Try Again',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14, // Smaller text
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.orange.shade600,
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 12, // Reduced padding
+                                          horizontal: 16,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(width: 12),
+                                  // Play/Pause button
+                                  ValueListenableBuilder<VideoPlayerValue>(
+                                    valueListenable: _controller!,
+                                    builder: (context, value, child) {
+                                      return Container(
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.blue.withOpacity(
+                                                0.3,
+                                              ),
+                                              blurRadius: 8,
+                                              offset: Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                        child: ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                Colors.blue.shade600,
+                                            shape: CircleBorder(),
+                                            padding: EdgeInsets.all(
+                                              14,
+                                            ), // Slightly smaller
+                                            elevation: 0,
+                                          ),
+                                          onPressed: () {
+                                            HapticFeedback.selectionClick();
+                                            if (value.isPlaying) {
+                                              _controller?.pause();
+                                            } else {
+                                              _controller?.play();
+                                            }
+                                          },
+                                          child: Icon(
+                                            value.isPlaying
+                                                ? Icons.pause_rounded
+                                                : Icons.play_arrow_rounded,
+                                            color: Colors.white,
+                                            size: 26, // Slightly smaller
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  SizedBox(width: 12),
+                                  Expanded(
+                                    flex: 2,
+                                    child: ElevatedButton.icon(
+                                      onPressed:
+                                          _isLoading
+                                              ? null
+                                              : () {
+                                                HapticFeedback.mediumImpact();
+                                                onSend();
+                                              },
+                                      icon:
+                                          _isLoading
+                                              ? SizedBox(
+                                                width: 16, // Smaller loader
+                                                height: 16,
+                                                child: CircularProgressIndicator(
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(Colors.white),
+                                                  strokeWidth: 2.0,
+                                                ),
+                                              )
+                                              : Icon(
+                                                Icons.send_rounded,
+                                                color: Colors.white,
+                                                size: 18, // Smaller icon
+                                              ),
+                                      label: Text(
+                                        _isLoading ? 'Sending...' : 'Send',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14, // Smaller text
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            _isLoading
+                                                ? Colors.grey.shade400
+                                                : Colors.green.shade600,
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 12, // Reduced padding
+                                          horizontal: 16,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        elevation: 0,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+
+                Positioned(
+                  top: 8,
+                  left: 8,
+                  child: BackButton(
+                    onPressed: () {
+                      _controller?.pause();
+                      Navigator.of(context).pop();
                     },
                   ),
                 ),
-            ],
+              ],
+            ),
           ),
         );
   }
@@ -348,6 +528,12 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
           _isLoading = false;
           setState(() {});
         });
+  }
+
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
   Future<void> _initializeVideoRecording() async {

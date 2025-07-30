@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/services/user/getMe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,9 +17,7 @@ class AuthGate extends StatelessWidget {
           FirebaseAuth.instance.authStateChanges(), // Listen to auth changes
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return Scaffold(body: Center(child: CircularProgressIndicator()));
         } else if (snapshot.hasData) {
           return FutureBuilder<bool>(
             future: _ensureUserDataExists(),
@@ -35,9 +34,7 @@ class AuthGate extends StatelessWidget {
                 }
                 return child;
               }
-              return const Scaffold(
-                body: Center(child: CircularProgressIndicator()),
-              );
+              return Scaffold(body: Center(child: CircularProgressIndicator()));
             },
           );
         } else {
@@ -56,14 +53,14 @@ class AuthGate extends StatelessWidget {
       if (userString == null || userString.isEmpty) {
         await getMe();
       }
-
+      FlutterNativeSplash.remove();
       return true; // User data now exists
     } else {
       SharedPreferences.getInstance().then((prefs) {
         prefs.remove('user'); // Clear user data if not authenticated
       });
     }
-
+    FlutterNativeSplash.remove();
     return false;
   }
 }

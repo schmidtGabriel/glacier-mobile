@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/resources/FriendResource.dart';
 import 'package:glacier/resources/UserResource.dart';
+import 'package:glacier/themes/theme_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AcceptedFriendsList extends StatelessWidget {
@@ -31,17 +32,7 @@ class AcceptedFriendsList extends StatelessWidget {
               onTap: onInviteFriend,
               child: Container(
                 padding: EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
+                decoration: ThemeContainers.card(context),
                 child: Row(
                   children: [
                     CircleAvatar(
@@ -78,17 +69,7 @@ class AcceptedFriendsList extends StatelessWidget {
 
                     return Container(
                       padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                      decoration: ThemeContainers.card(context),
                       child: Row(
                         children: [
                           UserAvatar(user: friend),

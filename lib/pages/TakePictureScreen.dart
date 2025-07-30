@@ -191,7 +191,7 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
 
     _controller = CameraController(
       _cameras[_currentCameraIndex],
-      ResolutionPreset.medium,
+      ResolutionPreset.high,
     );
     _initializeControllerFuture = _controller.initialize().then((_) {
       // Set initial flash mode

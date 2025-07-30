@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/helpers/formatStatusReaction.dart';
 import 'package:glacier/services/reactions/listReactions.dart';
+import 'package:glacier/themes/theme_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class RequestedReactionsList extends StatefulWidget {
@@ -89,24 +90,20 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                     final title = reaction['title'] ?? 'No Name';
                     final createdBy = reaction['requested'];
                     return Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.2),
-                            spreadRadius: 1,
-                            blurRadius: 5,
-                            offset: Offset(0, 3),
-                          ),
-                        ],
-                      ),
+                      decoration: ThemeContainers.card(context),
                       child: Column(
                         children: [
                           Container(
-                            padding: EdgeInsets.all(8),
+                            padding: EdgeInsets.symmetric(
+                              vertical: 15,
+                              horizontal: 8,
+                            ),
                             decoration: BoxDecoration(
-                              color: Colors.blueGrey.shade100,
+                              color:
+                                  context.isDarkMode
+                                      ? Colors.blueGrey.shade800
+                                      : Colors.blueGrey.shade200,
+
                               borderRadius: BorderRadius.only(
                                 topLeft: Radius.circular(8),
                                 topRight: Radius.circular(8),

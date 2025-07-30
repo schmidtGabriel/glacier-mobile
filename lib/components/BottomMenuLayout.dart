@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:glacier/pages/friends/FriendsStack.dart';
 import 'package:glacier/pages/home/HomeStack.dart';
 import 'package:glacier/pages/send-reaction/SendReactionStack.dart';
+import 'package:glacier/services/getFCMToken.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BottomMenuLayout extends StatefulWidget {
   final int? index;
@@ -22,29 +24,26 @@ class _BottomMenuLayoutState extends State<BottomMenuLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(60),
-        child: SizedBox(height: 60),
-      ),
       body: _pages[_currentIndex],
 
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        selectedItemColor: Colors.blue,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        iconSize: 30,
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.phone_android), label: ''),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_reaction_sharp),
-            label: '',
-          ),
-        ],
+      bottomNavigationBar: Theme(
+        data: Theme.of(context),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: _onTabTapped,
+          type: BottomNavigationBarType.fixed,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          iconSize: 30,
+          items: [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
+            BottomNavigationBarItem(icon: Icon(Icons.phone_android), label: ''),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_reaction_sharp),
+              label: '',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -53,6 +52,7 @@ class _BottomMenuLayoutState extends State<BottomMenuLayout> {
   void initState() {
     super.initState();
 
+    // Initialize the pages
     _pages.addAll([
       HomeStack(),
       SendReactionStack(),
@@ -65,6 +65,23 @@ class _BottomMenuLayoutState extends State<BottomMenuLayout> {
       // Ensure the page is initialized
     } else {
       _currentIndex = 0; // Default to the first tab
+    }
+
+    openPermissionsPage();
+  }
+
+  void openPermissionsPage() async {
+    // Navigate to the permissions page if permissions are not granted
+    final prefs = await SharedPreferences.getInstance();
+    final permissionsGranted = prefs.getBool('permissionsGranted') ?? false;
+    print('Permissions granted: $permissionsGranted');
+    if (!permissionsGranted) {
+      Navigator.of(context).pushNamed('/permissions').then((_) {
+        // Reload the current page after permissions are granted
+        prefs.setBool('permissionsGranted', true);
+        initFCM();
+        setState(() {});
+      });
     }
   }
 

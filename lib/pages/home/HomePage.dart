@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/pages/home/components/RequestedReactionsList.dart';
@@ -51,26 +50,28 @@ class _HomePageState extends State<HomePage>
                                   });
                                 },
                                 child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     UserAvatar(user: user, size: 48),
-                                    SizedBox(width: 4),
+                                    SizedBox(width: 8),
                                     Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Hello ${user.name}',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 20,
-                                          ),
+                                          style:
+                                              Theme.of(
+                                                context,
+                                              ).textTheme.titleLarge,
                                         ),
 
                                         Text(
                                           user.email ?? '',
-                                          style: TextStyle(
-                                            color: Colors.grey.shade700,
-                                            fontSize: 14,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodySmall?.copyWith(
                                             fontStyle: FontStyle.italic,
                                           ),
                                         ),
@@ -78,55 +79,6 @@ class _HomePageState extends State<HomePage>
                                     ),
                                   ],
                                 ),
-                              ),
-                            ),
-
-                            GestureDetector(
-                              onTap: () async {
-                                bool? shouldSignOut = await showDialog<bool>(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title: Text('Sign Out'),
-                                      content: Text(
-                                        'Are you sure you want to sign out?',
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.of(
-                                                context,
-                                              ).pop(false),
-                                          child: Text('Cancel'),
-                                        ),
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.of(
-                                                context,
-                                              ).pop(true),
-                                          child: Text('Sign Out'),
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-
-                                if (shouldSignOut == true) {
-                                  await FirebaseAuth.instance.signOut();
-                                  SharedPreferences.getInstance().then((
-                                    prefs,
-                                  ) async {
-                                    await prefs.remove('user');
-                                    await prefs.remove('friends');
-                                    await prefs.remove('invite');
-                                    await prefs.remove('reactions');
-                                  });
-                                }
-                              },
-                              child: Icon(
-                                Icons.logout,
-                                size: 24,
-                                color: Colors.grey[600],
                               ),
                             ),
                           ],

@@ -1,0 +1,35 @@
+flutter_native_splash:
+  # Background color for light theme
+  color: "#ffffff"
+  image: lib/assets/logo.png
+  
+  # Background color for dark theme
+  color_dark: "#121212"
+  image_dark: lib/assets/logo-dark.png
+  
+  # Android 12+ specific configuration
+  android_12:
+    image: lib/assets/logo.png
+    icon_background_color: "#ffffff"
+    image_dark: lib/assets/logo-dark.png
+    icon_background_color_dark: "#121212"
+  
+  # iOS specific settings to eliminate white flash
+  ios:
+    image: lib/assets/logo.png
+    color: "#ffffff"
+    image_dark: lib/assets/logo-dark.png
+    color_dark: "#121212"
+    
+  # Android specific settings
+  android:
+    image: lib/assets/logo.png
+    color: "#ffffff"
+    image_dark: lib/assets/logo-dark.png
+    color_dark: "#121212"
+    
+  # Disable web splash screen
+  web: false
+  
+  # Add fullscreen setting to avoid status bar issues
+  fullscreen: true

@@ -28,16 +28,7 @@ class _ButtonState extends State<Button> {
       height: 50,
       child: ElevatedButton(
         onPressed: widget.isLoading == true ? null : widget.onPressed,
-        style:
-            widget.style ??
-            ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue,
-              disabledBackgroundColor: Colors.blue.shade100,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(100),
-              ),
-              elevation: 2,
-            ),
+        style: widget.style,
         child:
             widget.isLoading == true
                 ? Row(

@@ -2,9 +2,10 @@
 
 import 'dart:io';
 
-import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
+import 'package:glacier/helpers/addWatermark.dart';
 import 'package:glacier/helpers/copyAssetToFile.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 Future<String?> processVideo(
@@ -93,11 +94,6 @@ Future<String?> processVideo(
     //   throw Exception('Cannot write to temporary directory: $e');
     // }
 
-    // Input files
-    final watermark = await copyAssetToFile(
-      'lib/assets/watermark.png',
-      'watermark.png',
-    );
     // final endingVideo = await copyAssetToFile(
     //   'assets/endVideo.mp4',
     //   'endVideo.mp4',
@@ -169,15 +165,27 @@ Future<String?> processVideo(
     // print('Stacked video saved to: $stackedVideoPath');
 
     // 1. Add watermark - use separate input and output files
-    final watermarkCommand =
-        '-i $videoPath -i $watermark -filter_complex "[1:v]scale=iw*0.4:-1[wm];[0:v][wm]overlay=(main_w-overlay_w)/2:(main_h-overlay_h)/1.5" -codec:a copy $finalVideoPath';
-    final sessionWaterMark = await FFmpegKit.execute(watermarkCommand);
+    // final sessionWaterMark = await addWatermarkWithDate(
+    //   videoPath: videoPath,
+    //   outputPath: finalVideoPath,
+    // );
+
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+    final watermark = await copyAssetToFile(
+      'lib/assets/watermark.png',
+      'watermark.png',
+    );
+
+    var sessionWaterMark = await addWatermarkWithDate(
+      videoPath: videoPath,
+      outputPath: finalVideoPath,
+    );
+
     final returnCodeWaterMark = await sessionWaterMark.getReturnCode();
     final watermarkLogs = await sessionWaterMark.getLogs();
 
-    print('Watermark command: $watermarkCommand');
     print('Input stacked video: $stackedVideoPath');
-    print('Watermark file: $watermark');
     print('Final output: $finalVideoPath');
 
     // Print watermark FFmpeg logs for debugging

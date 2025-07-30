@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:glacier/components/Button.dart';
-import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/services/auth/signin.dart';
 import 'package:toastification/toastification.dart';
 
@@ -23,7 +23,6 @@ class _SigninPageState extends State<SigninPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -56,13 +55,21 @@ class _SigninPageState extends State<SigninPage> {
                                 padding: const EdgeInsets.only(bottom: 12.0),
                                 child: Text(
                                   _errorMessage,
-                                  style: const TextStyle(color: Colors.red),
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
                             TextFormField(
                               controller: _emailController,
-                              decoration: inputDecoration('Email'),
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                errorText:
+                                    _errorMessage.isNotEmpty
+                                        ? _errorMessage
+                                        : null,
+                              ),
                               validator:
                                   (value) =>
                                       value != null && value.contains('@')
@@ -76,10 +83,9 @@ class _SigninPageState extends State<SigninPage> {
                             TextFormField(
                               controller: _passwordController,
                               obscureText: _obscurePassword,
-                              decoration: inputDecoration(
-                                'Password',
-                                null,
-                                IconButton(
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
                                         ? Icons.visibility_off
@@ -91,6 +97,10 @@ class _SigninPageState extends State<SigninPage> {
                                     });
                                   },
                                 ),
+                                errorText:
+                                    _errorMessage.isNotEmpty
+                                        ? _errorMessage
+                                        : null,
                               ),
                               validator:
                                   (value) =>
@@ -142,6 +152,12 @@ class _SigninPageState extends State<SigninPage> {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    FlutterNativeSplash.remove();
   }
 
   Future<void> _signIn() async {

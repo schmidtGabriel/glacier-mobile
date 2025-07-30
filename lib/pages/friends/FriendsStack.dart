@@ -7,19 +7,11 @@ class FriendsStack extends StatelessWidget {
 
   const FriendsStack({super.key, this.segment});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Friends Stack',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-      ),
+    return Navigator(
       initialRoute: '/friends',
       onGenerateRoute: (RouteSettings settings) {
-        final args = settings.arguments;
-
         switch (settings.name) {
           case '/friends':
             return MaterialPageRoute(

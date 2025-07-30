@@ -172,6 +172,9 @@ class _RecordPageState extends State<RecordPage> {
 
       if (isFinished && !_controllerVideo!.value.isPlaying) {
         // Update the state to trigger CameraPreviewWidget's didUpdateWidget
+
+        await Future.delayed(Duration(seconds: 5));
+
         setState(() {
           isVideoFinished = true;
         });
@@ -344,12 +347,12 @@ class _RecordPageState extends State<RecordPage> {
         }
       });
     }
+    Navigator.pop(dialogContext); // Close the dialog
 
     setState(() {
       isRecording = true;
     });
-    Navigator.pop(dialogContext); // Close the dialog
-    Future.delayed(Duration(seconds: 3));
+    await Future.delayed(Duration(milliseconds: 150));
     FlutterScreenRecording.startRecordScreenAndAudio(
           currentReaction != null ? "${widget.uuid}.mp4" : 'Video Title',
         )

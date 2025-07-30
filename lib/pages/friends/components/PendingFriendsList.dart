@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/helpers/formatStatusInviteFriend.dart';
 import 'package:glacier/resources/FriendResource.dart';
+import 'package:glacier/themes/theme_extensions.dart';
 
 class PendingFriendsList extends StatelessWidget {
   final List<FriendResource> pendingFriends;
@@ -33,7 +34,6 @@ class PendingFriendsList extends StatelessWidget {
                   itemCount: pendingFriends.length,
                   separatorBuilder: (_, __) => SizedBox(height: 8),
                   itemBuilder: (context, index) {
-                    print('Pending friend data: ${pendingFriends[index]}');
                     final friendData = pendingFriends[index];
                     final friend = friendData.friend ?? {};
                     final name = friendData.friend?.name ?? '';
@@ -41,17 +41,7 @@ class PendingFriendsList extends StatelessWidget {
 
                     return Container(
                       padding: EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
+                      decoration: ThemeContainers.card(context),
                       child: Row(
                         children: [
                           UserAvatar(user: friend),

@@ -5,11 +5,12 @@ import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/Button.dart';
-import 'package:glacier/components/decorations/inputDecoration.dart';
+import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/user/getMe.dart';
 import 'package:glacier/services/user/updateUserData.dart';
+import 'package:glacier/themes/theme_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 
@@ -39,8 +40,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       appBar: AppBar(
         title: Text(
           'Edit Profile',
-          style: TextStyle(
-            color: Colors.black,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -76,34 +76,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       Center(
                         child: Stack(
                           children: [
-                            CircleAvatar(
-                              radius: 60,
-                              backgroundColor: Colors.grey.shade300,
-                              child:
-                                  profilePictureUrl.isNotEmpty
-                                      ? ClipOval(
-                                        child: Image.network(
-                                          profilePictureUrl,
-                                          width: 120,
-                                          height: 120,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      )
-                                      : user!.profilePic.isNotEmpty
-                                      ? ClipOval(
-                                        child: Image.network(
-                                          user!.profilePic,
-                                          width: 120,
-                                          height: 120,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      )
-                                      : Icon(
-                                        Icons.person,
-                                        size: 60,
-                                        color: Colors.grey[600],
-                                      ),
-                            ),
+                            UserAvatar(user: user, size: 100),
                             if (_uploadProgress > 0)
                               Positioned.fill(
                                 child: CircularProgressIndicator(
@@ -148,40 +121,25 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       Container(
                         width: double.infinity,
                         padding: EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
-                              spreadRadius: 1,
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
+                        decoration: ThemeContainers.card(context),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Name Field
-                            Text(
-                              'Name',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
                             SizedBox(height: 8),
                             TextFormField(
                               controller: _nameController,
-                              decoration: inputDecoration(
-                                'Enter your name',
-                                Icon(
+                              decoration: InputDecoration(
+                                labelText: 'Enter your name',
+                                prefixIcon: Icon(
                                   Icons.person_outline,
-                                  color: Colors.grey[600],
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
+
                               onTapOutside: (event) {
                                 FocusScope.of(context).unfocus();
                               },
@@ -195,25 +153,20 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
                             SizedBox(height: 24),
 
-                            // Email Field
-                            Text(
-                              'Email',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
                             SizedBox(height: 8),
                             TextFormField(
                               controller: _emailController,
-                              decoration: inputDecoration(
-                                'Enter your email',
-                                Icon(
+                              decoration: InputDecoration(
+                                labelText: 'Enter your email',
+                                prefixIcon: Icon(
                                   Icons.email_outlined,
-                                  color: Colors.grey[600],
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
                                 ),
                               ),
+
                               keyboardType: TextInputType.emailAddress,
                               onTapOutside: (event) {
                                 FocusScope.of(context).unfocus();
@@ -233,40 +186,22 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
 
                             SizedBox(height: 24),
 
-                            // Member Since (Read-only)
-                            Text(
-                              'Member Since',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                            TextField(
+                              controller: TextEditingController(
+                                text: user?.createdAt ?? '',
                               ),
-                            ),
-                            SizedBox(height: 8),
-                            Container(
-                              width: double.infinity,
-                              padding: EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: Colors.grey[300]!),
+                              decoration: InputDecoration(
+                                labelText: 'Member since',
+                                prefixIcon: Icon(
+                                  Icons.calendar_today_outlined,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                ),
                               ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.calendar_today_outlined,
-                                    color: Colors.grey[600],
-                                  ),
-                                  SizedBox(width: 12),
-                                  Text(
-                                    user?.createdAt ?? '',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: Colors.grey[700],
-                                    ),
-                                  ),
-                                ],
-                              ),
+
+                              readOnly: true,
                             ),
                           ],
                         ),

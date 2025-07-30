@@ -6,11 +6,14 @@ FirebaseMessaging messaging = FirebaseMessaging.instance;
 void initFCM() async {
   print('Initializing Firebase Cloud Messaging...');
   // Request permission
-  NotificationSettings settings = await messaging.requestPermission(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+  var settings = await FirebaseMessaging.instance.getNotificationSettings();
+  if (settings.authorizationStatus == AuthorizationStatus.notDetermined) {
+    settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
 
   // Handle foreground messages
   if (settings.authorizationStatus == AuthorizationStatus.authorized) {

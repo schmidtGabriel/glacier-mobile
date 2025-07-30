@@ -21,7 +21,9 @@ class _UserAvatarState extends State<UserAvatar> {
       backgroundColor: Colors.grey.shade300,
       backgroundImage: picture.isNotEmpty ? NetworkImage(picture) : null,
       child:
-          picture.isEmpty && name.isNotEmpty
+          picture.isNotEmpty
+              ? null
+              : picture.isEmpty && name.isNotEmpty
               ? Text(
                 name[0].toUpperCase(),
                 style: TextStyle(

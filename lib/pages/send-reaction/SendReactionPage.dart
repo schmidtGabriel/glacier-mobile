@@ -5,7 +5,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/Button.dart';
 import 'package:glacier/components/UserAvatar.dart';
-import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/helpers/updateRecentFriends.dart';
 import 'package:glacier/pages/PreviewVideoPage.dart';
 import 'package:glacier/pages/UserInvite.dart';
@@ -135,11 +134,17 @@ class _SendReactionPageState extends State<SendReactionPage> {
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                       SizedBox(height: 8),
-                      TextField(
+                      TextFormField(
                         controller: _titleController,
-                        decoration: inputDecoration("Enter title"),
+                        decoration: InputDecoration(labelText: "Enter title"),
                         onTapOutside: (event) {
                           FocusScope.of(context).unfocus();
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a title';
+                          }
+                          return null;
                         },
                       ),
                       SizedBox(height: 16),
@@ -149,13 +154,21 @@ class _SendReactionPageState extends State<SendReactionPage> {
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                       SizedBox(height: 8),
-                      TextField(
+                      TextFormField(
                         minLines: 4,
                         maxLines: 6,
                         controller: _descriptionController,
-                        decoration: inputDecoration("Enter description"),
+                        decoration: InputDecoration(
+                          labelText: "Enter description",
+                        ),
                         onTapOutside: (event) {
                           FocusScope.of(context).unfocus();
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter a description';
+                          }
+                          return null;
                         },
                       ),
 
@@ -441,20 +454,17 @@ class _SendReactionPageState extends State<SendReactionPage> {
       isLoadingSubmit = true;
     });
 
-    await uploadVideo();
-
-    final videoUrl = _filePath.trim();
-    final videoDuration = _duration;
-
-    if (videoUrl.isEmpty) {
+    if (_selectedVideo == null) {
       toastification.show(
         title: Text('Warning'),
-        description: Text("Please upload a video first."),
+        description: Text("You have to pick a video first."),
         autoCloseDuration: const Duration(seconds: 5),
         type: ToastificationType.warning,
         alignment: Alignment.bottomCenter,
       );
-
+      setState(() {
+        isLoadingSubmit = false;
+      });
       return;
     }
 
@@ -467,9 +477,17 @@ class _SendReactionPageState extends State<SendReactionPage> {
         type: ToastificationType.warning,
         alignment: Alignment.bottomCenter,
       );
-
+      setState(() {
+        isLoadingSubmit = false;
+      });
       return;
     }
+
+    await uploadVideo();
+
+    final videoUrl = _filePath.trim();
+    final videoDuration = _duration;
+
     await createReaction({
       'user': selectedFriend?.uuid,
       'invited_to': selectedFriendEmail ?? '',

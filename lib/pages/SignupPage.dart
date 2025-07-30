@@ -1,7 +1,6 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
-import 'package:glacier/components/decorations/inputDecoration.dart';
 import 'package:glacier/services/auth/signup.dart';
 import 'package:glacier/services/auth/verifyEmail.dart';
 import 'package:toastification/toastification.dart';
@@ -34,9 +33,6 @@ class _SignupPageState extends State<SignupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 1,
         leading:
             _step == 1
                 ? IconButton(
@@ -78,7 +74,6 @@ class _SignupPageState extends State<SignupPage> {
           ],
         ),
       ),
-      backgroundColor: Colors.grey[200],
       body: LayoutBuilder(
         builder: (context, constraints) {
           return Padding(
@@ -138,7 +133,7 @@ class _SignupPageState extends State<SignupPage> {
             children: [
               TextFormField(
                 controller: _controllers['name'],
-                decoration: inputDecoration("Name"),
+                decoration: InputDecoration(labelText: "Name"),
                 validator:
                     (value) =>
                         value != null && value.isNotEmpty
@@ -151,7 +146,7 @@ class _SignupPageState extends State<SignupPage> {
               SizedBox(height: 16),
               TextFormField(
                 controller: _controllers['email'],
-                decoration: inputDecoration("Email"),
+                decoration: InputDecoration(labelText: "Email"),
                 keyboardType: TextInputType.emailAddress,
                 validator:
                     (value) =>
@@ -165,7 +160,7 @@ class _SignupPageState extends State<SignupPage> {
               SizedBox(height: 16),
               TextFormField(
                 controller: _controllers['phone'],
-                decoration: inputDecoration("Phone"),
+                decoration: InputDecoration(labelText: "Phone"),
                 keyboardType: TextInputType.phone,
                 validator:
                     (value) =>
@@ -180,10 +175,9 @@ class _SignupPageState extends State<SignupPage> {
               TextFormField(
                 controller: _controllers['password'],
                 obscureText: _obscurePassword,
-                decoration: inputDecoration(
-                  "Password",
-                  null,
-                  IconButton(
+                decoration: InputDecoration(
+                  labelText: "Password",
+                  suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
                           ? Icons.visibility_off
@@ -225,10 +219,12 @@ class _SignupPageState extends State<SignupPage> {
         SizedBox(height: 24),
         TextField(
           controller: _friendEmailController,
-          decoration: inputDecoration(
-            "Friend's Email",
-            null,
-            IconButton(icon: Icon(Icons.add), onPressed: _addFriend),
+          decoration: InputDecoration(
+            labelText: "Friend's Email",
+            suffixIcon: IconButton(
+              icon: Icon(Icons.add),
+              onPressed: _addFriend,
+            ),
           ),
           onTapOutside: (event) {
             FocusScope.of(context).unfocus();
