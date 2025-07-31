@@ -111,7 +111,11 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                             ),
                             child: Row(
                               children: [
-                                UserAvatar(user: createdBy, size: 32),
+                                UserAvatar(
+                                  userName: createdBy?.name,
+                                  pictureUrl: createdBy?.profilePic,
+                                  size: 32,
+                                ),
                                 SizedBox(width: 8),
                                 Expanded(
                                   child: Column(

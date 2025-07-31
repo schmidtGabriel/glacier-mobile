@@ -1,31 +1,37 @@
 import 'package:flutter/material.dart';
 
 class UserAvatar extends StatefulWidget {
-  final user;
+  final String? userName;
   final double size;
+  final String? pictureUrl;
 
-  const UserAvatar({super.key, this.user, this.size = 48.0});
+  const UserAvatar({
+    super.key,
+    this.userName,
+    this.size = 48.0,
+    this.pictureUrl,
+  });
 
   @override
   State<UserAvatar> createState() => _UserAvatarState();
 }
 
 class _UserAvatarState extends State<UserAvatar> {
-  String picture = '';
-  String name = '';
-
   @override
   Widget build(BuildContext context) {
     return CircleAvatar(
       radius: widget.size / 2,
       backgroundColor: Colors.grey.shade300,
-      backgroundImage: picture.isNotEmpty ? NetworkImage(picture) : null,
+      backgroundImage:
+          widget.pictureUrl!.isNotEmpty
+              ? NetworkImage(widget.pictureUrl!)
+              : null,
       child:
-          picture.isNotEmpty
+          widget.pictureUrl!.isNotEmpty
               ? null
-              : picture.isEmpty && name.isNotEmpty
+              : widget.pictureUrl!.isEmpty && widget.userName!.isNotEmpty
               ? Text(
-                name[0].toUpperCase(),
+                widget.userName![0].toUpperCase(),
                 style: TextStyle(
                   fontSize: widget.size * 0.6,
                   color: Colors.grey.shade600,
@@ -38,14 +44,5 @@ class _UserAvatarState extends State<UserAvatar> {
   @override
   void dispose() {
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.user != null) {
-      picture = widget.user?.profilePic ?? '';
-      name = widget.user?.name ?? '';
-    }
   }
 }

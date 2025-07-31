@@ -35,7 +35,7 @@ class PendingFriendsList extends StatelessWidget {
                   separatorBuilder: (_, __) => SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final friendData = pendingFriends[index];
-                    final friend = friendData.friend ?? {};
+                    final friend = friendData.friend;
                     final name = friendData.friend?.name ?? '';
                     final email = friendData.friend?.email ?? '';
 
@@ -44,7 +44,10 @@ class PendingFriendsList extends StatelessWidget {
                       decoration: ThemeContainers.card(context),
                       child: Row(
                         children: [
-                          UserAvatar(user: friend),
+                          UserAvatar(
+                            userName: name,
+                            pictureUrl: friendData.friend?.profilePic,
+                          ),
                           SizedBox(width: 10),
                           Expanded(
                             child: Column(

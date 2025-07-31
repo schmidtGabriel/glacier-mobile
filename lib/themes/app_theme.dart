@@ -17,7 +17,7 @@ class AppTheme {
     cardColor: AppColors.lightSurface,
     dividerColor: AppColors.lightDivider,
     shadowColor: AppColors.lightShadow,
-    fontFamily: 'Poppins',
+    fontFamily: 'Raleway',
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.lightSurface,
       foregroundColor: AppColors.lightOnSurface,
@@ -86,7 +86,7 @@ class AppTheme {
     cardColor: AppColors.darkSurface,
     dividerColor: AppColors.darkDivider,
     shadowColor: AppColors.darkShadow,
-    fontFamily: 'Poppins',
+    fontFamily: 'Raleway',
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.darkSurface,
 

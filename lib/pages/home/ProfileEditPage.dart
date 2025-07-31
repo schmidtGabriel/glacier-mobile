@@ -76,7 +76,11 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       Center(
                         child: Stack(
                           children: [
-                            UserAvatar(user: user, size: 100),
+                            UserAvatar(
+                              userName: user?.name,
+                              pictureUrl: profilePictureUrl,
+                              size: 100,
+                            ),
                             if (_uploadProgress > 0)
                               Positioned.fill(
                                 child: CircularProgressIndicator(
@@ -212,7 +216,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                       // Save Button
                       Button(
                         label: 'Save Changes',
-                        isLoading: isSaving,
+                        isLoading: isSaving || _uploadProgress > 0,
                         onPressed: _saveProfile,
                       ),
                     ],
@@ -315,7 +319,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     label: 'Camera',
                     onTap: () {
                       Navigator.pop(context);
-                      _pickImageFromCamera();
+                      _pickImageFromCamera(context);
                     },
                   ),
                   _buildImageOption(
@@ -336,7 +340,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     );
   }
 
-  Future<void> _pickImageFromCamera() async {
+  Future<void> _pickImageFromCamera(context) async {
     try {
       final cameras = await availableCameras();
       final firstCamera = cameras.first;
@@ -364,7 +368,6 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                 autoCloseDuration: const Duration(seconds: 5),
                 alignment: Alignment.bottomCenter,
               );
-
               setState(() {
                 _uploadProgress = 0.0;
                 profilePictureUrl = value ?? '';

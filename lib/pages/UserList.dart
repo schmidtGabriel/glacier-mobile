@@ -101,7 +101,10 @@ class _UserListState extends State<UserList> {
                                   onTap: () {
                                     Navigator.of(context).pop(friend);
                                   },
-                                  leading: UserAvatar(user: friend),
+                                  leading: UserAvatar(
+                                    userName: friend.name,
+                                    pictureUrl: friend.profilePic,
+                                  ),
                                   title: Text(friend.name ?? ''),
                                   subtitle: Text(friend.email ?? ''),
                                   trailing: IconButton(
@@ -145,7 +148,10 @@ class _UserListState extends State<UserList> {
                                   onTap: () {
                                     Navigator.of(context).pop(friend);
                                   },
-                                  leading: UserAvatar(user: friend),
+                                  leading: UserAvatar(
+                                    userName: friend?.name,
+                                    pictureUrl: friend?.profilePic,
+                                  ),
                                   title: Text(friend?.name ?? ''),
                                   subtitle: Text(friend?.email ?? ''),
                                 );

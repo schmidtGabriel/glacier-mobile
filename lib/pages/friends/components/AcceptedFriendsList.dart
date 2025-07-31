@@ -72,7 +72,10 @@ class AcceptedFriendsList extends StatelessWidget {
                       decoration: ThemeContainers.card(context),
                       child: Row(
                         children: [
-                          UserAvatar(user: friend),
+                          UserAvatar(
+                            userName: friend.name,
+                            pictureUrl: friend.profilePic,
+                          ),
                           SizedBox(width: 10),
                           Expanded(
                             child: Column(

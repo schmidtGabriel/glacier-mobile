@@ -53,7 +53,10 @@ class _HomePageState extends State<HomePage>
                                   mainAxisAlignment: MainAxisAlignment.start,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    UserAvatar(user: user, size: 48),
+                                    UserAvatar(
+                                      userName: user.name,
+                                      pictureUrl: user.profilePic,
+                                    ),
                                     SizedBox(width: 8),
                                     Column(
                                       crossAxisAlignment:

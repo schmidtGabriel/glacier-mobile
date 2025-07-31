@@ -23,7 +23,6 @@ class _ProfilePageState extends State<ProfilePage> {
   bool isLoading = true;
   final uploadService = FirebaseStorageService();
   final double _uploadProgress = 0.0;
-  String profilePictureUrl = '';
 
   late final CameraDescription camera;
 
@@ -79,7 +78,11 @@ class _ProfilePageState extends State<ProfilePage> {
                     SizedBox(height: 20),
 
                     // User Avatar with Camera Icon
-                    UserAvatar(user: user, size: 100),
+                    UserAvatar(
+                      userName: user?.name,
+                      pictureUrl: user?.profilePic,
+                      size: 100,
+                    ),
 
                     if (_uploadProgress > 0) ...[
                       SizedBox(height: 10),

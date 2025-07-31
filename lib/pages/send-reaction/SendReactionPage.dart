@@ -274,7 +274,10 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
                             Row(
                               children: [
-                                UserAvatar(user: selectedFriend),
+                                UserAvatar(
+                                  userName: selectedFriend?.name,
+                                  pictureUrl: selectedFriend?.profilePic,
+                                ),
                                 SizedBox(width: 10),
                                 Expanded(
                                   child: Column(
