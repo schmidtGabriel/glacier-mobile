@@ -18,7 +18,8 @@ class _GalleryScreenState extends State<GalleryScreen> {
   bool _showAlbums = false;
   String? _currentAlbumName = 'Recents';
   String pageTitle = 'Gallery';
-  bool isLoading = true;
+  bool isLoading = false;
+  bool isGalleryGranted = false;
 
   @override
   Widget build(BuildContext context) {
@@ -31,128 +32,163 @@ class _GalleryScreenState extends State<GalleryScreen> {
           ).pushReplacementNamed('/', arguments: {'index': 0});
         }
       },
-      child: Scaffold(
-        appBar: PreferredSize(
-          preferredSize: Size.fromHeight(
-            _currentAlbumName == null ? kToolbarHeight : kToolbarHeight * 2,
-          ),
-          child: Column(
-            children: [
-              AppBar(
-                title: Text(pageTitle),
-
-                leading: CloseButton(
-                  onPressed: () {
-                    Navigator.of(
-                      context,
-                    ).pushReplacementNamed('/', arguments: {'index': 0});
-                  },
-                ),
-                actions: [
-                  if (_currentAlbumName == null && !isLoading) ...[
-                    IconButton(
-                      icon: Icon(
-                        _showAlbums ? Icons.video_collection : Icons.folder,
-                      ),
-                      onPressed: () async {
-                        if (!_showAlbums && _albums.isEmpty) {
-                          await _loadAlbums();
-                        }
-                        if (_showAlbums) {
-                          // switching to show all videos
-                          List<AssetEntity> allVideos = [];
-                          for (var album in _albums) {
-                            final albumVideos = await album.getAssetListPaged(
-                              page: 0,
-                              size: 100,
-                            );
-                            allVideos.addAll(albumVideos);
-                          }
-                          setState(() {
-                            _videos = allVideos;
-                            _showAlbums = false;
-                            pageTitle = 'All Videos';
-                          });
-                        } else {
-                          setState(() {
-                            _showAlbums = true;
-                            pageTitle = 'Gallery';
-                          });
-                        }
-                      },
-                    ),
-                  ],
-                ],
-              ),
-              if (_currentAlbumName != null)
-                Container(
-                  child: Row(
+      child:
+          !isGalleryGranted
+              ? Scaffold(
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      IconButton(
-                        icon: Icon(Icons.arrow_back),
-                        onPressed: () {
-                          setState(() {
-                            _showAlbums = true;
-                            _currentAlbumName = null;
-                          });
-                        },
+                      Text(
+                        'Gallery permission is required to access videos.',
+                        style: TextStyle(fontSize: 18),
+                        textAlign: TextAlign.center,
                       ),
-
-                      Expanded(
-                        child: Text(
-                          _currentAlbumName ?? 'Videos',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: () async {
+                          final permission =
+                              await PhotoManager.requestPermissionExtend();
+                          if (permission.isAuth) {
+                            setState(() {
+                              isGalleryGranted = true;
+                            });
+                            _loadAlbums();
+                          } else {
+                            PhotoManager.openSetting();
+                          }
+                        },
+                        child: Text('Grant Permission'),
                       ),
                     ],
                   ),
                 ),
-            ],
-          ),
-        ),
-        body:
-            _showAlbums
-                ? AlbumGridView(
-                  albums: _albums,
-                  openAlbum: (album) => openAlbum(album),
-                )
-                : isLoading
-                ? Center(child: CircularProgressIndicator())
-                : VideoGridView(
-                  videos: _videos,
-                  previewVideo: (video) async {
-                    final selectedVideo =
-                        await Navigator.push<Map<String, dynamic>?>(
-                          context,
-                          MaterialPageRoute(
-                            builder:
-                                (context) => PreviewVideoPage(
-                                  localVideo: video,
-                                  hasConfirmButton: true,
-                                ),
-                          ),
-                        );
+              )
+              : Scaffold(
+                appBar: PreferredSize(
+                  preferredSize: Size.fromHeight(
+                    _currentAlbumName == null
+                        ? kToolbarHeight
+                        : kToolbarHeight * 2,
+                  ),
+                  child: Column(
+                    children: [
+                      AppBar(
+                        title: Text(pageTitle),
 
-                    if (selectedVideo != null) {
-                      // var path = await selectedVideo.file;
-                      // Navigator.of(context).pop(selectedVideo);
-                      await Navigator.push<AssetEntity?>(
-                        context,
-                        MaterialPageRoute(
-                          builder:
-                              (context) => SendReactionPage(
-                                video: selectedVideo['video'],
-                                duration: selectedVideo['duration'],
-                              ),
+                        leading: CloseButton(
+                          onPressed: () {
+                            Navigator.of(context).pushReplacementNamed(
+                              '/',
+                              arguments: {'index': 0},
+                            );
+                          },
                         ),
-                      );
-                    }
-                  },
+                        actions: [
+                          if (_currentAlbumName == null && !isLoading) ...[
+                            IconButton(
+                              icon: Icon(
+                                _showAlbums
+                                    ? Icons.video_collection
+                                    : Icons.folder,
+                              ),
+                              onPressed: () async {
+                                if (!_showAlbums && _albums.isEmpty) {
+                                  await _loadAlbums();
+                                }
+                                if (_showAlbums) {
+                                  // switching to show all videos
+                                  List<AssetEntity> allVideos = [];
+                                  for (var album in _albums) {
+                                    final albumVideos = await album
+                                        .getAssetListPaged(page: 0, size: 100);
+                                    allVideos.addAll(albumVideos);
+                                  }
+                                  setState(() {
+                                    _videos = allVideos;
+                                    _showAlbums = false;
+                                    pageTitle = 'All Videos';
+                                  });
+                                } else {
+                                  setState(() {
+                                    _showAlbums = true;
+                                    pageTitle = 'Gallery';
+                                  });
+                                }
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (_currentAlbumName != null)
+                        Container(
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.arrow_back),
+                                onPressed: () {
+                                  setState(() {
+                                    _showAlbums = true;
+                                    _currentAlbumName = null;
+                                  });
+                                },
+                              ),
+
+                              Expanded(
+                                child: Text(
+                                  _currentAlbumName ?? 'Videos',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-      ),
+                body:
+                    _showAlbums
+                        ? AlbumGridView(
+                          albums: _albums,
+                          openAlbum: (album) => openAlbum(album),
+                        )
+                        : isLoading
+                        ? Center(child: CircularProgressIndicator())
+                        : VideoGridView(
+                          videos: _videos,
+                          previewVideo: (video) async {
+                            final selectedVideo =
+                                await Navigator.push<Map<String, dynamic>?>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => PreviewVideoPage(
+                                          localVideo: video,
+                                          hasConfirmButton: true,
+                                        ),
+                                  ),
+                                );
+
+                            if (selectedVideo != null) {
+                              // var path = await selectedVideo.file;
+                              // Navigator.of(context).pop(selectedVideo);
+                              await Navigator.push<AssetEntity?>(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => SendReactionPage(
+                                        video: selectedVideo['video'],
+                                        duration: selectedVideo['duration'],
+                                      ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+              ),
     );
   }
 
@@ -176,42 +212,40 @@ class _GalleryScreenState extends State<GalleryScreen> {
   }
 
   Future<void> _loadAlbums() async {
-    final permission = await PhotoManager.requestPermissionExtend();
-    if (!permission.isAuth) {
-      PhotoManager.openSetting();
-      return;
-    }
-
     setState(() {
       isLoading = true;
     });
 
-    // Get all albums/folders with videos
-    List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
-      type: RequestType.video,
-    );
-    for (final album in albums) {
-      final count = await album.assetCountAsync;
-      if (count > 0) {
+    isGalleryGranted = (await PhotoManager.requestPermissionExtend()).isAuth;
+
+    if (isGalleryGranted) {
+      // Get all albums/folders with videos
+      List<AssetPathEntity> albums = await PhotoManager.getAssetPathList(
+        type: RequestType.video,
+      );
+      for (final album in albums) {
+        final count = await album.assetCountAsync;
+        if (count > 0) {
+          setState(() {
+            _albums.add(album);
+          });
+        }
+      }
+
+      if (!_showAlbums) {
+        List<AssetEntity> allVideos = [];
+        for (var album in albums) {
+          final albumVideos = await album.getAssetListPaged(page: 0, size: 100);
+          allVideos.addAll(albumVideos);
+        }
         setState(() {
-          _albums.add(album);
+          _videos = allVideos;
         });
-      }
-    }
+      } else {
+        final ab = albums.firstWhere((album) => album.name == 'Recents');
 
-    if (!_showAlbums) {
-      List<AssetEntity> allVideos = [];
-      for (var album in albums) {
-        final albumVideos = await album.getAssetListPaged(page: 0, size: 100);
-        allVideos.addAll(albumVideos);
+        openAlbum(ab);
       }
-      setState(() {
-        _videos = allVideos;
-      });
-    } else {
-      final ab = albums.firstWhere((album) => album.name == 'Recents');
-
-      openAlbum(ab);
     }
 
     setState(() {

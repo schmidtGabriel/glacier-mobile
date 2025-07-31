@@ -432,12 +432,12 @@ class _PermissionsPageState extends State<PermissionsPage> {
         _cameraGranted = granted;
       });
 
-      if (!granted) {
-        _showPermissionDeniedDialog(
-          'Camera Access',
-          'To record reactions, please enable camera access in your device settings.',
-        );
-      }
+      // if (!granted) {
+      //   _showPermissionDeniedDialog(
+      //     'Camera Access',
+      //     'To record reactions, please enable camera access in your device settings.',
+      //   );
+      // }
     } catch (e) {
       print('Error requesting camera permission: $e');
       setState(() {
@@ -453,12 +453,12 @@ class _PermissionsPageState extends State<PermissionsPage> {
         _galleryGranted = granted;
       });
 
-      if (!granted) {
-        _showPermissionDeniedDialog(
-          'Gallery Access',
-          'To select videos from your gallery, please enable photo access in your device settings.',
-        );
-      }
+      // if (!granted) {
+      //   _showPermissionDeniedDialog(
+      //     'Gallery Access',
+      //     'To select videos from your gallery, please enable photo access in your device settings.',
+      //   );
+      // }
     } catch (e) {
       print('Error requesting gallery permission: $e');
     }
@@ -473,12 +473,12 @@ class _PermissionsPageState extends State<PermissionsPage> {
         _notificationsGranted = granted;
       });
 
-      if (!granted) {
-        _showPermissionDeniedDialog(
-          'Notifications',
-          'To receive important updates and friend requests, please enable notifications in your device settings.',
-        );
-      }
+      // if (!granted) {
+      //   _showPermissionDeniedDialog(
+      //     'Notifications',
+      //     'To receive important updates and friend requests, please enable notifications in your device settings.',
+      //   );
+      // }
     } catch (e) {
       print('Error requesting notification permission: $e');
     }
@@ -494,12 +494,12 @@ class _PermissionsPageState extends State<PermissionsPage> {
 
       print('Screen recording permission granted: $granted');
 
-      if (!granted) {
-        _showPermissionDeniedDialog(
-          'Screen Recording',
-          'To record your screen reactions, please enable screen recording access in your device settings.',
-        );
-      }
+      // if (!granted) {
+      //   _showPermissionDeniedDialog(
+      //     'Screen Recording',
+      //     'To record your screen reactions, please enable screen recording access in your device settings.',
+      //   );
+      // }
     } catch (e) {
       print('Error requesting screen recording permission: $e');
       setState(() {

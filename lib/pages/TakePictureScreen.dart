@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class TakePictureScreen extends StatefulWidget {
   final CameraDescription camera;
@@ -20,11 +21,11 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   int _currentCameraIndex = 0;
   bool _isFlashOn = false;
   bool _isSwitchingCamera = false;
+  bool isCameraGranted = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         iconTheme: IconThemeData(color: Colors.grey.shade400),
@@ -33,37 +34,71 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
           statusBarBrightness: Brightness.dark,
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.6,
-                width: double.infinity,
-                child:
-                    _isSwitchingCamera || _initializeControllerFuture == null
-                        ? const Center(child: CircularProgressIndicator())
-                        : FutureBuilder<void>(
-                          future: _initializeControllerFuture!,
-                          builder: (builderContext, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.done) {
-                              return ClipRect(
-                                child: CameraPreview(_controller),
-                              );
-                            } else {
-                              return const Center(
-                                child: CircularProgressIndicator(),
-                              );
-                            }
-                          },
-                        ),
+      body:
+          isCameraGranted
+              ? Column(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.6,
+                        width: double.infinity,
+                        child:
+                            _isSwitchingCamera ||
+                                    _initializeControllerFuture == null
+                                ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
+                                : FutureBuilder<void>(
+                                  future: _initializeControllerFuture!,
+                                  builder: (builderContext, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.done) {
+                                      return ClipRect(
+                                        child: CameraPreview(_controller),
+                                      );
+                                    } else {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                  },
+                                ),
+                      ),
+                    ),
+                  ),
+                  _buildCameraControls(),
+                ],
+              )
+              : Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Camera permission is required to take pictures.',
+                      style: TextStyle(fontSize: 18),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: 20),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final permission = await Permission.camera.request();
+                        if (permission.isGranted) {
+                          setState(() {
+                            isCameraGranted = true;
+                          });
+                          _initializeCameras();
+                        } else {
+                          openAppSettings();
+                        }
+                      },
+                      child: Text('Open Settings'),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-          _buildCameraControls(),
-        ],
-      ),
     );
   }
 
@@ -183,21 +218,25 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   Future<void> _initializeCameras() async {
-    _cameras = await availableCameras();
-    _currentCameraIndex = _cameras.indexWhere(
-      (camera) => camera == widget.camera,
-    );
-    if (_currentCameraIndex == -1) _currentCameraIndex = 0;
-
-    _controller = CameraController(
-      _cameras[_currentCameraIndex],
-      ResolutionPreset.high,
-    );
-    _initializeControllerFuture = _controller.initialize().then((_) {
-      // Set initial flash mode
-      _controller.setFlashMode(_isFlashOn ? FlashMode.always : FlashMode.off);
-    });
+    isCameraGranted = (await Permission.camera.status).isGranted;
     setState(() {});
+    if (isCameraGranted) {
+      _cameras = await availableCameras();
+      _currentCameraIndex = _cameras.indexWhere(
+        (camera) => camera == widget.camera,
+      );
+      if (_currentCameraIndex == -1) _currentCameraIndex = 0;
+
+      _controller = CameraController(
+        _cameras[_currentCameraIndex],
+        ResolutionPreset.high,
+      );
+      _initializeControllerFuture = _controller.initialize().then((_) {
+        // Set initial flash mode
+        _controller.setFlashMode(_isFlashOn ? FlashMode.always : FlashMode.off);
+      });
+      setState(() {});
+    }
   }
 
   Future<void> _switchCamera() async {
