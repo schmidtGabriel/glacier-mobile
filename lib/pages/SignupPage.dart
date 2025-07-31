@@ -18,6 +18,7 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   int _step = 0;
   bool _obscurePassword = true;
+  final String _errorMessage = '';
 
   final _formKey = GlobalKey<FormState>();
   final Map<String, TextEditingController> _controllers = {
@@ -144,14 +145,29 @@ class _SignupPageState extends State<SignupPage> {
           key: _formKey,
           child: Column(
             children: [
+              if (_errorMessage.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12.0),
+                  child: Text(
+                    _errorMessage,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               TextFormField(
                 controller: _controllers['name'],
-                decoration: InputDecoration(labelText: "Name"),
+                decoration: InputDecoration(
+                  labelText: "Name",
+                  errorText: _errorMessage.isNotEmpty ? _errorMessage : null,
+                ),
                 validator:
                     (value) =>
                         value != null && value.isNotEmpty
                             ? null
                             : "Name is required",
+
                 onTapOutside: (event) {
                   FocusScope.of(context).unfocus();
                 },
@@ -265,6 +281,8 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   void _nextStep() {
+    if (_formKey.currentState?.validate() != true) return;
+
     verifyEmailAccount(_controllers['email']!.text).then((isRegistered) {
       if (isRegistered) {
         toastification.show(
