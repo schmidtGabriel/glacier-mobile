@@ -68,11 +68,11 @@ extension ThemeExtension on BuildContext {
         case ThemeMode.light:
           return false;
         case ThemeMode.system:
-          return Theme.of(this).brightness == Brightness.dark;
+          return MediaQuery.of(this).platformBrightness == Brightness.dark;
       }
     } catch (e) {
       // Fallback to Theme.of(context) if ThemeProvider is not available
-      return Theme.of(this).brightness == Brightness.dark;
+      return MediaQuery.of(this).platformBrightness == Brightness.dark;
     }
   }
 

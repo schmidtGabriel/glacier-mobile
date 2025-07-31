@@ -24,14 +24,6 @@ void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
-  // Configure system UI to minimize white flash
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent,
-    ),
-  );
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -131,8 +123,8 @@ class MyApp extends StatelessWidget {
               darkTheme: AppTheme.darkTheme,
               themeMode: themeProvider.themeMode,
               builder: (context, child) {
-                final brightness = Theme.of(context).brightness;
-                final isDark = brightness == Brightness.dark;
+                // Determine if dark mode is active based on themeProvider and system brightness
+                final isDark = _getIsDarkMode(themeProvider, context);
                 SystemChrome.setSystemUIOverlayStyle(
                   SystemUiOverlayStyle(
                     statusBarColor: Colors.transparent,
@@ -251,7 +243,9 @@ class MyApp extends StatelessWidget {
         return _errorRoute();
 
       case '/permissions':
-        return MaterialPageRoute(builder: (_) => PermissionsPage());
+        return MaterialPageRoute(
+          builder: (_) => AuthGate(child: PermissionsPage()),
+        );
 
       default:
         return _errorRoute();
@@ -266,5 +260,17 @@ class MyApp extends StatelessWidget {
             body: Center(child: Text("Page not found or invalid arguments")),
           ),
     );
+  }
+
+  // Helper method to determine if dark mode is active
+  bool _getIsDarkMode(ThemeProvider themeProvider, BuildContext context) {
+    switch (themeProvider.themeMode) {
+      case ThemeMode.dark:
+        return true;
+      case ThemeMode.light:
+        return false;
+      case ThemeMode.system:
+        return MediaQuery.of(context).platformBrightness == Brightness.dark;
+    }
   }
 }

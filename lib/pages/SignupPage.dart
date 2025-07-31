@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:glacier/services/auth/signup.dart';
 import 'package:glacier/services/auth/verifyEmail.dart';
+import 'package:glacier/themes/theme_extensions.dart';
 import 'package:toastification/toastification.dart';
 
 class SignupPage extends StatefulWidget {
@@ -76,19 +77,21 @@ class _SignupPageState extends State<SignupPage> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          return Padding(
-            padding: EdgeInsets.fromLTRB(
-              24.0,
-              24.0,
-              24.0,
-              24.0 + MediaQuery.of(context).viewInsets.bottom,
-            ),
+          return SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                24.0,
+                24.0,
+                24.0,
+                24.0 + MediaQuery.of(context).viewInsets.bottom,
+              ),
 
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [if (_step == 0) _buildStep1() else _buildStep2()],
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [if (_step == 0) _buildStep1() else _buildStep2()],
+                ),
               ),
             ),
           );
@@ -126,7 +129,17 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildStep1() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      mainAxisSize: MainAxisSize.min,
       children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 60.0),
+          child: Center(
+            child:
+                context.isDarkMode
+                    ? Image.asset('lib/assets/logo-dark.png')
+                    : Image.asset('lib/assets/logo.png'),
+          ),
+        ),
         Form(
           key: _formKey,
           child: Column(
@@ -200,7 +213,6 @@ class _SignupPageState extends State<SignupPage> {
                             ? null
                             : 'Password too short',
               ),
-              SizedBox(height: 32),
             ],
           ),
         ),

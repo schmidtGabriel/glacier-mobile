@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:glacier/components/Button.dart';
 import 'package:glacier/services/auth/signin.dart';
+import 'package:glacier/themes/theme_extensions.dart';
 import 'package:toastification/toastification.dart';
 
 class SigninPage extends StatefulWidget {
@@ -29,115 +30,121 @@ class _SigninPageState extends State<SigninPage> {
             padding: EdgeInsets.only(
               left: 24.0,
               right: 24.0,
-              top: 24.0,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 24.0,
+              top: 0.0,
+              bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 40),
-                      Center(
-                        child: Image.asset('assets/logo.png', height: 100),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 60.0,
+                        vertical: 0,
                       ),
-                      const SizedBox(height: 40),
-                      Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (_errorMessage.isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 12.0),
-                                child: Text(
-                                  _errorMessage,
-                                  style: TextStyle(
-                                    color: Theme.of(context).colorScheme.error,
-                                  ),
-                                  textAlign: TextAlign.center,
+                      child: Center(
+                        child:
+                            context.isDarkMode
+                                ? Image.asset('lib/assets/logo-dark.png')
+                                : Image.asset('lib/assets/logo.png'),
+                      ),
+                    ),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (_errorMessage.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12.0),
+                              child: Text(
+                                _errorMessage,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
                                 ),
+                                textAlign: TextAlign.center,
                               ),
-                            TextFormField(
-                              controller: _emailController,
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                errorText:
-                                    _errorMessage.isNotEmpty
-                                        ? _errorMessage
-                                        : null,
-                              ),
-                              validator:
-                                  (value) =>
-                                      value != null && value.contains('@')
-                                          ? null
-                                          : 'Invalid email',
-                              onTapOutside: (event) {
-                                FocusScope.of(context).unfocus();
-                              },
                             ),
-                            const SizedBox(height: 16),
-                            TextFormField(
-                              controller: _passwordController,
-                              obscureText: _obscurePassword,
-                              decoration: InputDecoration(
-                                labelText: 'Password',
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_off
-                                        : Icons.visibility,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                              errorText:
+                                  _errorMessage.isNotEmpty
+                                      ? _errorMessage
+                                      : null,
+                            ),
+                            validator:
+                                (value) =>
+                                    value != null && value.contains('@')
+                                        ? null
+                                        : 'Invalid email',
+                            onTapOutside: (event) {
+                              FocusScope.of(context).unfocus();
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              labelText: 'Password',
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
                                 ),
-                                errorText:
-                                    _errorMessage.isNotEmpty
-                                        ? _errorMessage
-                                        : null,
-                              ),
-                              validator:
-                                  (value) =>
-                                      value != null && value.length >= 6
-                                          ? null
-                                          : 'Password too short',
-
-                              onTapOutside: (event) {
-                                FocusScope.of(context).unfocus();
-                              },
-                            ),
-                            const SizedBox(height: 24),
-                            Button(
-                              label: 'Sign In',
-                              isLoading: _isLoading,
-                              onPressed: _signIn,
-                            ),
-                            const SizedBox(height: 16),
-                            Center(
-                              child: GestureDetector(
-                                onTap: () {
-                                  Navigator.pushNamed(context, '/signup');
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
                                 },
-                                child: const Text(
-                                  "Don't have an account? Sign up",
-                                  style: TextStyle(
-                                    color: Colors.blueAccent,
-                                    decoration: TextDecoration.underline,
-                                  ),
+                              ),
+                              errorText:
+                                  _errorMessage.isNotEmpty
+                                      ? _errorMessage
+                                      : null,
+                            ),
+                            validator:
+                                (value) =>
+                                    value != null && value.length >= 6
+                                        ? null
+                                        : 'Password too short',
+
+                            onTapOutside: (event) {
+                              FocusScope.of(context).unfocus();
+                            },
+                          ),
+                          const SizedBox(height: 24),
+                          Button(
+                            label: 'Sign In',
+                            isLoading: _isLoading,
+                            onPressed: _signIn,
+                          ),
+                          const SizedBox(height: 16),
+                          Center(
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.pushNamed(context, '/signup');
+                              },
+                              child: const Text(
+                                "Don't have an account? Sign up",
+                                style: TextStyle(
+                                  color: Colors.blueAccent,
+                                  decoration: TextDecoration.underline,
                                 ),
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),

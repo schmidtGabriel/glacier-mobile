@@ -33,7 +33,6 @@ class _PermissionsPageState extends State<PermissionsPage> {
         appBar: AppBar(
           automaticallyImplyLeading: false,
           title: Text('App Permissions'),
-          backgroundColor: Colors.transparent,
         ),
         body:
             _isLoading
