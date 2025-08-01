@@ -1,18 +1,18 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/Button.dart';
 import 'package:glacier/components/UserAvatar.dart';
+import 'package:glacier/helpers/ImageProcessingHelper.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/user/getMe.dart';
 import 'package:glacier/services/user/updateUserData.dart';
 import 'package:glacier/themes/theme_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:toastification/toastification.dart';
 
 class ProfileEditPage extends StatefulWidget {
   const ProfileEditPage({super.key});
@@ -319,7 +319,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     label: 'Camera',
                     onTap: () {
                       Navigator.pop(context);
-                      _pickImageFromCamera(context);
+                      _pickImageFromCamera();
                     },
                   ),
                   _buildImageOption(
@@ -327,7 +327,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                     label: 'Gallery',
                     onTap: () {
                       Navigator.pop(context);
-                      _pickImageFromGallery(context);
+                      _pickImageFromGallery();
                     },
                   ),
                 ],
@@ -340,10 +340,11 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
     );
   }
 
-  Future<void> _pickImageFromCamera(context) async {
+  Future<void> _pickImageFromCamera() async {
     try {
       final cameras = await availableCameras();
       final firstCamera = cameras.first;
+      if (!mounted) return;
 
       final imagePath = await Navigator.of(
         context,
@@ -351,70 +352,57 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       ).pushNamed('/camera', arguments: {'camera': firstCamera});
 
       if (imagePath is String && imagePath.isNotEmpty) {
-        await uploadService
-            .uploadProfilePic(
-              imagePath,
-              onProgress: (sent, total) {
-                setState(() {
-                  _uploadProgress = sent / total;
-                });
-              },
-            )
-            .then((value) async {
-              toastification.show(
-                context: context,
-                title: Text('Profile picture updated successfully!'),
-                type: ToastificationType.success,
-                autoCloseDuration: const Duration(seconds: 5),
-                alignment: Alignment.bottomCenter,
-              );
-              setState(() {
-                _uploadProgress = 0.0;
-                profilePictureUrl = value ?? '';
-              });
+        if (!mounted) return;
+        // Navigate to crop page
+        final croppedImagePath = await ImageProcessingHelper.cropImage(
+          context,
+          imagePath,
+        );
 
-              await getMe();
-              File(imagePath).delete(); // Clean up temp file
-            });
+        if (croppedImagePath is String && croppedImagePath.isNotEmpty) {
+          await _uploadProfilePicture(croppedImagePath);
+
+          await ImageProcessingHelper.safeDeleteFile(imagePath);
+          await ImageProcessingHelper.safeDeleteFile(croppedImagePath);
+        } else {
+          print('Image cropping was cancelled or failed');
+          await ImageProcessingHelper.safeDeleteFile(imagePath);
+        }
       }
     } catch (e) {
       print('Camera error: $e');
+      ToastHelper.showError(
+        context,
+        'Error accessing camera. Please try again.',
+      );
     }
   }
 
-  Future<void> _pickImageFromGallery(context) async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+  Future<void> _pickImageFromGallery() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(type: FileType.image);
 
-    if (result != null && result.files.single.path != null) {
-      await uploadService
-          .uploadProfilePic(
-            result.files.single.path!,
-            onProgress: (sent, total) {
-              setState(() {
-                _uploadProgress = sent / total;
-              });
-            },
-          )
-          .then((value) async {
-            final file = result.files.single.path!;
+      if (result != null && result.files.single.path != null) {
+        final originalFilePath = result.files.single.path!;
+        if (!mounted) return;
+        // Navigate to crop page
+        final croppedImagePath = await ImageProcessingHelper.cropImage(
+          context,
+          originalFilePath,
+        );
 
-            toastification.show(
-              context: context,
-              title: Text('Profile picture updated successfully!'),
-              type: ToastificationType.success,
-              autoCloseDuration: const Duration(seconds: 5),
-              alignment: Alignment.bottomCenter,
-            );
+        if (croppedImagePath is String && croppedImagePath.isNotEmpty) {
+          await _uploadProfilePicture(croppedImagePath);
 
-            setState(() {
-              _uploadProgress = 0.0;
-              profilePictureUrl = value ?? '';
-            });
-
-            await getMe();
-
-            File(file).delete();
-          });
+          await ImageProcessingHelper.safeDeleteFile(croppedImagePath);
+        }
+      }
+    } catch (e) {
+      print('Gallery error: $e');
+      ToastHelper.showSuccess(
+        context,
+        'Error accessing gallery. Please try again.',
+      );
     }
   }
 
@@ -436,40 +424,71 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       final updatedUserData = await updateUserData(updateData);
 
       if (updatedUserData != null) {
-        toastification.show(
-          context: context,
-          title: Text('Profile updated successfully!'),
-          type: ToastificationType.success,
-          autoCloseDuration: const Duration(seconds: 3),
-          alignment: Alignment.bottomCenter,
-        );
-
-        // Navigate back
-        Navigator.pop(context);
+        if (mounted) {
+          ToastHelper.showSuccess(
+            context,
+            'Profile updated successfully!',
+            duration: const Duration(seconds: 3),
+          );
+          // Navigate back
+          Navigator.pop(context);
+        }
       } else {
-        toastification.show(
-          context: context,
-          title: Text('Failed to update profile'),
-          description: Text('Please try again later'),
-          type: ToastificationType.error,
-          autoCloseDuration: const Duration(seconds: 3),
-          alignment: Alignment.bottomCenter,
-        );
+        if (mounted) {
+          ToastHelper.showError(
+            context,
+            'Failed to update profile',
+            description: 'Please try again later',
+            duration: const Duration(seconds: 3),
+          );
+        }
       }
     } catch (e) {
       print('Error updating profile: $e');
-      toastification.show(
-        context: context,
-        title: Text('Error updating profile'),
-        description: Text('Please try again later'),
-        type: ToastificationType.error,
-        autoCloseDuration: const Duration(seconds: 3),
-        alignment: Alignment.bottomCenter,
-      );
+      if (mounted) {
+        ToastHelper.showError(
+          context,
+          'Error updating profile',
+          description: 'Please try again later',
+          duration: const Duration(seconds: 3),
+        );
+      }
     } finally {
       setState(() {
         isSaving = false;
       });
+    }
+  }
+
+  Future<void> _uploadProfilePicture(String imagePath) async {
+    try {
+      await uploadService
+          .uploadProfilePic(
+            imagePath,
+            onProgress: (sent, total) {
+              setState(() {
+                _uploadProgress = sent / total;
+              });
+            },
+          )
+          .then((value) async {
+            ToastHelper.showSuccess(
+              context,
+              'Profile picture updated successfully!',
+            );
+            setState(() {
+              _uploadProgress = 0.0;
+              profilePictureUrl = value ?? '';
+            });
+
+            await getMe();
+          });
+    } catch (e) {
+      print('Upload error: $e');
+      ToastHelper.showError(
+        context,
+        'Failed to upload profile picture. Please try again.',
+      );
     }
   }
 }

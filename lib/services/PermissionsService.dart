@@ -62,7 +62,8 @@ class PermissionsService {
           ),
         ),
       );
-      return permission == PermissionState.authorized ? true : false;
+      return permission == PermissionState.authorized ||
+          permission == PermissionState.limited;
     } catch (e) {
       print('Error checking gallery permission: $e');
       return false;
@@ -120,7 +121,8 @@ class PermissionsService {
     try {
       final permission = await PhotoManager.requestPermissionExtend();
       print('Requested gallery permission: $permission');
-      return permission.isAuth;
+      return permission == PermissionState.authorized ||
+          permission == PermissionState.limited;
     } catch (e) {
       print('Error requesting gallery permission: $e');
       return false;

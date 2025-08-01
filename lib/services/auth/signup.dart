@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:glacier/services/handleInvitation.dart';
+import 'package:glacier/services/friends/updateInvitedUser.dart';
 import 'package:glacier/services/user/saveFriend.dart';
 
 signup(data) async {
@@ -44,7 +44,7 @@ signup(data) async {
       var reslt = await saveFriend(res.user!.uid, friendEmail);
     }
 
-    await handleInvitations(data['email'], res.user!.uid);
+    await updateInvitedUser(data['email'], res.user!.uid);
     return res;
   } catch (error) {
     print('Error creating user document: $error');

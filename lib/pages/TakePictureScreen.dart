@@ -1,6 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:glacier/services/PermissionsService.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -14,7 +15,8 @@ class TakePictureScreen extends StatefulWidget {
   State<TakePictureScreen> createState() => _TakePictureScreenState();
 }
 
-class _TakePictureScreenState extends State<TakePictureScreen> {
+class _TakePictureScreenState extends State<TakePictureScreen>
+    with WidgetsBindingObserver {
   late CameraController _controller;
   Future<void>? _initializeControllerFuture;
   late List<CameraDescription> _cameras;
@@ -22,6 +24,7 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   bool _isFlashOn = false;
   bool _isSwitchingCamera = false;
   bool isCameraGranted = false;
+  final _permissionsService = PermissionsService.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -103,6 +106,15 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Refresh permissions when app comes back from settings
+    if (state == AppLifecycleState.resumed) {
+      _initializeCameras();
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
 
@@ -113,6 +125,7 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
         statusBarBrightness: Brightness.light, // For iOS
       ),
     );
+    WidgetsBinding.instance.removeObserver(this);
 
     super.dispose();
   }
@@ -120,6 +133,7 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initializeCameras();
   }
 
@@ -218,7 +232,8 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
   }
 
   Future<void> _initializeCameras() async {
-    isCameraGranted = (await Permission.camera.status).isGranted;
+    isCameraGranted = await _permissionsService.isCameraAccessGranted();
+
     setState(() {});
     if (isCameraGranted) {
       _cameras = await availableCameras();
@@ -229,7 +244,7 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
 
       _controller = CameraController(
         _cameras[_currentCameraIndex],
-        ResolutionPreset.high,
+        ResolutionPreset.veryHigh,
       );
       _initializeControllerFuture = _controller.initialize().then((_) {
         // Set initial flash mode
@@ -255,7 +270,7 @@ class _TakePictureScreenState extends State<TakePictureScreen> {
 
         _controller = CameraController(
           _cameras[_currentCameraIndex],
-          ResolutionPreset.medium,
+          ResolutionPreset.veryHigh,
         );
 
         _initializeControllerFuture = _controller.initialize().then((_) {

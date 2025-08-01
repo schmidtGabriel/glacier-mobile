@@ -4,8 +4,6 @@ import 'dart:io';
 
 import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:glacier/helpers/addWatermark.dart';
-import 'package:glacier/helpers/copyAssetToFile.dart';
-import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 Future<String?> processVideo(
@@ -170,28 +168,15 @@ Future<String?> processVideo(
     //   outputPath: finalVideoPath,
     // );
 
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-    final watermark = await copyAssetToFile(
-      'lib/assets/watermark.png',
-      'watermark.png',
-    );
-
     var sessionWaterMark = await addWatermarkWithDate(
       videoPath: videoPath,
       outputPath: finalVideoPath,
     );
 
     final returnCodeWaterMark = await sessionWaterMark.getReturnCode();
-    final watermarkLogs = await sessionWaterMark.getLogs();
 
     print('Input stacked video: $stackedVideoPath');
     print('Final output: $finalVideoPath');
-
-    // Print watermark FFmpeg logs for debugging
-    // for (final log in watermarkLogs) {
-    //   print('Watermark FFmpeg log: ${log.getMessage()}');
-    // }
 
     if (ReturnCode.isSuccess(returnCodeWaterMark)) {
       // SUCCESS
@@ -214,12 +199,4 @@ Future<String?> processVideo(
     print('Error stacking videos: $e');
     return null;
   }
-
-  // 2. Concat videos (with watermark + outro)
-  // final concatCommand =
-  //     '-i $watermarkedOutput -i $endingVideo -filter_complex "[0:v:0][0:a:0][1:v:0][1:a:0]concat=n=2:v=1:a=1[outv][outa]" -map "[outv]" -map "[outa]" $finalOutput';
-
-  // await FFmpegKit.execute(concatCommand);
-
-  // return finalOutput;
 }

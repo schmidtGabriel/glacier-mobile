@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:glacier/pages/friends/FriendsStack.dart';
 import 'package:glacier/pages/home/HomeStack.dart';
 import 'package:glacier/pages/send-reaction/SendReactionStack.dart';
-import 'package:glacier/services/getFCMToken.dart';
+import 'package:glacier/services/auth/getFCMToken.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BottomMenuLayout extends StatefulWidget {
@@ -74,7 +74,6 @@ class _BottomMenuLayoutState extends State<BottomMenuLayout> {
     // Navigate to the permissions page if permissions are not granted
     final prefs = await SharedPreferences.getInstance();
     final permissionsGranted = prefs.getBool('permissionsGranted') ?? false;
-    print('Permissions granted: $permissionsGranted');
     if (!permissionsGranted) {
       Navigator.of(context).pushNamed('/permissions').then((_) {
         // Reload the current page after permissions are granted

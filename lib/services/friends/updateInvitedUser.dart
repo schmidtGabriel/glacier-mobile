@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-handleInvitations(email, uid) async {
+updateInvitedUser(email, uid) async {
   final db = FirebaseFirestore.instance;
   final docFriendRef = db.collection('friend_invitations');
 

@@ -5,7 +5,6 @@ import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/pages/home/components/RequestedReactionsList.dart';
 import 'package:glacier/pages/home/components/SentReactionsList.dart';
 import 'package:glacier/resources/UserResource.dart';
-import 'package:glacier/services/getFCMToken.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -72,7 +71,7 @@ class _HomePageState extends State<HomePage>
                                         ),
 
                                         Text(
-                                          user.email ?? '',
+                                          user.email,
                                           style: Theme.of(
                                             context,
                                           ).textTheme.bodySmall?.copyWith(
@@ -155,20 +154,5 @@ class _HomePageState extends State<HomePage>
     setState(() {
       isLoading = false;
     });
-  }
-
-  void openPermissionsPage() async {
-    // Navigate to the permissions page if permissions are not granted
-    final prefs = await SharedPreferences.getInstance();
-    final permissionsGranted = prefs.getBool('permissionsGranted') ?? false;
-    print('Permissions granted: $permissionsGranted');
-    if (!permissionsGranted) {
-      Navigator.of(context).pushNamed('/permissions').then((_) {
-        // Reload the current page after permissions are granted
-        prefs.setBool('permissionsGranted', true);
-        initFCM();
-        setState(() {});
-      });
-    }
   }
 }

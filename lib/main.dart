@@ -6,6 +6,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:glacier/components/BottomMenuLayout.dart';
 import 'package:glacier/firebase_options.dart';
 import 'package:glacier/gate/AuthGate.dart';
+import 'package:glacier/pages/ImageCropPage.dart';
 import 'package:glacier/pages/PermissionsPage.dart';
 import 'package:glacier/pages/PreviewVideoPage.dart';
 import 'package:glacier/pages/SigninPage.dart';
@@ -226,6 +227,17 @@ class MyApp extends StatelessWidget {
         return MaterialPageRoute(
           builder: (_) => AuthGate(child: GalleryScreen()),
         );
+
+      case '/crop-image':
+        if (args is Map<String, dynamic> && args.containsKey('imagePath')) {
+          return MaterialPageRoute(
+            builder:
+                (_) => AuthGate(
+                  child: ImageCropPage(imagePath: args['imagePath']),
+                ),
+          );
+        }
+        return _errorRoute();
 
       case '/preview-video':
         if (args is Map<String, dynamic>) {
