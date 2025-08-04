@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:glacier/components/Button.dart';
 import 'package:glacier/services/PermissionsService.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -14,7 +15,7 @@ class _PermissionsPageState extends State<PermissionsPage> {
   bool _galleryGranted = false;
   bool _cameraGranted = false;
   bool _screenRecordingGranted = false;
-  final bool _isLoading = false;
+  bool _isLoading = false;
 
   final _permissionsService = PermissionsService.instance;
 
@@ -34,275 +35,251 @@ class _PermissionsPageState extends State<PermissionsPage> {
           automaticallyImplyLeading: false,
           title: Text('App Permissions'),
         ),
-        body:
-            _isLoading
-                ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text(
-                        'Checking permissions...',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ],
+        body: SingleChildScrollView(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade600, Colors.blue.shade400],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-                )
-                : SingleChildScrollView(
-                  padding: EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header
-                      Container(
-                        padding: EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.blue.shade600,
-                              Colors.blue.shade400,
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.security, color: Colors.white, size: 48),
-                            SizedBox(height: 12),
-                            Text(
-                              'Grant Permissions',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'To provide you with the best experience, Glacier needs access to certain features on your device.',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.security, color: Colors.white, size: 48),
+                    SizedBox(height: 12),
+                    Text(
+                      'Grant Permissions',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
                       ),
-
-                      SizedBox(height: 32),
-
-                      // Permission Cards
-                      _buildPermissionCard(
-                        icon: Icons.notifications,
-                        title: 'Notifications',
-                        description:
-                            'Receive friend requests, reaction updates, and important alerts',
-                        isGranted: _notificationsGranted,
-                        onTap: _requestNotificationPermission,
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'To provide you with the best experience, Glacier needs access to certain features on your device.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.9),
+                        fontSize: 16,
                       ),
+                    ),
+                  ],
+                ),
+              ),
 
-                      SizedBox(height: 16),
+              SizedBox(height: 32),
 
-                      _buildPermissionCard(
-                        icon: Icons.photo_library,
-                        title: 'Gallery Access',
-                        description:
-                            'Select videos from your device to create and share reactions',
-                        isGranted: _galleryGranted,
-                        onTap: _requestGalleryPermission,
+              // Permission Cards
+              _buildPermissionCard(
+                icon: Icons.notifications,
+                title: 'Notifications',
+                description:
+                    'Receive friend requests, reaction updates, and important alerts',
+                isGranted: _notificationsGranted,
+                onTap: _requestNotificationPermission,
+              ),
+
+              SizedBox(height: 16),
+
+              _buildPermissionCard(
+                icon: Icons.photo_library,
+                title: 'Gallery Access',
+                description:
+                    'Select videos from your device to create and share reactions',
+                isGranted: _galleryGranted,
+                onTap: _requestGalleryPermission,
+              ),
+
+              SizedBox(height: 16),
+
+              _buildPermissionCard(
+                icon: Icons.camera_alt,
+                title: 'Camera Access',
+                description:
+                    'Record your reactions and take photos within the app',
+                isGranted: _cameraGranted,
+                onTap: _requestCameraPermission,
+              ),
+
+              SizedBox(height: 16),
+
+              _buildPermissionCard(
+                icon: Icons.screen_share,
+                title: 'Screen Recording',
+                description:
+                    'Record your screen to capture reactions to videos and content',
+                isGranted: _screenRecordingGranted,
+                onTap: _requestScreenRecordingPermission,
+              ),
+
+              // Card(
+              //   elevation: 2,
+              //   shape: RoundedRectangleBorder(
+              //     borderRadius: BorderRadius.circular(12),
+              //   ),
+              //   child: InkWell(
+              //     onTap: null,
+              //     borderRadius: BorderRadius.circular(12),
+              //     child: Padding(
+              //       padding: EdgeInsets.all(16),
+              //       child: Row(
+              //         children: [
+              //           Container(
+              //             width: 48,
+              //             height: 48,
+              //             decoration: BoxDecoration(
+              //               color: Colors.orange.shade600,
+              //               borderRadius: BorderRadius.circular(12),
+              //             ),
+              //             child: Icon(
+              //               Icons.screen_share,
+              //               color: Colors.white,
+              //               size: 24,
+              //             ),
+              //           ),
+              //           SizedBox(width: 16),
+              //           Expanded(
+              //             child: Column(
+              //               crossAxisAlignment: CrossAxisAlignment.start,
+              //               children: [
+              //                 Text(
+              //                   'Screen Recording',
+              //                   style: TextStyle(
+              //                     fontSize: 16,
+              //                     fontWeight: FontWeight.w600,
+              //                     color: Colors.grey.shade800,
+              //                   ),
+              //                 ),
+              //                 SizedBox(height: 4),
+              //                 Text(
+              //                   'This feature requires your permission, we will request it when you try to use it.',
+              //                   style: TextStyle(
+              //                     fontSize: 14,
+              //                     color: Colors.grey.shade600,
+              //                   ),
+              //                 ),
+              //               ],
+              //             ),
+              //           ),
+              //           SizedBox(width: 16),
+              //           Container(
+              //             width: 24,
+              //             height: 24,
+              //             decoration: BoxDecoration(
+              //               color: Colors.orange.shade600,
+              //               shape: BoxShape.circle,
+              //             ),
+              //             child: Icon(
+              //               Icons.warning,
+              //               color: Colors.white,
+              //               size: 16,
+              //             ),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ),
+              // ),
+              SizedBox(height: 32),
+
+              // Action Buttons
+              if (!_allPermissionsGranted) ...[
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: Button(
+                    onPressed: () {
+                      if (!_isLoading) _requestAllPermissions();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue.shade600,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
-
-                      SizedBox(height: 16),
-
-                      _buildPermissionCard(
-                        icon: Icons.camera_alt,
-                        title: 'Camera Access',
-                        description:
-                            'Record your reactions and take photos within the app',
-                        isGranted: _cameraGranted,
-                        onTap: _requestCameraPermission,
-                      ),
-
-                      SizedBox(height: 16),
-
-                      _buildPermissionCard(
-                        icon: Icons.screen_share,
-                        title: 'Screen Recording',
-                        description:
-                            'Record your screen to capture reactions to videos and content',
-                        isGranted: _screenRecordingGranted,
-                        onTap: _requestScreenRecordingPermission,
-                      ),
-
-                      // Card(
-                      //   elevation: 2,
-                      //   shape: RoundedRectangleBorder(
-                      //     borderRadius: BorderRadius.circular(12),
-                      //   ),
-                      //   child: InkWell(
-                      //     onTap: null,
-                      //     borderRadius: BorderRadius.circular(12),
-                      //     child: Padding(
-                      //       padding: EdgeInsets.all(16),
-                      //       child: Row(
-                      //         children: [
-                      //           Container(
-                      //             width: 48,
-                      //             height: 48,
-                      //             decoration: BoxDecoration(
-                      //               color: Colors.orange.shade600,
-                      //               borderRadius: BorderRadius.circular(12),
-                      //             ),
-                      //             child: Icon(
-                      //               Icons.screen_share,
-                      //               color: Colors.white,
-                      //               size: 24,
-                      //             ),
-                      //           ),
-                      //           SizedBox(width: 16),
-                      //           Expanded(
-                      //             child: Column(
-                      //               crossAxisAlignment: CrossAxisAlignment.start,
-                      //               children: [
-                      //                 Text(
-                      //                   'Screen Recording',
-                      //                   style: TextStyle(
-                      //                     fontSize: 16,
-                      //                     fontWeight: FontWeight.w600,
-                      //                     color: Colors.grey.shade800,
-                      //                   ),
-                      //                 ),
-                      //                 SizedBox(height: 4),
-                      //                 Text(
-                      //                   'This feature requires your permission, we will request it when you try to use it.',
-                      //                   style: TextStyle(
-                      //                     fontSize: 14,
-                      //                     color: Colors.grey.shade600,
-                      //                   ),
-                      //                 ),
-                      //               ],
-                      //             ),
-                      //           ),
-                      //           SizedBox(width: 16),
-                      //           Container(
-                      //             width: 24,
-                      //             height: 24,
-                      //             decoration: BoxDecoration(
-                      //               color: Colors.orange.shade600,
-                      //               shape: BoxShape.circle,
-                      //             ),
-                      //             child: Icon(
-                      //               Icons.warning,
-                      //               color: Colors.white,
-                      //               size: 16,
-                      //             ),
-                      //           ),
-                      //         ],
-                      //       ),
-                      //     ),
-                      //   ),
-                      // ),
-                      SizedBox(height: 32),
-
-                      // Action Buttons
-                      if (!_allPermissionsGranted) ...[
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: ElevatedButton(
-                            onPressed:
-                                _isLoading ? null : _requestAllPermissions,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.blue.shade600,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 2,
-                            ),
-                            child: Text(
-                              'Grant All Permissions',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 16),
-                      ],
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            if (_allPermissionsGranted) {
-                              Navigator.of(context).pop(true);
-                            } else {
-                              Navigator.of(context).pop(false);
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                _allPermissionsGranted
-                                    ? Colors.green.shade600
-                                    : Colors.grey.shade600,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 2,
-                          ),
-                          child: Text(
-                            _allPermissionsGranted
-                                ? 'Continue to App'
-                                : 'Continue Anyway',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 20),
-
-                      // Privacy Note
-                      Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.shade300),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.privacy_tip,
-                              color: Colors.grey.shade600,
-                              size: 20,
-                            ),
-                            SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                'Your privacy is important to us. These permissions are only used to provide app functionality and your data is never shared without consent.',
-                                style: TextStyle(
-                                  color: Colors.grey.shade700,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                      elevation: 2,
+                    ),
+                    label: 'Grant All Permissions',
+                    isLoading: _isLoading,
+                    loadingLabel: 'Requesting Permissions...',
                   ),
                 ),
+                SizedBox(height: 16),
+              ],
+
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (_allPermissionsGranted) {
+                      Navigator.of(context).pop(true);
+                    } else {
+                      Navigator.of(context).pop(false);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        _allPermissionsGranted
+                            ? Colors.green.shade600
+                            : Colors.grey.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 2,
+                  ),
+                  child: Text(
+                    _allPermissionsGranted
+                        ? 'Continue to App'
+                        : 'Continue Anyway',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: 20),
+
+              // Privacy Note
+              Container(
+                padding: EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.privacy_tip,
+                      color: Colors.grey.shade600,
+                      size: 20,
+                    ),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Your privacy is important to us. These permissions are only used to provide app functionality and your data is never shared without consent.',
+                        style: TextStyle(
+                          color: Colors.grey.shade700,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -406,15 +383,22 @@ class _PermissionsPageState extends State<PermissionsPage> {
   }
 
   void _requestAllPermissions() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     await _requestNotificationPermission();
 
     await _requestGalleryPermission();
 
-    await _requestScreenRecordingPermission();
+    await _requestScreenRecordingPermission(keepRecording: true);
 
     await _requestCameraPermission();
 
     if (mounted) {
+      await Future.delayed(Duration(milliseconds: 200));
+      _permissionsService.stopScreenRecording();
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Permission requests completed!'),
@@ -423,6 +407,10 @@ class _PermissionsPageState extends State<PermissionsPage> {
         ),
       );
     }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   Future<void> _requestCameraPermission() async {
@@ -431,13 +419,6 @@ class _PermissionsPageState extends State<PermissionsPage> {
       setState(() {
         _cameraGranted = granted;
       });
-
-      // if (!granted) {
-      //   _showPermissionDeniedDialog(
-      //     'Camera Access',
-      //     'To record reactions, please enable camera access in your device settings.',
-      //   );
-      // }
     } catch (e) {
       print('Error requesting camera permission: $e');
       setState(() {
@@ -452,13 +433,6 @@ class _PermissionsPageState extends State<PermissionsPage> {
       setState(() {
         _galleryGranted = granted;
       });
-
-      // if (!granted) {
-      //   _showPermissionDeniedDialog(
-      //     'Gallery Access',
-      //     'To select videos from your gallery, please enable photo access in your device settings.',
-      //   );
-      // }
     } catch (e) {
       print('Error requesting gallery permission: $e');
     }
@@ -472,19 +446,14 @@ class _PermissionsPageState extends State<PermissionsPage> {
       setState(() {
         _notificationsGranted = granted;
       });
-
-      // if (!granted) {
-      //   _showPermissionDeniedDialog(
-      //     'Notifications',
-      //     'To receive important updates and friend requests, please enable notifications in your device settings.',
-      //   );
-      // }
     } catch (e) {
       print('Error requesting notification permission: $e');
     }
   }
 
-  Future<void> _requestScreenRecordingPermission() async {
+  Future<void> _requestScreenRecordingPermission({
+    bool keepRecording = false,
+  }) async {
     try {
       final granted =
           await _permissionsService.requestScreenRecordingPermission();
@@ -492,14 +461,11 @@ class _PermissionsPageState extends State<PermissionsPage> {
         _screenRecordingGranted = granted;
       });
 
+      if (granted && !keepRecording) {
+        await Future.delayed(Duration(milliseconds: 200));
+        _permissionsService.stopScreenRecording();
+      }
       print('Screen recording permission granted: $granted');
-
-      // if (!granted) {
-      //   _showPermissionDeniedDialog(
-      //     'Screen Recording',
-      //     'To record your screen reactions, please enable screen recording access in your device settings.',
-      //   );
-      // }
     } catch (e) {
       print('Error requesting screen recording permission: $e');
       setState(() {

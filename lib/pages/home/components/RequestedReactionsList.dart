@@ -36,6 +36,7 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
             physics: AlwaysScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
               children: [
                 SizedBox(
                   width: double.infinity,

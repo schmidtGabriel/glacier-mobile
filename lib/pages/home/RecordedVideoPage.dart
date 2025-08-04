@@ -31,6 +31,7 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
   String? editedVideo;
   String? selfiePath;
   var _isLoading = false;
+  var loadingMessage = 'Processing your video...';
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +49,7 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
                 ),
                 SizedBox(height: 20),
                 Text(
-                  'Processing your video...',
+                  loadingMessage,
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ],
@@ -82,93 +83,89 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(16),
-                          child: Container(
-                            child: FutureBuilder(
-                              future: _initializeVideoPlayerFuture,
-                              builder: (context, snapshot) {
-                                if (snapshot.connectionState ==
-                                        ConnectionState.done &&
-                                    _controller != null) {
-                                  return Stack(
-                                    children: [
-                                      SizedBox(
-                                        width: double.infinity,
-                                        height: double.infinity,
-                                        child: FittedBox(
-                                          fit: BoxFit.contain,
-                                          child: SizedBox(
-                                            width:
-                                                _controller!.value.size.width,
-                                            height:
-                                                _controller!.value.size.height,
-                                            child: VideoPlayer(_controller!),
-                                          ),
+                          child: FutureBuilder(
+                            future: _initializeVideoPlayerFuture,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                      ConnectionState.done &&
+                                  _controller != null) {
+                                return Stack(
+                                  children: [
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      child: FittedBox(
+                                        fit: BoxFit.contain,
+                                        child: SizedBox(
+                                          width: _controller!.value.size.width,
+                                          height:
+                                              _controller!.value.size.height,
+                                          child: VideoPlayer(_controller!),
                                         ),
                                       ),
-                                      // Video progress indicator
-                                      Positioned(
-                                        bottom: 0,
-                                        left: 0,
-                                        right: 0,
-                                        child: SizedBox(
-                                          height: 4,
-                                          child: ValueListenableBuilder<
-                                            VideoPlayerValue
-                                          >(
-                                            valueListenable: _controller!,
-                                            builder: (context, value, child) {
-                                              return LinearProgressIndicator(
-                                                value:
-                                                    value
-                                                                .duration
-                                                                .inMilliseconds >
-                                                            0
-                                                        ? value
-                                                                .position
-                                                                .inMilliseconds /
-                                                            value
-                                                                .duration
-                                                                .inMilliseconds
-                                                        : 0.0,
-                                                backgroundColor: Colors.white
-                                                    .withOpacity(0.3),
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                      Color
-                                                    >(Colors.blue.shade600),
-                                              );
-                                            },
-                                          ),
+                                    ),
+                                    // Video progress indicator
+                                    Positioned(
+                                      bottom: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: SizedBox(
+                                        height: 4,
+                                        child: ValueListenableBuilder<
+                                          VideoPlayerValue
+                                        >(
+                                          valueListenable: _controller!,
+                                          builder: (context, value, child) {
+                                            return LinearProgressIndicator(
+                                              value:
+                                                  value
+                                                              .duration
+                                                              .inMilliseconds >
+                                                          0
+                                                      ? value
+                                                              .position
+                                                              .inMilliseconds /
+                                                          value
+                                                              .duration
+                                                              .inMilliseconds
+                                                      : 0.0,
+                                              backgroundColor: Colors.white
+                                                  .withOpacity(0.3),
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.blue.shade600,
+                                                  ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              } else {
+                                return Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      CircularProgressIndicator(
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'Loading video...',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
                                         ),
                                       ),
                                     ],
-                                  );
-                                } else {
-                                  return Center(
-                                    child: Column(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        CircularProgressIndicator(
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
-                                              ),
-                                        ),
-                                        SizedBox(height: 16),
-                                        Text(
-                                          'Loading video...',
-                                          style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
+                                  ),
+                                );
+                              }
+                            },
                           ),
                         ),
                       ),
@@ -434,12 +431,14 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
       if (editedVideo != null) {
         _controller = VideoPlayerController.file(File(editedVideo!));
         _initializeVideoPlayerFuture = _initializeVideoRecording();
+        print('Video processing completed: $editedVideo');
         prefs.remove('selfiePath');
         prefs.remove('selfieName');
         // File(selfiePath!).delete();
       } else {
         // Show error if video processing failed
         if (mounted) {
+          print('Video processing failed: $editedVideo');
           toastification.show(
             title: Text('Video processing failed'),
             description: Text(
@@ -469,6 +468,7 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
           alignment: Alignment.bottomCenter,
         );
       }
+      Navigator.pop(context);
     }
   }
 
@@ -489,9 +489,14 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
       );
       return;
     }
+    _controller?.pause();
+    _controller?.dispose();
+
     setState(() {
+      loadingMessage = 'Submitting your video...';
       _isLoading = true;
     });
+
     var service = FirebaseStorageService();
     final prefs = await SharedPreferences.getInstance();
 
@@ -539,7 +544,7 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
   Future<void> _initializeVideoRecording() async {
     if (_controller != null) {
       await _controller!.initialize();
-
+      print('Video player initialized with size: ${_controller!.value.size}');
       // Add listener to detect when video finishes
       _controller!.addListener(() {
         if (_controller!.value.position >= _controller!.value.duration) {
@@ -548,8 +553,10 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
           _controller!.seekTo(Duration.zero);
         }
       });
+      print('Starting video playback');
 
       await _controller!.play();
+      print('Video playback started');
     }
   }
 }

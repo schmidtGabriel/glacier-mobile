@@ -25,7 +25,7 @@ class PendingFriendsList extends StatelessWidget {
             SizedBox(height: 16),
             pendingFriends.isEmpty
                 ? Text(
-                  "You haven't have new invites.",
+                  "You don't have any new invites.",
                   style: Theme.of(context).textTheme.bodyMedium,
                 )
                 : ListView.separated(

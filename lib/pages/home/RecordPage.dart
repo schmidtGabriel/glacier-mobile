@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screen_recording/flutter_screen_recording.dart';
 import 'package:glacier/components/CameraPreviewWidget.dart';
+import 'package:glacier/services/PermissionsService.dart';
 import 'package:glacier/services/reactions/getReaction.dart';
 import 'package:video_player/video_player.dart';
 
@@ -24,6 +25,7 @@ class _RecordPageState extends State<RecordPage> {
   String? videoPath;
 
   VideoPlayerController? _controllerVideo;
+  final _permissionsService = PermissionsService.instance;
 
   Map<String, dynamic>? currentReaction;
 
@@ -49,8 +51,9 @@ class _RecordPageState extends State<RecordPage> {
           body: ValueListenableBuilder<bool>(
             valueListenable: ValueNotifier(_isLoading),
             builder: (context, value, child) {
-              if (_controllerVideo == null ||
-                  !_controllerVideo!.value.isInitialized) {
+              if (!_isLoading &&
+                  (_controllerVideo == null ||
+                      !_controllerVideo!.value.isInitialized)) {
                 return Center(
                   child: Text('Video not available ${(widget.uuid)}'),
                 );
@@ -162,7 +165,11 @@ class _RecordPageState extends State<RecordPage> {
       isVideoFinished = false;
     });
 
-    _controllerVideo = VideoPlayerController.networkUrl(Uri.parse(videoUrl));
+    _controllerVideo = VideoPlayerController.networkUrl(
+      Uri.parse(videoUrl),
+      viewType: VideoViewType.textureView,
+      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+    );
     await _controllerVideo!.initialize();
     _controllerVideo!.setLooping(false);
 
@@ -353,6 +360,7 @@ class _RecordPageState extends State<RecordPage> {
       isRecording = true;
     });
     await Future.delayed(Duration(milliseconds: 150));
+
     FlutterScreenRecording.startRecordScreenAndAudio(
           currentReaction != null ? "${widget.uuid}.mp4" : 'Video Title',
         )

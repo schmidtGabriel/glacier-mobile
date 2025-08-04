@@ -5,10 +5,17 @@ import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/services/user/getMe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AuthGate extends StatelessWidget {
+class AuthGate extends StatefulWidget {
   final Widget child;
 
   const AuthGate({super.key, required this.child});
+
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _hasNavigatedToHome = false;
 
   @override
   Widget build(BuildContext context) {
@@ -32,12 +39,15 @@ class AuthGate extends StatelessWidget {
                 if (user == null) {
                   return const SigninPage();
                 }
-                return child;
+
+                return widget.child;
               }
               return Scaffold(body: Center(child: CircularProgressIndicator()));
             },
           );
         } else {
+          // Reset navigation flag when user logs out
+          _hasNavigatedToHome = false;
           return const SigninPage();
         }
       },

@@ -76,7 +76,7 @@ class _CameraPreviewWidgetState extends State<CameraPreviewWidget> {
           orElse: () => _cameras!.first, // fallback to first if no front cam
         );
 
-        _controller = CameraController(frontCamera, ResolutionPreset.ultraHigh);
+        _controller = CameraController(frontCamera, ResolutionPreset.max);
         await _controller!.initialize();
         print('Camera initialized, starting video recording...');
         await _controller!.startVideoRecording();

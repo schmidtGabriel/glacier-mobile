@@ -1,8 +1,10 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/services/auth/signup.dart';
 import 'package:glacier/services/auth/verifyEmail.dart';
+import 'package:glacier/services/user/getMe.dart';
 import 'package:glacier/themes/theme_extensions.dart';
 import 'package:toastification/toastification.dart';
 
@@ -18,7 +20,10 @@ class SignupPage extends StatefulWidget {
 class _SignupPageState extends State<SignupPage> {
   int _step = 0;
   bool _obscurePassword = true;
+  bool _isLoading = false;
   final String _errorMessage = '';
+  final ScrollController _scrollController =
+      ScrollController(); // Add this line
 
   final _formKey = GlobalKey<FormState>();
   final Map<String, TextEditingController> _controllers = {
@@ -65,13 +70,39 @@ class _SignupPageState extends State<SignupPage> {
                 },
                 child: Text("Back", style: TextStyle(color: Colors.blue)),
               ),
+
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blueAccent,
                 foregroundColor: Colors.white,
               ),
               onPressed: _step == 0 ? _nextStep : _submit,
-              child: Text(_step == 0 ? "Next" : "Submit"),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isLoading) ...[
+                    SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    ),
+                    SizedBox(width: 12),
+                  ],
+
+                  Text(
+                    _step == 0 ? "Next" : "Submit",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -79,6 +110,8 @@ class _SignupPageState extends State<SignupPage> {
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
+            controller: _scrollController, // Add this line
+
             child: Padding(
               padding: EdgeInsets.fromLTRB(
                 24.0,
@@ -282,21 +315,23 @@ class _SignupPageState extends State<SignupPage> {
 
   void _nextStep() {
     if (_formKey.currentState?.validate() != true) return;
+    print('Form validation result: ${_formKey.currentState?.validate()}');
 
     verifyEmailAccount(_controllers['email']!.text).then((isRegistered) {
+      print('Email verification result: $isRegistered');
       if (isRegistered) {
-        toastification.show(
-          title: Text('Ops.'),
-          description: Text("Email already registered."),
-          autoCloseDuration: const Duration(seconds: 5),
-          type: ToastificationType.warning,
-          alignment: Alignment.bottomCenter,
-        );
+        ToastHelper.showError(context, "Email already registered.");
       } else {
         if (_step == 0 && _formKey.currentState!.validate()) {
           setState(() {
             _step = 1;
           });
+
+          _scrollController.animateTo(
+            0,
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         }
       }
     });
@@ -304,6 +339,10 @@ class _SignupPageState extends State<SignupPage> {
 
   Future<void> _submit() async {
     try {
+      setState(() {
+        _isLoading = true;
+      });
+
       await signup({
         'name': _controllers['name']!.text,
         'email': _controllers['email']!.text,
@@ -320,7 +359,16 @@ class _SignupPageState extends State<SignupPage> {
         alignment: Alignment.bottomCenter,
       );
 
-      Navigator.pop(context); // Navigate back after successful signup
+      await getMe();
+
+      setState(() {
+        _isLoading = false;
+      });
+
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).pushNamedAndRemoveUntil('/', (route) => false);
     } catch (e) {
       print('Signup failed: $e');
       toastification.show(

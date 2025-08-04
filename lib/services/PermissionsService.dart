@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_screen_recording/flutter_screen_recording.dart';
@@ -6,6 +8,8 @@ import 'package:photo_manager/photo_manager.dart';
 
 class PermissionsService {
   static PermissionsService? _instance;
+  static bool _isTestingPermission = false; // Add this flag
+
   static PermissionsService get instance {
     _instance ??= PermissionsService._internal();
     return _instance!;
@@ -86,15 +90,17 @@ class PermissionsService {
   /// Check if screen recording permission is granted
   Future<bool> isScreenRecordingGranted() async {
     try {
-      final result = await FlutterScreenRecording.startRecordScreenAndAudio(
-        'Permission',
-      );
-      Future.delayed(Duration(seconds: 5)); // Allow time for recording to start
-      await FlutterScreenRecording.stopRecordScreen;
-      return result;
+      // This checks if the permission dialog would appear
+      // without actually starting a recording
+      return await FlutterScreenRecording.startRecordScreenAndAudio('test')
+          .timeout(Duration(milliseconds: 100))
+          .then((value) {
+            // If it succeeds quickly, permission is likely granted
+            FlutterScreenRecording.stopRecordScreen.catchError((_) {});
+            return value;
+          })
+          .catchError((_) => false);
     } catch (e) {
-      print('Error checking screen recording permission: $e');
-      await FlutterScreenRecording.stopRecordScreen;
       return false;
     }
   }
@@ -149,31 +155,52 @@ class PermissionsService {
     }
   }
 
-  /// Request screen recording permission by doing a quick test recording
+  /// Request screen recording permission - IMPROVED VERSION
   Future<bool> requestScreenRecordingPermission() async {
-    try {
-      return await FlutterScreenRecording.startRecordScreenAndAudio(
-            'Permission',
-          )
-          .then((value) async {
-            print('Screen recording started: $value');
-
-            await Future.delayed(
-              Duration(seconds: 1),
-            ); // Allow time for recording to start
-
-            FlutterScreenRecording.stopRecordScreen;
-
-            return true;
-          })
-          .catchError((e) {
-            print('Error starting screen recording: $e');
-            return false;
-          });
-    } catch (e) {
-      print('Error checking screen recording permission: $e');
-      await FlutterScreenRecording.stopRecordScreen;
+    if (_isTestingPermission) {
       return false;
+    }
+
+    try {
+      _isTestingPermission = true;
+
+      final result = await FlutterScreenRecording.startRecordScreenAndAudio(
+        'permission_request',
+      );
+
+      if (result) {
+        print('Screen recording permission granted');
+        // Shorter delay for permission testing
+        // await Future.delayed(Duration(milliseconds: 200));
+
+        // try {
+        //   await FlutterScreenRecording.stopRecordScreen;
+        // } catch (e) {
+        //   print('Error stopping permission request recording: $e');
+        // }
+      }
+
+      return result;
+    } catch (e) {
+      print('Error requesting screen recording permission: $e');
+      try {
+        await FlutterScreenRecording.stopRecordScreen;
+      } catch (stopError) {
+        print('Error in cleanup: $stopError');
+      }
+      return false;
+    } finally {
+      _isTestingPermission = false;
+    }
+  }
+
+  void stopScreenRecording() async {
+    var video = await FlutterScreenRecording.stopRecordScreen;
+    //delete the file if needed
+    File file = File(video);
+    if (file.existsSync()) {
+      file.deleteSync();
+      print('Screen recording file deleted');
     }
   }
 }
