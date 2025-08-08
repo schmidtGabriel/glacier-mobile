@@ -150,13 +150,21 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                             arguments: reaction,
                                           )
                                           .then((_) {
-                                            loadReactions();
+                                            // loadReactions();
+                                            Navigator.of(context)
+                                                .pushNamed(
+                                                  '/reaction-detail',
+                                                  arguments: reaction,
+                                                )
+                                                .then((_) {
+                                                  loadReactions();
+                                                });
                                           });
                                     },
                                     child: Container(
                                       padding: EdgeInsets.symmetric(
                                         vertical: 3,
-                                        horizontal: 15,
+                                        horizontal: 10,
                                       ),
                                       decoration: BoxDecoration(
                                         color: Colors.blueGrey.shade900,
@@ -175,6 +183,7 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                             'Record',
                                             style: TextStyle(
                                               color: Colors.white,
+                                              fontSize: 12,
                                             ),
                                           ),
                                         ],
@@ -185,7 +194,7 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                   Container(
                                     padding: EdgeInsets.symmetric(
                                       vertical: 3,
-                                      horizontal: 15,
+                                      horizontal: 10,
                                     ),
                                     decoration: BoxDecoration(
                                       color: colorStatusReaction(
@@ -195,7 +204,11 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                     ),
                                     child: Text(
                                       formatStatusReaction(reaction['status']),
-                                      style: TextStyle(color: Colors.white),
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
                                   ),
                               ],

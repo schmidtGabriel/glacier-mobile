@@ -6,6 +6,8 @@ import 'package:ffmpeg_kit_flutter_new/return_code.dart';
 import 'package:glacier/helpers/addWatermark.dart';
 import 'package:path_provider/path_provider.dart';
 
+// This method will send the selfie to server and return the path of the processed video
+
 Future<String?> processVideo(
   String? videoPath,
   String? selfiePath,

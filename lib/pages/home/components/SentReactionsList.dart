@@ -111,7 +111,7 @@ class _SentReactionsListState extends State<SentReactionsList> {
                                 Container(
                                   padding: EdgeInsets.symmetric(
                                     vertical: 3,
-                                    horizontal: 15,
+                                    horizontal: 10,
                                   ),
                                   decoration: BoxDecoration(
                                     color: colorStatusReaction(
@@ -121,7 +121,11 @@ class _SentReactionsListState extends State<SentReactionsList> {
                                   ),
                                   child: Text(
                                     formatStatusReaction(reaction['status']),
-                                    style: TextStyle(color: Colors.white),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                                 ),
                                 Text(
@@ -166,10 +170,14 @@ class _SentReactionsListState extends State<SentReactionsList> {
 
                                 GestureDetector(
                                   onTap: () {
-                                    Navigator.of(context).pushNamed(
-                                      '/reaction-detail',
-                                      arguments: reaction,
-                                    );
+                                    Navigator.of(context)
+                                        .pushNamed(
+                                          '/reaction-detail',
+                                          arguments: reaction,
+                                        )
+                                        .then((value) {
+                                          loadReactions();
+                                        });
                                   },
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.end,

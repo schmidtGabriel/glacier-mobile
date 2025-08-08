@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/Button.dart';
 import 'package:glacier/components/UserAvatar.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/helpers/updateRecentFriends.dart';
 import 'package:glacier/pages/PreviewVideoPage.dart';
 import 'package:glacier/pages/UserInvite.dart';
@@ -12,6 +13,7 @@ import 'package:glacier/pages/UserList.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/createReaction.dart';
+import 'package:glacier/services/reactions/updateReaction.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
@@ -84,8 +86,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                 ),
                                 builder: (_, snapshot) {
                                   final thumb = snapshot.data;
-                                  if (thumb == null)
+                                  if (thumb == null) {
                                     return Container(color: Colors.grey);
+                                  }
                                   return GestureDetector(
                                     onTap: () async {
                                       await Navigator.push<AssetEntity?>(
@@ -327,15 +330,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
                           ),
                         ],
                         SizedBox(height: 24),
-                        if (_uploadProgress > 0) ...[
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: LinearProgressIndicator(
-                              value: _uploadProgress,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                        ],
+
                         isLoading
                             ? const Center(child: CircularProgressIndicator())
                             : Button(
@@ -350,6 +345,17 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                 ),
                               ),
                             ),
+
+                        if (_uploadProgress > 0) ...[
+                          SizedBox(height: 10),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            child: LinearProgressIndicator(
+                              value: _uploadProgress,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                        ],
                       ],
                     ],
                   ),
@@ -414,24 +420,23 @@ class _SendReactionPageState extends State<SendReactionPage> {
     });
   }
 
-  Future<void> uploadVideo() async {
+  Future<Map<String, dynamic>?> uploadVideo(reactionId) async {
     if (_selectedVideo == null) {
-      toastification.show(
-        title: Text('Warning'),
-        description: Text("Please select a video first."),
-        autoCloseDuration: const Duration(seconds: 5),
-        type: ToastificationType.warning,
-        alignment: Alignment.bottomCenter,
+      ToastHelper.showWarning(
+        context,
+        description: 'Please select a video to upload.',
       );
-      return;
+
+      return null;
     }
 
     File? file = await _selectedVideo?.file;
     String filePath = file?.path ?? '';
 
-    await uploadService
+    return await uploadService
         .uploadVideo(
           filePath,
+          '$reactionId',
           onProgress: (sent, total) {
             setState(() {
               _uploadProgress = sent / total;
@@ -486,20 +491,24 @@ class _SendReactionPageState extends State<SendReactionPage> {
       return;
     }
 
-    await uploadVideo();
-
-    final videoUrl = _filePath.trim();
-    final videoDuration = _duration;
-
-    await createReaction({
+    var reactionId = await createReaction({
       'user': selectedFriend?.uuid,
       'invited_to': selectedFriendEmail ?? '',
       'is_friend': true,
-      'video': videoUrl,
-      'video_duration': videoDuration,
       'title': _titleController.text.trim(),
       'type_video': '3',
       'description': _descriptionController.text.trim(),
+    });
+
+    var uploadResult = await uploadVideo(reactionId);
+
+    final videoUrl = uploadResult?['filePath'].trim();
+    final videoDuration = _duration;
+
+    updateReaction({
+      'uuid': reactionId,
+      'video_path': videoUrl,
+      'video_duration': videoDuration,
     });
 
     if (selectedFriend != null) {

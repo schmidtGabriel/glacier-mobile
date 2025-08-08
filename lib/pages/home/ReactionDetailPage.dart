@@ -2,8 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/helpers/formatStatusReaction.dart';
+import 'package:glacier/resources/ReactionResource.dart';
+import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/reactions/cancelReaction.dart';
+import 'package:glacier/services/reactions/completeReaction.dart';
 import 'package:glacier/services/reactions/getReaction.dart';
+import 'package:glacier/services/reactions/updateReaction.dart';
 import 'package:glacier/themes/theme_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,20 +21,38 @@ class ReactionDetailPage extends StatefulWidget {
 }
 
 class _ReactionDetailPageState extends State<ReactionDetailPage> {
-  Map<String, dynamic>? reaction;
-  Map<String, dynamic>? user;
+  ReactionResource? reaction;
+  UserResource? user;
   bool _isLoading = false; // Track loading state
 
   @override
   Widget build(BuildContext context) {
-    final title = reaction?['title'] ?? 'No Title';
-    final createdBy = reaction?['requested'];
-    final assignedUser = reaction?['user'];
-    var status = reaction?['status'] ?? '0';
-    final createdAt = reaction?['created_at'] ?? 'No Date';
-    final videoUrl = reaction?['url'] ?? '';
-    final recordedUrl = reaction?['recordedUrl'] ?? '';
-    final videoDuration = reaction?['video_duration'].round() ?? '0';
+    final title = reaction?.title ?? 'No Title';
+    final createdBy = reaction?.createdBy;
+    final assignedUser = reaction?.assignedUser;
+    var status = reaction?.status ?? '0';
+    final createdAt = reaction?.createdAt ?? 'No Date';
+    final videoUrl = reaction?.videoUrl ?? '';
+    final reactionUrl = reaction?.reactionUrl ?? '';
+    final recordUrl = reaction?.recordUrl ?? '';
+    final videoDuration = reaction?.videoDuration.round() ?? '0';
+
+    final isStartRecording =
+        status == '0' &&
+        user?.uuid != reaction?.createdBy?.uuid &&
+        videoUrl.isNotEmpty &&
+        reactionUrl.isEmpty;
+    final isSendReaction =
+        status == '1' &&
+        user?.uuid != createdBy?.uuid &&
+        videoUrl.isNotEmpty &&
+        reactionUrl.isNotEmpty;
+    final isWatchRecord = status == '10' && recordUrl.isNotEmpty;
+    final isWatchVideo = videoUrl.isNotEmpty && user?.uuid == createdBy?.uuid;
+    final isCancelRequest = status == '0' && user?.uuid == createdBy?.uuid;
+
+    print('Reaction: ${reaction?.uuid}');
+
     return _isLoading
         ? Scaffold(body: Center(child: CircularProgressIndicator()))
         : Scaffold(
@@ -184,7 +206,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                                           Theme.of(context).textTheme.bodySmall,
                                     ),
                                     Text(
-                                      assignedUser?.name ?? 'Unknown',
+                                      assignedUser.name ?? 'Unknown',
                                       style: Theme.of(
                                         context,
                                       ).textTheme.bodyMedium?.copyWith(
@@ -203,8 +225,8 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
 
                   SizedBox(height: 20),
 
-                  if (reaction!.containsKey('description') &&
-                      reaction?['description'] != null) ...[
+                  if (reaction?.description != null &&
+                      reaction!.description!.isNotEmpty) ...[
                     Container(
                       width: double.infinity,
                       padding: EdgeInsets.all(20),
@@ -219,7 +241,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                           ),
                           SizedBox(height: 8),
                           Text(
-                            reaction?['description'] ?? 'No Description',
+                            reaction?.description ?? 'No Description',
                             style: Theme.of(context).textTheme.bodyMedium,
                           ),
                         ],
@@ -268,47 +290,10 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                         ),
 
                         if (videoUrl.isNotEmpty &&
-                            user?['uuid'] == createdBy.uuid) ...[
+                            user?.uuid == createdBy?.uuid) ...[
                           SizedBox(height: 16),
                           Divider(color: Colors.grey[200]),
                           SizedBox(height: 16),
-
-                          // Video URL
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Icon(
-                                Icons.link,
-                                color: Colors.grey[600],
-                                size: 20,
-                              ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Video URL',
-                                      style:
-                                          Theme.of(context).textTheme.bodySmall,
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text(
-                                      videoUrl,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium?.copyWith(
-                                        color: Colors.blue[700],
-                                        decoration: TextDecoration.underline,
-                                      ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
                         ],
                       ],
                     ),
@@ -317,9 +302,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                   SizedBox(height: 30),
 
                   // Action Buttons
-                  if (status == '0' &&
-                      user?['uuid'] != createdBy.uuid &&
-                      videoUrl.isNotEmpty) ...[
+                  if (isStartRecording) ...[
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -360,7 +343,37 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                     ),
                   ],
 
-                  if (status == '1' && recordedUrl.isNotEmpty) ...[
+                  if (isSendReaction) ...[
+                    SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          // logic to send the reaction and create the merging video
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[600],
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                        icon: Icon(Icons.send),
+                        iconAlignment: IconAlignment.end,
+                        label: Text(
+                          'Send Reaction',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  if (isWatchRecord) ...[
                     SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
@@ -372,7 +385,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                               rootNavigator: true,
                             ).pushNamed(
                               '/preview-video',
-                              arguments: {'videoPath': recordedUrl},
+                              arguments: {'videoPath': recordUrl},
                             ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.yellow[800],
@@ -394,8 +407,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                     ),
                   ],
 
-                  if (videoUrl.isNotEmpty &&
-                      user?['uuid'] == createdBy.uuid) ...[
+                  if (isWatchVideo) ...[
                     SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
@@ -429,19 +441,19 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                     ),
                   ],
 
-                  if (status == '0' && user?['uuid'] == createdBy.uuid) ...[
+                  if (isCancelRequest) ...[
                     SizedBox(height: 20),
                     SizedBox(
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton.icon(
-                        onPressed:
-                            () => {
-                              cancelReactionRequest(reaction?['uuid'] ?? ''),
-                              setState(() {
-                                status = '-10';
-                              }),
-                            },
+                        onPressed: () async {
+                          await cancelReactionRequest(reaction?.uuid ?? '');
+                          setState(() {
+                            status = '-10';
+                          });
+                          Navigator.of(context).pop();
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red[600],
                           foregroundColor: Colors.white,
@@ -503,6 +515,33 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
     _loadReactionByUuid();
   }
 
+  Future<void> _completeReaction() async {
+    if (reaction == null) return;
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      var resultReaction = await completeReaction(reaction, (progress, total) {
+        // Handle progress updates if needed
+      });
+
+      await updateReaction({
+        'status': '10',
+        'uuid': reaction?.uuid ?? '',
+        'record_path': resultReaction?['recordPath'],
+      });
+      await _loadReactionByUuid(); // Refresh the reaction data
+    } catch (e) {
+      print('Error completing reaction: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<bool> _loadReactionByUuid() async {
     setState(() {
       _isLoading = true;
@@ -511,7 +550,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
 
     final userString = prefs.getString('user');
     if (userString != null) {
-      user = jsonDecode(userString);
+      user = UserResource.fromJson(jsonDecode(userString));
     } else {
       user = null; // Handle case where user data is not available
     }
@@ -519,7 +558,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
     var currentReaction = await getReaction(widget.uuid ?? '');
     if (currentReaction != null) {
       setState(() {
-        reaction = Map<String, dynamic>.from(currentReaction);
+        reaction = currentReaction;
         _isLoading = false; // Hide loading indicator
       });
       return true;

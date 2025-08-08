@@ -289,6 +289,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             await prefs.remove('friends');
                             await prefs.remove('invite');
                             await prefs.remove('reactions');
+                            await prefs.remove('recent_friends');
                             Navigator.pushNamedAndRemoveUntil(
                               context,
                               '/',

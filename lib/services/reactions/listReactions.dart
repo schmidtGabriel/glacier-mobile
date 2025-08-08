@@ -1,46 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:glacier/helpers/parseTimeStamp.dart';
-import 'package:glacier/services/FirebaseStorageService.dart';
+import 'package:glacier/services/reactions/getReactionVideos.dart';
 import 'package:glacier/services/user/getUser.dart';
-
-Future<String> handleRecord(data) async {
-  try {
-    if (data['recorded_video'] != null || data['recorded_video'].isNotEmpty) {
-      final service = FirebaseStorageService();
-      String res = await service.getDownloadUrl(data['recorded_video']);
-
-      if (res.isNotEmpty) {
-        return res;
-      } else {
-        return '';
-      }
-    } else {
-      return '';
-    }
-  } catch (e) {
-    // print('Error fetching video URL: $e');
-    return '';
-  }
-}
-
-Future<String> handleVideo(data) async {
-  try {
-    if (data['video'] != null || data['video'].isNotEmpty) {
-      final service = FirebaseStorageService();
-      if (data['type_video'] == '3') {
-        String res = await service.getDownloadUrl(data['video']);
-        return res;
-      } else {
-        return data['video'] ?? '';
-      }
-    } else {
-      return '';
-    }
-  } catch (e) {
-    // print('Error fetching video URL: $e');
-    return '';
-  }
-}
 
 Future<List> listReactions({
   required String userId,

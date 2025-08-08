@@ -506,7 +506,12 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
         .then((value) async {
           print('Video uploaded successfully: $value');
 
-          await updateReaction(widget.videoName, widget.uuid);
+          await updateReaction({
+            'selfie_video': 'reactions/${widget.uuid}.mp4',
+            'uuid': widget.uuid ?? '',
+            'recordDuration': 0, // Placeholder, update as needed
+            'delayDuration': 0, // Placeholder, update as needed
+          });
           toastification.show(
             title: Text('Video uploaded successfully'),
             autoCloseDuration: const Duration(seconds: 5),

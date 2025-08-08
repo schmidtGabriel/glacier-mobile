@@ -20,9 +20,9 @@ String formatStatusReaction(String status) {
     case '0':
       return 'Pending';
     case '1':
-      return 'Sent';
+      return 'Recorded';
     case '10':
-      return 'Approved';
+      return 'Finished';
     case '-10':
       return 'Rejected';
     default:

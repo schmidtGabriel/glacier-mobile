@@ -1,34 +1,24 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-Future<String?> sendReactionVideo(
-  video1Url,
+Future<Map<String, dynamic>?> completeReaction(
+  reaction,
   void Function(dynamic progress, dynamic total)? onProgress,
 ) async {
   var service = FirebaseStorageService();
-  var prefs = await SharedPreferences.getInstance();
   final FirebaseAuth auth = FirebaseAuth.instance;
 
-  var selfiePath = prefs.getString('selfiePath') ?? '';
+  var reactionPath = reaction?.reactionPath ?? '';
+  var videoPath = reaction?.videoPath ?? '';
+  var delayTime = reaction?.delayTime ?? 0;
 
-  print('Selfie path: $selfiePath');
-  print('Video 1 URL: $video1Url');
+  print('Selfie path: $reactionPath');
+  print('Video 1 URL: $videoPath');
   try {
     // Validate input paths
-    if (selfiePath.isEmpty) {
-      throw Exception('Invalid video or selfie path');
-    }
-
-    final value = await service.uploadReaction(
-      selfiePath,
-      onProgress: (sent, total) {
-        onProgress?.call(sent, total);
-      },
-    );
-    if (value == null) {
-      throw Exception('Failed to upload video or selfie');
+    if (reactionPath.isEmpty || videoPath.isEmpty) {
+      throw Exception('Invalid video or reaction path');
     }
 
     final user = auth.currentUser;
@@ -46,18 +36,20 @@ Future<String?> sendReactionVideo(
     try {
       final callable = FirebaseFunctions.instanceFor(
         region: 'us-central1',
-      ).httpsCallable('runFFmpeg');
+      ).httpsCallable('runCompleteRecord');
       final result = await callable.call({
-        'video1Url': video1Url,
-        'video2Url': value,
+        'videoPath': videoPath,
+        'reactionPath': reactionPath,
+        'uuid': reaction?.uuid ?? '',
+        'delayTime': delayTime,
       });
-      return result.data['videoUrl'];
+      return result.data;
     } on FirebaseFunctionsException catch (error) {
       print(error.message);
     }
   } catch (e) {
     print('Error sending reaction video: $e');
-    return '';
+    return null;
   }
   return null;
 }

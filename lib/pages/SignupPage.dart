@@ -320,7 +320,10 @@ class _SignupPageState extends State<SignupPage> {
     verifyEmailAccount(_controllers['email']!.text).then((isRegistered) {
       print('Email verification result: $isRegistered');
       if (isRegistered) {
-        ToastHelper.showError(context, "Email already registered.");
+        ToastHelper.showError(
+          context,
+          description: "Email already registered.",
+        );
       } else {
         if (_step == 0 && _formKey.currentState!.validate()) {
           setState(() {

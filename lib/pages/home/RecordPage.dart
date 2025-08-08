@@ -1,8 +1,11 @@
+import 'dart:async';
+
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screen_recording/flutter_screen_recording.dart';
-import 'package:glacier/components/CameraPreviewWidget.dart';
-import 'package:glacier/services/PermissionsService.dart';
+import 'package:glacier/resources/ReactionResource.dart';
+import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/getReaction.dart';
+import 'package:glacier/services/reactions/updateReaction.dart';
 import 'package:video_player/video_player.dart';
 
 class RecordPage extends StatefulWidget {
@@ -15,22 +18,27 @@ class RecordPage extends StatefulWidget {
 }
 
 class _RecordPageState extends State<RecordPage> {
-  bool isRecording = false;
   int countdown = 3;
   bool startCountdown = false;
   bool showCamera = false;
-  bool isVideoFinished = false; // Add this state variable
-  String videoName = '';
-
-  String? videoPath;
+  String progressMessage = 'Loading, please wait...';
 
   VideoPlayerController? _controllerVideo;
-  final _permissionsService = PermissionsService.instance;
+  bool isPlaying = false;
+  bool isVideoFinished = false;
+  CameraController? _controllerCamera;
+  List<CameraDescription>? _cameras;
+  bool showControls = true; // Track if controls are hidden
 
-  Map<String, dynamic>? currentReaction;
+  ReactionResource? currentReaction;
 
-  final double _uploadProgress = 0.0; // Track upload progress
   bool _isLoading = false; // Track loading state
+
+  // Timer variables
+  DateTime? _timerStartTime;
+  Duration _delayVideo = Duration.zero;
+  Duration _currentRecordingDuration = Duration.zero;
+  Timer? _realtimeTimer;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +50,7 @@ class _RecordPageState extends State<RecordPage> {
               children: [
                 CircularProgressIndicator(),
                 SizedBox(height: 16),
-                Text('Loading, please wait...', style: TextStyle(fontSize: 16)),
+                Text(progressMessage, style: TextStyle(fontSize: 16)),
               ],
             ),
           ),
@@ -58,72 +66,134 @@ class _RecordPageState extends State<RecordPage> {
                   child: Text('Video not available ${(widget.uuid)}'),
                 );
               }
-              return Column(
-                children: [
-                  // Video Player section (70% height)
-                  Expanded(
-                    flex: 6,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Stack(
-                        children: [
-                          // Video Player
-                          SizedBox.expand(
-                            child: FittedBox(
-                              fit: BoxFit.cover,
-                              child: SizedBox(
-                                width: _controllerVideo!.value.size.width,
-                                height: _controllerVideo!.value.size.height,
-                                child: VideoPlayer(_controllerVideo!),
-                              ),
+              return GestureDetector(
+                onTap: () {
+                  _handleControlsVisibility();
+                },
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        // Video Player section (70% height)
+                        Expanded(
+                          flex: 6,
+                          child: FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _controllerVideo!.value.size.width,
+                              height: _controllerVideo!.value.size.height,
+                              child: VideoPlayer(_controllerVideo!),
                             ),
                           ),
+                        ),
 
-                          // Play button overlay if video is paused
-                          if (_controllerVideo != null &&
-                              _controllerVideo!.value.isInitialized)
-                            ValueListenableBuilder<VideoPlayerValue>(
-                              valueListenable: _controllerVideo!,
-                              builder: (context, value, child) {
-                                if (value.isPlaying) {
-                                  return SizedBox.shrink();
-                                } else {
-                                  return Center(
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        _controllerVideo!.play();
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.all(16),
-                                        decoration: BoxDecoration(
-                                          color: Colors.black.withOpacity(0.5),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.play_arrow,
-                                          color: Colors.white,
-                                          size: 48,
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
-                        ],
+                        // Camera Preview section (30% height)
+                        Expanded(
+                          flex: 4,
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: CameraPreview(_controllerCamera!),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    Visibility(
+                      visible: showControls,
+                      child: Positioned(
+                        bottom: 20,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          margin: EdgeInsets.symmetric(
+                            vertical: 0,
+                            horizontal: 20,
+                          ),
+                          padding: EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.black38,
+                            borderRadius: BorderRadius.circular(40),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            mainAxisSize: MainAxisSize.max,
+                            children: [
+                              // Timer duration display
+                              Expanded(
+                                child: Center(
+                                  child:
+                                      _timerStartTime != null
+                                          ? Text(
+                                            '${_currentRecordingDuration.inSeconds}s',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )
+                                          : SizedBox(),
+                                ),
+                              ),
+                              IconButton(
+                                style: ButtonStyle(
+                                  padding: WidgetStateProperty.all(
+                                    EdgeInsets.all(2),
+                                  ),
+                                  backgroundColor: WidgetStateProperty.all(
+                                    Colors.black54,
+                                  ),
+                                ),
+                                icon: Icon(
+                                  size: 20,
+                                  isVideoFinished
+                                      ? Icons.stop
+                                      : !isVideoFinished && isPlaying
+                                      ? Icons.pause
+                                      : Icons.play_arrow,
+                                  color:
+                                      isVideoFinished
+                                          ? Colors.red
+                                          : Colors.white,
+                                ),
+                                onPressed: () {
+                                  if (isVideoFinished && !isPlaying) {
+                                    _controllerVideo!.pause();
+                                    if (_controllerVideo!.value.isCompleted) {
+                                      _realtimeTimer?.cancel();
+                                      finishReation();
+                                    }
+                                  } else {
+                                    if (isPlaying) {
+                                      _controllerVideo!.pause();
+                                      _handleControlsVisibility();
+                                      setState(() {
+                                        isPlaying = false;
+                                      });
+                                    } else {
+                                      _controllerVideo!.play();
+                                      _delayVideo = _currentRecordingDuration;
+
+                                      _handleControlsVisibility();
+
+                                      setState(() {
+                                        isPlaying = true;
+                                      });
+
+                                      print(
+                                        'Timer stopped. Duration: ${_delayVideo.inSeconds} seconds',
+                                      );
+                                    }
+                                  }
+                                },
+                              ),
+                              Expanded(child: SizedBox()),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-
-                  // Camera Preview section (30% height)
-                  Expanded(
-                    flex: 4,
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: CameraPreviewWidget(isFinished: isVideoFinished),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               );
             },
           ),
@@ -133,10 +203,63 @@ class _RecordPageState extends State<RecordPage> {
   @override
   void dispose() {
     _controllerVideo?.dispose();
-    if (isRecording) {
-      FlutterScreenRecording.stopRecordScreen;
-    }
+    _controllerCamera?.dispose();
+    _realtimeTimer?.cancel();
+    resetTimer();
     super.dispose();
+  }
+
+  void finishReation() {
+    setState(() {
+      progressMessage = 'Submitting reaction...';
+      _isLoading = true; // Show loading indicator
+    });
+    // This function can be used to handle any finalization logic after the reaction is completed
+    print('Reaction finished for UUID: ${widget.uuid}');
+    print('Video delay: ${_delayVideo.inSeconds} seconds');
+    print(
+      'Current recording duration: ${_currentRecordingDuration.inSeconds} seconds',
+    );
+
+    if (_controllerCamera!.value.isRecordingVideo) {
+      _controllerCamera!.stopVideoRecording().then((file) async {
+        // Handle the recorded video file
+        print('Video recorded: ${file.path}');
+        print('Video name: ${file.name}');
+
+        try {
+          var service = FirebaseStorageService();
+          await service.uploadReaction(
+            file.path,
+            '${currentReaction?.uuid}',
+            onProgress: (progress, total) {
+              // print('Upload progress: $progress / $total');
+            },
+          );
+
+          await updateReaction({
+            'uuid': currentReaction?.uuid,
+            'selfie_video': 'reactions/${currentReaction?.uuid}.mp4',
+            'record_duration': _currentRecordingDuration.inSeconds,
+            'delay_duration': _delayVideo.inSeconds,
+            'status': '1',
+          });
+        } catch (e) {
+          print('Error uploading reaction: $e');
+        }
+
+        setState(() {
+          _isLoading = false; // Hide loading indicator
+        });
+        resetTimer();
+        if (mounted) {
+          Navigator.pop(context); // Close the current page
+        } else {
+          print('Navigator context is not mounted, cannot navigate.');
+        }
+      });
+    }
+    // You can add any additional logic here, such as updating the UI or navigating to another
   }
 
   @override
@@ -145,12 +268,51 @@ class _RecordPageState extends State<RecordPage> {
     _loadReactionByUuid();
   }
 
+  void resetTimer() {
+    _realtimeTimer?.cancel();
+    _timerStartTime = null;
+    _delayVideo = Duration.zero;
+    _currentRecordingDuration = Duration.zero;
+  }
+
+  void _handleControlsVisibility() {
+    setState(() {
+      showControls = true;
+    });
+    Future.delayed(Duration(seconds: 3), () {
+      setState(() {
+        showControls = false;
+      });
+    });
+  }
+
+  Future<void> _initializeCamera() async {
+    try {
+      print('Initializing camera...');
+      _cameras = await availableCameras();
+      print('Available cameras: $_cameras');
+      if (_cameras!.isNotEmpty) {
+        final frontCamera = _cameras!.firstWhere(
+          (camera) => camera.lensDirection == CameraLensDirection.front,
+          orElse: () => _cameras!.first, // fallback to first if no front cam
+        );
+
+        _controllerCamera = CameraController(frontCamera, ResolutionPreset.max);
+        await _controllerCamera!.initialize();
+      } else {
+        print('No cameras found');
+      }
+    } catch (e) {
+      print('Camera error: $e');
+    }
+  }
+
   Future<bool> _initializeVideo() async {
     if (currentReaction == null) {
       print('No reaction data available');
       return false;
     }
-    final videoUrl = currentReaction?['url']?.toString().trim();
+    final videoUrl = currentReaction?.videoUrl.toString().trim();
     if (videoUrl == null || videoUrl.isEmpty) {
       print('Invalid or missing video URL');
       return false;
@@ -160,16 +322,12 @@ class _RecordPageState extends State<RecordPage> {
       await _controllerVideo!.dispose();
     }
 
-    // Reset the video finished state when initializing a new video
-    setState(() {
-      isVideoFinished = false;
-    });
-
     _controllerVideo = VideoPlayerController.networkUrl(
       Uri.parse(videoUrl),
       viewType: VideoViewType.textureView,
       videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
     );
+
     await _controllerVideo!.initialize();
     _controllerVideo!.setLooping(false);
 
@@ -178,72 +336,14 @@ class _RecordPageState extends State<RecordPage> {
           _controllerVideo!.value.position >= _controllerVideo!.value.duration;
 
       if (isFinished && !_controllerVideo!.value.isPlaying) {
-        // Update the state to trigger CameraPreviewWidget's didUpdateWidget
-
-        await Future.delayed(Duration(seconds: 5));
-
         setState(() {
+          isPlaying = false;
           isVideoFinished = true;
-        });
-
-        videoPath = await FlutterScreenRecording.stopRecordScreen;
-
-        //* Code below works to handle the video editing on Firebase Functions
-        // setState(() {
-        //   _isLoading = true; // Show loading indicator
-        // });
-
-        // Wait a moment for the camera recording to finish and be saved
-        // await Future.delayed(Duration(seconds: 2));
-
-        // var value = await sendReactionVideo(videoUrl, (progress, total) {
-        //   // Handle progress updates if needed
-        //   setState(() {
-        //     print('Upload progress: $progress / $total');
-        //     _uploadProgress = progress / total;
-
-        //     if (progress == total) {
-        //       print('Upload completed');
-        //       _isLoading = false;
-        //     }
-        //   });
-        // });
-
-        // if (value == null || value.isEmpty) {
-        //   print('Failed to send reaction video');
-        //   setState(() {
-        //     _isLoading = false; // Hide loading indicator
-        //   });
-        // }
-        //* Code above works to handle the video editing on Firebase Functions
-        print('Video recording finished $videoPath');
-        setState(() {
-          isRecording = false;
-          Navigator.of(context, rootNavigator: true)
-              .pushNamed(
-                '/recorded-video',
-                arguments: {
-                  'videoPath': videoPath,
-                  'videoName': videoName,
-                  'uuid': widget.uuid,
-                },
-              )
-              .then(
-                (value) => {
-                  if (value == true)
-                    {
-                      setState(() {
-                        showCamera = false;
-                        countdown = 3;
-                        startCountdown = false;
-                      }),
-                      _initializeVideo(),
-                    },
-                },
-              );
+          _handleControlsVisibility();
         });
       }
     });
+
     _showCountdownDialog();
 
     setState(() {});
@@ -251,7 +351,7 @@ class _RecordPageState extends State<RecordPage> {
   }
 
   // Load reaction by UUID
-  Future<bool> _loadReactionByUuid() async {
+  Future<void> _loadReactionByUuid() async {
     setState(() {
       _isLoading = true; // Show loading indicator
     });
@@ -263,26 +363,20 @@ class _RecordPageState extends State<RecordPage> {
       setState(() {
         _isLoading = false; // Hide loading indicator
       });
-      return false;
     }
 
+    _initializeCamera();
     await _initializeVideo();
 
     setState(() {
       _isLoading = false; // Show loading indicator
     });
-
-    return true;
   }
 
   // Show countdown dialog
   void _showCountdownDialog() {
     late StateSetter dialogState;
     late BuildContext dialogContext;
-
-    if (isRecording) {
-      return;
-    }
 
     showDialog(
       context: context,
@@ -308,6 +402,9 @@ class _RecordPageState extends State<RecordPage> {
                         SizedBox(height: 10),
                         ElevatedButton(
                           onPressed: () {
+                            // Reset timer for new recording cycle
+                            resetTimer();
+
                             setState(() {
                               startCountdown = true;
                             });
@@ -356,24 +453,26 @@ class _RecordPageState extends State<RecordPage> {
     }
     Navigator.pop(dialogContext); // Close the dialog
 
-    setState(() {
-      isRecording = true;
-    });
-    await Future.delayed(Duration(milliseconds: 150));
+    if (_controllerCamera != null && _controllerCamera!.value.isInitialized) {
+      try {
+        await _controllerCamera!.startVideoRecording();
 
-    FlutterScreenRecording.startRecordScreenAndAudio(
-          currentReaction != null ? "${widget.uuid}.mp4" : 'Video Title',
-        )
-        .then((result) {
-          videoName =
-              currentReaction != null ? "${widget.uuid}.mp4" : 'Video Title';
-        })
-        .catchError((error) {
-          print('Error starting screen recording');
-          setState(() {
-            isRecording = false;
-          });
-          FlutterScreenRecording.stopRecordScreen;
-        });
+        _startRealtimeTimer();
+      } catch (e) {
+        print('Error starting video recording: $e');
+      }
+    } else {
+      print('Camera controller is not initialized or null');
+    }
+  }
+
+  void _startRealtimeTimer() {
+    _timerStartTime = DateTime.now();
+    _realtimeTimer = Timer.periodic(Duration(milliseconds: 100), (timer) {
+      setState(() {
+        _currentRecordingDuration = DateTime.now().difference(_timerStartTime!);
+      });
+      // print('Timer started at: $_timerStartTime');
+    });
   }
 }

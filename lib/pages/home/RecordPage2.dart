@@ -1,8 +1,6 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_screen_recording/flutter_screen_recording.dart';
-import 'package:glacier/components/CameraPreviewWidget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
@@ -105,14 +103,14 @@ class _RecordPage2State extends State<RecordPage2> {
                       }
                     },
                   ),
-                Visibility(
-                  visible: showCamera,
-                  child: Positioned(
-                    bottom: 20,
-                    right: 20,
-                    child: CameraPreviewWidget(isFinished: isVideoFinished),
-                  ),
-                ),
+                // Visibility(
+                //   visible: showCamera,
+                //   child: Positioned(
+                //     bottom: 20,
+                //     right: 20,
+                //     child: CameraPreview(_controllerCamera!),
+                //   ),
+                // ),
               ],
             ),
           );
@@ -124,9 +122,7 @@ class _RecordPage2State extends State<RecordPage2> {
   @override
   void dispose() {
     _controllerVideo?.dispose();
-    if (isRecording) {
-      FlutterScreenRecording.stopRecordScreen;
-    }
+
     super.dispose();
   }
 
@@ -176,35 +172,6 @@ class _RecordPage2State extends State<RecordPage2> {
           isVideoFinished = true;
         });
 
-        videoPath = await FlutterScreenRecording.stopRecordScreen;
-
-        //* Code below works to handle the video editing on Firebase Functions
-        // setState(() {
-        //   _isLoading = true; // Show loading indicator
-        // });
-
-        // Wait a moment for the camera recording to finish and be saved
-        // await Future.delayed(Duration(seconds: 2));
-
-        // var value = await sendReactionVideo(videoUrl, (progress, total) {
-        //   // Handle progress updates if needed
-        //   setState(() {
-        //     print('Upload progress: $progress / $total');
-        //     _uploadProgress = progress / total;
-
-        //     if (progress == total) {
-        //       print('Upload completed');
-        //       _isLoading = false;
-        //     }
-        //   });
-        // });
-
-        // if (value == null || value.isEmpty) {
-        //   print('Failed to send reaction video');
-        //   setState(() {
-        //     _isLoading = false; // Hide loading indicator
-        //   });
-        // }
         //* Code above works to handle the video editing on Firebase Functions
         print('Video recording finished $videoPath');
         setState(() {
@@ -349,27 +316,5 @@ class _RecordPage2State extends State<RecordPage2> {
       isRecording = true;
     });
     Navigator.pop(dialogContext); // Close the dialog
-    FlutterScreenRecording.startRecordScreenAndAudio(
-          currentReaction != null
-              ? "${currentReaction?['title']}-${currentReaction?['user']}"
-                  .replaceAll(' ', '-')
-                  .trim()
-              : 'Video Title',
-        )
-        .then((result) {
-          videoName =
-              currentReaction != null
-                  ? "${currentReaction?['title']}-${currentReaction?['user']}.mp4"
-                      .replaceAll(' ', '-')
-                      .trim()
-                  : 'Video Title';
-        })
-        .catchError((error) {
-          print('Error starting screen recording');
-          setState(() {
-            isRecording = false;
-          });
-          FlutterScreenRecording.stopRecordScreen;
-        });
   }
 }

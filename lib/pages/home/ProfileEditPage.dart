@@ -373,7 +373,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       print('Camera error: $e');
       ToastHelper.showError(
         context,
-        'Error accessing camera. Please try again.',
+        description: 'Error accessing camera. Please try again.',
       );
     }
   }
@@ -401,7 +401,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       print('Gallery error: $e');
       ToastHelper.showSuccess(
         context,
-        'Error accessing gallery. Please try again.',
+        description: 'Error accessing gallery. Please try again.',
       );
     }
   }
@@ -427,8 +427,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         if (mounted) {
           ToastHelper.showSuccess(
             context,
-            'Profile updated successfully!',
-            duration: const Duration(seconds: 3),
+            description: 'Profile updated successfully!',
           );
           // Navigate back
           Navigator.pop(context);
@@ -437,21 +436,14 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
         if (mounted) {
           ToastHelper.showError(
             context,
-            'Failed to update profile',
-            description: 'Please try again later',
-            duration: const Duration(seconds: 3),
+            description: 'Failed to update profile',
           );
         }
       }
     } catch (e) {
       print('Error updating profile: $e');
       if (mounted) {
-        ToastHelper.showError(
-          context,
-          'Error updating profile',
-          description: 'Please try again later',
-          duration: const Duration(seconds: 3),
-        );
+        ToastHelper.showError(context, description: 'Error updating profile');
       }
     } finally {
       setState(() {
@@ -474,7 +466,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
           .then((value) async {
             ToastHelper.showSuccess(
               context,
-              'Profile picture updated successfully!',
+              description: 'Profile picture updated successfully!',
             );
             setState(() {
               _uploadProgress = 0.0;
@@ -487,7 +479,7 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
       print('Upload error: $e');
       ToastHelper.showError(
         context,
-        'Failed to upload profile picture. Please try again.',
+        description: 'Failed to upload profile picture. Please try again.',
       );
     }
   }

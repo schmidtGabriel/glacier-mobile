@@ -24,8 +24,8 @@ class ToastHelper {
 
   /// Shows an error toast notification
   static void showError(
-    BuildContext context,
-    String message, {
+    BuildContext context, {
+    String message = 'Error',
     String? description,
     Duration? duration,
     Alignment alignment = Alignment.bottomCenter,
@@ -42,8 +42,8 @@ class ToastHelper {
 
   /// Shows an info toast notification
   static void showInfo(
-    BuildContext context,
-    String message, {
+    BuildContext context, {
+    String message = 'Info',
     String? description,
     Duration? duration,
     Alignment alignment = Alignment.bottomCenter,
@@ -60,8 +60,8 @@ class ToastHelper {
 
   /// Shows a success toast notification
   static void showSuccess(
-    BuildContext context,
-    String message, {
+    BuildContext context, {
+    String message = 'Success',
     String? description,
     Duration? duration,
     Alignment alignment = Alignment.bottomCenter,
@@ -78,8 +78,8 @@ class ToastHelper {
 
   /// Shows a warning toast notification
   static void showWarning(
-    BuildContext context,
-    String message, {
+    BuildContext context, {
+    String message = 'Warning',
     String? description,
     Duration? duration,
     Alignment alignment = Alignment.bottomCenter,

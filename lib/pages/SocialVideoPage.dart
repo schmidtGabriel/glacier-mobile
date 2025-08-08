@@ -1,9 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_screen_recording/flutter_screen_recording.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
-import 'package:glacier/components/CameraPreviewWidget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
@@ -65,14 +63,14 @@ class _SocialVideoPageState extends State<SocialVideoPage> {
             Center(child: CircularProgressIndicator()),
 
           // Camera preview in bottom right
-          Visibility(
-            visible: showCamera,
-            child: Positioned(
-              bottom: 20,
-              right: 20,
-              child: CameraPreviewWidget(isFinished: !isRecording),
-            ),
-          ),
+          // Visibility(
+          //   visible: showCamera,
+          //   child: Positioned(
+          //     bottom: 20,
+          //     right: 20,
+          //     child: CameraPreviewWidget(isFinished: !isRecording),
+          //   ),
+          // ),
         ],
       ),
     );
@@ -197,9 +195,5 @@ class _SocialVideoPageState extends State<SocialVideoPage> {
     });
 
     Navigator.of(context).pop();
-
-    await FlutterScreenRecording.startRecordScreenAndAudio(
-      currentReaction?['title'] ?? 'Video Title',
-    );
   }
 }

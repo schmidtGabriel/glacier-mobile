@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:glacier/helpers/parseTimeStamp.dart';
-import 'package:glacier/services/reactions/listReactions.dart';
+import 'package:glacier/resources/ReactionResource.dart';
+import 'package:glacier/services/reactions/getReactionVideos.dart';
 import 'package:glacier/services/user/getUser.dart';
 
-Future<Map<String, dynamic>?> getReaction(String uuid) async {
+Future<ReactionResource?> getReaction(String uuid) async {
   try {
     if (uuid.isEmpty) {
       print('UUID is empty, cannot fetch reaction.');
@@ -22,19 +23,30 @@ Future<Map<String, dynamic>?> getReaction(String uuid) async {
         print('No data found for UUID: $uuid');
         return null;
       }
+
       final videoUrl = await handleVideo(data);
+      final reactionUrl = await handleReaction(data);
       final recordUrl = await handleRecord(data);
-      return {
-        ...data,
-        'created_at': formatTimestamp(data['created_at']),
-        'due_date': formatTimestamp(data['due_date']),
-        'requested':
-            data['requested'] != null ? await getUser(data['requested']) : null,
-        'user': data['user'] != null ? await getUser(data['user']) : null,
-        'url': videoUrl,
-        'recordedUrl': recordUrl,
-      };
+
+      return ReactionResource(
+        uuid: uuid,
+        title: data['title'] ?? '',
+        description: data['description'] ?? '',
+        createdBy: await getUser(data['requested']),
+        assignedUser: await getUser(data['user']),
+        invitedTo: data['invited_to'],
+        status: data['status'] ?? '',
+        videoUrl: videoUrl,
+        videoPath: data['video_path'] ?? '',
+        reactionUrl: reactionUrl,
+        reactionPath: data['reaction_path'] ?? '',
+        recordUrl: recordUrl,
+        recordPath: data['record_path'] ?? '',
+        videoDuration: data['video_duration'] ?? 0,
+        createdAt: formatTimestamp(data['created_at']),
+      );
     }
+    return null;
   } catch (e) {
     print('Error fetching reaction: $e');
     return null;

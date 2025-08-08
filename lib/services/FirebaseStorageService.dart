@@ -3,8 +3,10 @@
 import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:glacier/helpers/convertVideo.dart';
 import 'package:glacier/services/user/updateUserData.dart';
 import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 class FirebaseStorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -59,11 +61,19 @@ class FirebaseStorageService {
   }
 
   Future<String?> uploadReaction(
-    String videoPath, {
+    String videoPath,
+    String videoName, {
     void Function(dynamic progress, dynamic total)? onProgress,
   }) async {
     try {
-      final videoFile = File(videoPath);
+      final tempDir = await getTemporaryDirectory();
+
+      final tempVideoPath =
+          '${tempDir.path}/${videoName.endsWith('.mp4') ? videoName : '$videoName.mp4'}';
+
+      await convertVideo(videoPath: videoPath, outputPath: tempVideoPath);
+
+      final videoFile = File(tempVideoPath);
 
       // Check if the file exists
       if (!videoFile.existsSync()) {
@@ -72,8 +82,12 @@ class FirebaseStorageService {
       }
 
       // Upload screen recording
-      final fileName = basename(videoPath);
-      final storageRef = _storage.ref().child('reactions/$fileName');
+      final fileName =
+          videoName.endsWith('.mp4')
+              ? videoName
+              : '$videoName.mp4'; // Ensure the file has .mp4 extension
+      final filePath = 'reactions/$fileName';
+      final storageRef = _storage.ref().child(filePath);
 
       UploadTask uploadTask = storageRef.putFile(videoFile);
 
@@ -134,11 +148,19 @@ class FirebaseStorageService {
   }
 
   Future<Map<String, String>?> uploadVideo(
-    String videoPath, {
+    String videoPath,
+    String videoName, {
     void Function(dynamic progress, dynamic total)? onProgress,
   }) async {
     try {
-      final videoFile = File(videoPath);
+      final tempDir = await getTemporaryDirectory();
+
+      final tempVideoPath =
+          '${tempDir.path}/${videoName.endsWith('.mp4') ? videoName : '$videoName.mp4'}';
+
+      await convertVideo(videoPath: videoPath, outputPath: tempVideoPath);
+
+      final videoFile = File(tempVideoPath);
 
       if (!videoFile.existsSync()) {
         print('Video file does not exist at path: $videoPath');
@@ -146,8 +168,9 @@ class FirebaseStorageService {
       }
 
       // Upload screen recording
-      final fileName = basename(videoPath);
-      final filePath = 'videos/$fileName';
+      final fileName =
+          videoName.endsWith('.mp4') ? videoName : '$videoName.mp4';
+      final filePath = 'sources/$fileName';
       final storageRef = _storage.ref().child(filePath);
 
       UploadTask uploadTask = storageRef.putFile(videoFile);

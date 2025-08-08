@@ -14,16 +14,12 @@ class _PermissionsPageState extends State<PermissionsPage> {
   bool _notificationsGranted = false;
   bool _galleryGranted = false;
   bool _cameraGranted = false;
-  bool _screenRecordingGranted = false;
   bool _isLoading = false;
 
   final _permissionsService = PermissionsService.instance;
 
   bool get _allPermissionsGranted {
-    return _notificationsGranted &&
-        _galleryGranted &&
-        _cameraGranted &&
-        _screenRecordingGranted;
+    return _notificationsGranted && _galleryGranted && _cameraGranted;
   }
 
   @override
@@ -112,83 +108,6 @@ class _PermissionsPageState extends State<PermissionsPage> {
 
               SizedBox(height: 16),
 
-              _buildPermissionCard(
-                icon: Icons.screen_share,
-                title: 'Screen Recording',
-                description:
-                    'Record your screen to capture reactions to videos and content',
-                isGranted: _screenRecordingGranted,
-                onTap: _requestScreenRecordingPermission,
-              ),
-
-              // Card(
-              //   elevation: 2,
-              //   shape: RoundedRectangleBorder(
-              //     borderRadius: BorderRadius.circular(12),
-              //   ),
-              //   child: InkWell(
-              //     onTap: null,
-              //     borderRadius: BorderRadius.circular(12),
-              //     child: Padding(
-              //       padding: EdgeInsets.all(16),
-              //       child: Row(
-              //         children: [
-              //           Container(
-              //             width: 48,
-              //             height: 48,
-              //             decoration: BoxDecoration(
-              //               color: Colors.orange.shade600,
-              //               borderRadius: BorderRadius.circular(12),
-              //             ),
-              //             child: Icon(
-              //               Icons.screen_share,
-              //               color: Colors.white,
-              //               size: 24,
-              //             ),
-              //           ),
-              //           SizedBox(width: 16),
-              //           Expanded(
-              //             child: Column(
-              //               crossAxisAlignment: CrossAxisAlignment.start,
-              //               children: [
-              //                 Text(
-              //                   'Screen Recording',
-              //                   style: TextStyle(
-              //                     fontSize: 16,
-              //                     fontWeight: FontWeight.w600,
-              //                     color: Colors.grey.shade800,
-              //                   ),
-              //                 ),
-              //                 SizedBox(height: 4),
-              //                 Text(
-              //                   'This feature requires your permission, we will request it when you try to use it.',
-              //                   style: TextStyle(
-              //                     fontSize: 14,
-              //                     color: Colors.grey.shade600,
-              //                   ),
-              //                 ),
-              //               ],
-              //             ),
-              //           ),
-              //           SizedBox(width: 16),
-              //           Container(
-              //             width: 24,
-              //             height: 24,
-              //             decoration: BoxDecoration(
-              //               color: Colors.orange.shade600,
-              //               shape: BoxShape.circle,
-              //             ),
-              //             child: Icon(
-              //               Icons.warning,
-              //               color: Colors.white,
-              //               size: 16,
-              //             ),
-              //           ),
-              //         ],
-              //       ),
-              //     ),
-              //   ),
-              // ),
               SizedBox(height: 32),
 
               // Action Buttons
@@ -287,7 +206,7 @@ class _PermissionsPageState extends State<PermissionsPage> {
   @override
   void initState() {
     super.initState();
-    // _checkCurrentPermissions();
+    _checkCurrentPermissions();
   }
 
   Widget _buildPermissionCard({
@@ -375,7 +294,6 @@ class _PermissionsPageState extends State<PermissionsPage> {
         _notificationsGranted = status.notifications;
         _galleryGranted = status.gallery;
         _cameraGranted = status.camera;
-        _screenRecordingGranted = status.screenRecording;
       });
     } catch (e) {
       print('Error checking permissions: $e');
@@ -391,13 +309,10 @@ class _PermissionsPageState extends State<PermissionsPage> {
 
     await _requestGalleryPermission();
 
-    await _requestScreenRecordingPermission(keepRecording: true);
-
     await _requestCameraPermission();
 
     if (mounted) {
       await Future.delayed(Duration(milliseconds: 200));
-      _permissionsService.stopScreenRecording();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -448,29 +363,6 @@ class _PermissionsPageState extends State<PermissionsPage> {
       });
     } catch (e) {
       print('Error requesting notification permission: $e');
-    }
-  }
-
-  Future<void> _requestScreenRecordingPermission({
-    bool keepRecording = false,
-  }) async {
-    try {
-      final granted =
-          await _permissionsService.requestScreenRecordingPermission();
-      setState(() {
-        _screenRecordingGranted = granted;
-      });
-
-      if (granted && !keepRecording) {
-        await Future.delayed(Duration(milliseconds: 200));
-        _permissionsService.stopScreenRecording();
-      }
-      print('Screen recording permission granted: $granted');
-    } catch (e) {
-      print('Error requesting screen recording permission: $e');
-      setState(() {
-        _screenRecordingGranted = false;
-      });
     }
   }
 

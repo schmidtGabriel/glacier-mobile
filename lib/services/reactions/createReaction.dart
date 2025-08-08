@@ -17,8 +17,8 @@ Future<String?> createReaction(data) async {
   });
 
   if (docSnapshot.id.isNotEmpty) {
-    print('Reaction created successfully with ID: ${docSnapshot.id}');
-    docRef.doc(docSnapshot.id).update({'uuid': docSnapshot.id});
+    // print('Reaction created successfully with ID: ${docSnapshot.id}');
+    // docRef.doc(docSnapshot.id).update({'uuid': docSnapshot.id});
     return docSnapshot.id;
   } else {
     print('Failed to create reaction.');

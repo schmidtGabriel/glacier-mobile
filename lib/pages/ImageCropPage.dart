@@ -205,11 +205,7 @@ class _ImageCropPageState extends State<ImageCropPage> {
         isLoading = false;
       });
       if (mounted) {
-        ToastHelper.showError(
-          context,
-          'Failed to crop image',
-          description: e.toString(),
-        );
+        ToastHelper.showError(context, description: e.toString());
         Navigator.pop(context);
       }
     }
