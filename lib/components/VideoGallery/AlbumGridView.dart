@@ -19,10 +19,9 @@ class AlbumGridView extends StatefulWidget {
 
 class _AlbumData {
   final AssetPathEntity album;
-  final AssetEntity? coverAsset;
   final int assetCount;
 
-  _AlbumData({required this.album, this.coverAsset, required this.assetCount});
+  _AlbumData({required this.album, required this.assetCount});
 }
 
 class _AlbumGridViewState extends State<AlbumGridView> {

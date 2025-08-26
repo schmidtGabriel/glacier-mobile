@@ -60,55 +60,6 @@ class FirebaseStorageService {
     }
   }
 
-  Future<String?> uploadReaction(
-    String videoPath,
-    String videoName, {
-    void Function(dynamic progress, dynamic total)? onProgress,
-  }) async {
-    try {
-      final tempDir = await getTemporaryDirectory();
-
-      final tempVideoPath =
-          '${tempDir.path}/${videoName.endsWith('.mp4') ? videoName : '$videoName.mp4'}';
-
-      await convertVideo(videoPath: videoPath, outputPath: tempVideoPath);
-
-      final videoFile = File(tempVideoPath);
-
-      // Check if the file exists
-      if (!videoFile.existsSync()) {
-        print('Video file does not exist at path: $videoPath');
-        return null;
-      }
-
-      // Upload screen recording
-      final fileName =
-          videoName.endsWith('.mp4')
-              ? videoName
-              : '$videoName.mp4'; // Ensure the file has .mp4 extension
-      final filePath = 'reactions/$fileName';
-      final storageRef = _storage.ref().child(filePath);
-
-      UploadTask uploadTask = storageRef.putFile(videoFile);
-
-      // Listen to progress
-      uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-        final sent = snapshot.bytesTransferred;
-        final total = snapshot.totalBytes;
-        onProgress!(sent, total);
-      });
-
-      TaskSnapshot snapshot = await uploadTask;
-
-      // Get the screen recording download URL
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
-    } catch (e) {
-      print('Upload failed: $e');
-      return null;
-    }
-  }
-
   /// Uploads a video file to Firebase Storage
   Future<String?> uploadRecord(String videoPath, String selfiePath) async {
     try {
@@ -149,6 +100,7 @@ class FirebaseStorageService {
 
   Future<Map<String, String>?> uploadVideo(
     String videoPath,
+    String videoFolder,
     String videoName, {
     void Function(dynamic progress, dynamic total)? onProgress,
   }) async {
@@ -158,7 +110,15 @@ class FirebaseStorageService {
       final tempVideoPath =
           '${tempDir.path}/${videoName.endsWith('.mp4') ? videoName : '$videoName.mp4'}';
 
-      await convertVideo(videoPath: videoPath, outputPath: tempVideoPath);
+      await convertVideo(
+        videoPath: videoPath,
+        outputPath: tempVideoPath,
+        onProgress: (progress) {
+          // Convert progress is 0-50% of total progress
+          final totalProgress = progress * 0.5;
+          onProgress?.call(totalProgress, 1.0);
+        },
+      );
 
       final videoFile = File(tempVideoPath);
 
@@ -170,7 +130,7 @@ class FirebaseStorageService {
       // Upload screen recording
       final fileName =
           videoName.endsWith('.mp4') ? videoName : '$videoName.mp4';
-      final filePath = 'sources/$fileName';
+      final filePath = '$videoFolder/$fileName';
       final storageRef = _storage.ref().child(filePath);
 
       UploadTask uploadTask = storageRef.putFile(videoFile);
@@ -179,10 +139,15 @@ class FirebaseStorageService {
       uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
         final sent = snapshot.bytesTransferred;
         final total = snapshot.totalBytes;
-        onProgress!(sent, total);
+        // Upload progress is 50-100% of total progress
+        final uploadProgress = sent / total;
+        final totalProgress = 0.5 + (uploadProgress * 0.5);
+        onProgress!(totalProgress, 1.0);
       });
 
       TaskSnapshot snapshot = await uploadTask;
+
+      videoFile.delete();
 
       // Get the screen recording download URL
       final downloadUrl = await snapshot.ref.getDownloadURL();

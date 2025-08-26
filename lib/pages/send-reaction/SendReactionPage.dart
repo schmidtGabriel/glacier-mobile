@@ -5,6 +5,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/Button.dart';
 import 'package:glacier/components/UserAvatar.dart';
+import 'package:glacier/enums/ReactionVideoOrientation.dart';
+import 'package:glacier/enums/ReactionVideoSegment.dart';
 import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/helpers/updateRecentFriends.dart';
 import 'package:glacier/pages/PreviewVideoPage.dart';
@@ -13,6 +15,7 @@ import 'package:glacier/pages/UserList.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/createReaction.dart';
+import 'package:glacier/services/reactions/createReactionVideo.dart';
 import 'package:glacier/services/reactions/updateReaction.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -182,6 +185,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () async {
+                            // Clear focus from any text fields before navigation
+                            FocusScope.of(context).unfocus();
+
                             final selectedUser =
                                 await Navigator.push<UserResource>(
                                   context,
@@ -229,6 +235,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
                         width: double.infinity,
                         child: GestureDetector(
                           onTap: () async {
+                            // Clear focus from any text fields before navigation
+                            FocusScope.of(context).unfocus();
+
                             final selectedUser = await Navigator.push<String?>(
                               context,
                               MaterialPageRoute(
@@ -335,7 +344,8 @@ class _SendReactionPageState extends State<SendReactionPage> {
                             ? const Center(child: CircularProgressIndicator())
                             : Button(
                               isLoading: isLoadingSubmit,
-                              loadingLabel: 'Sending...',
+                              loadingLabel:
+                                  '${(_uploadProgress * 100).toStringAsFixed(0)}% Sending...',
                               onPressed: _sendReaction,
                               label: 'Send Reaction',
                               style: ElevatedButton.styleFrom(
@@ -392,6 +402,70 @@ class _SendReactionPageState extends State<SendReactionPage> {
     super.dispose();
   }
 
+  Future<Map<String, dynamic>?> handleUploadVideo(
+    reactionId,
+    resolution,
+  ) async {
+    if (_selectedVideo == null) {
+      ToastHelper.showWarning(
+        context,
+        description: 'Please select a video to upload.',
+      );
+
+      return null;
+    }
+
+    File? file = await _selectedVideo?.file;
+    String filePath = file?.path ?? '';
+
+    return await uploadService
+        .uploadVideo(
+          filePath,
+          'sources',
+          reactionId,
+          onProgress: (sent, total) {
+            setState(() {
+              if (total > 0 && sent.isFinite && total.isFinite) {
+                _uploadProgress = (sent / total);
+              }
+            });
+          },
+        )
+        .then((value) async {
+          final file = filePath;
+
+          // var resultReaction = await convertReactionVideo(
+          //   reactionId ?? '',
+          //   'temp-sources/$reactionId.mp4',
+          //   'sources/$reactionId.mp4',
+          //   (progress, total) {
+          //     setState(() {
+          //       if (total > 0 &&
+          //           progress.isFinite &&
+          //           total.isFinite &&
+          //           _uploadProgress.isFinite) {
+          //         _uploadProgress = (_uploadProgress + (progress / total)) / 2;
+          //       }
+          //     });
+          //   },
+          //   {'resolution': resolution},
+          // );
+
+          // if (resultReaction == null) {
+          //   ToastHelper.showError(
+          //     context,
+          //     description:
+          //         'Failed to process the source video. Please try again.',
+          //   );
+          //   return null;
+          // }
+          File(file).delete();
+          return value;
+          // print('Value returned from convertReactionVideo: $resultReaction');
+          // return resultReaction;
+        });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -420,43 +494,6 @@ class _SendReactionPageState extends State<SendReactionPage> {
     });
   }
 
-  Future<Map<String, dynamic>?> uploadVideo(reactionId) async {
-    if (_selectedVideo == null) {
-      ToastHelper.showWarning(
-        context,
-        description: 'Please select a video to upload.',
-      );
-
-      return null;
-    }
-
-    File? file = await _selectedVideo?.file;
-    String filePath = file?.path ?? '';
-
-    return await uploadService
-        .uploadVideo(
-          filePath,
-          '$reactionId',
-          onProgress: (sent, total) {
-            setState(() {
-              _uploadProgress = sent / total;
-            });
-          },
-        )
-        .then((value) async {
-          final file = filePath;
-          _filePath = value?['filePath'] ?? '';
-
-          setState(() {
-            _uploadProgress = 0.0;
-          });
-
-          File(file).delete();
-
-          return value;
-        });
-  }
-
   Future<void> _sendReaction() async {
     setState(() {
       isLoadingSubmit = true;
@@ -476,6 +513,21 @@ class _SendReactionPageState extends State<SendReactionPage> {
       return;
     }
 
+    // Get video dimensions and rotation
+    int videoWidth = _selectedVideo?.width ?? 0;
+    int videoHeight = _selectedVideo?.height ?? 0;
+    int videoOrientation = _selectedVideo?.orientation ?? 0;
+
+    // Determine video orientation using enum
+    ReactionVideoOrientation videoOrientationEnum =
+        ReactionVideoOrientation.fromDimensions(videoWidth, videoHeight);
+
+    print('Video dimensions: ${videoWidth}x$videoHeight');
+    print('Video orientation: $videoOrientation°');
+    print(
+      'Video mode: ${videoOrientationEnum.label} (${videoOrientationEnum.value})',
+    );
+
     if ((selectedFriend == null && selectedFriendEmail == null) ||
         _titleController.text.trim().isEmpty) {
       toastification.show(
@@ -491,25 +543,71 @@ class _SendReactionPageState extends State<SendReactionPage> {
       return;
     }
 
-    var reactionId = await createReaction({
-      'user': selectedFriend?.uuid,
-      'invited_to': selectedFriendEmail ?? '',
-      'is_friend': true,
-      'title': _titleController.text.trim(),
-      'type_video': '3',
-      'description': _descriptionController.text.trim(),
-    });
+    try {
+      File? file = await _selectedVideo?.file;
 
-    var uploadResult = await uploadVideo(reactionId);
+      var reactionId = await createReaction({
+        'user': selectedFriend?.uuid,
+        'invited_to': selectedFriendEmail ?? '',
+        'is_friend': true,
+        'title': _titleController.text.trim(),
+        'type_video': '3',
+        'description': _descriptionController.text.trim(),
+      });
 
-    final videoUrl = uploadResult?['filePath'].trim();
-    final videoDuration = _duration;
+      var uploadResult = await uploadService.uploadVideo(
+        file?.path ?? '',
+        'sources',
+        reactionId!,
+        onProgress: (sent, total) {
+          setState(() {
+            if (total > 0 && sent.isFinite && total.isFinite) {
+              _uploadProgress = (sent / total);
+            }
+          });
+        },
+      );
 
-    updateReaction({
-      'uuid': reactionId,
-      'video_path': videoUrl,
-      'video_duration': videoDuration,
-    });
+      file?.delete();
+
+      // var uploadResult = await handleUploadVideo(
+      //   reactionId,
+      //   videoOrientationEnum.value == 1 ? '1080x1920' : '1920x1080',
+      // );
+      print(uploadResult);
+
+      print('Reaction ID: $reactionId');
+      updateReaction(reactionId, {
+        'video_path': 'sources/$reactionId.mp4',
+        'video_duration': _duration.round(),
+        'video_orientation': videoOrientationEnum.value,
+      });
+
+      createReactionVideo({
+        'reaction_id': reactionId,
+        'video_path': 'sources/$reactionId.mp4',
+        'video_duration': _duration.round(),
+        'video_orientation': videoOrientationEnum.value,
+        'video_name': _selectedVideo?.title ?? file?.path.split('/').last ?? '',
+        'segment': ReactionVideoSegment.sourceVideo.value,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      print('Error creating reaction: $e');
+      toastification.show(
+        title: Text('Error'),
+        description: Text("There was an error creating the reaction."),
+        autoCloseDuration: const Duration(seconds: 5),
+        type: ToastificationType.error,
+        alignment: Alignment.bottomCenter,
+      );
+
+      setState(() {
+        isLoadingSubmit = false;
+        _uploadProgress = 0.0;
+      });
+      return;
+    }
 
     if (selectedFriend != null) {
       await updateRecentFriends(selectedFriend?.toJson());
@@ -528,6 +626,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
     clearTextFields();
     setState(() {
       isLoadingSubmit = false;
+      _uploadProgress = 0.0;
     });
 
     // Navigate away before clearing fields to avoid widget lifecycle issues

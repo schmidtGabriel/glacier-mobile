@@ -1,21 +1,20 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-Future<Map<String, dynamic>?> completeReaction(
-  reaction,
+Future<Map<String, dynamic>?> convertReactionVideo(
+  uuid,
+  videoPath,
+  videoOutputPath,
   void Function(dynamic progress, dynamic total)? onProgress,
+  Map<String, dynamic>? options,
 ) async {
   final FirebaseAuth auth = FirebaseAuth.instance;
 
-  var reactionPath = reaction?.reactionPath ?? '';
-  var videoPath = reaction?.videoPath ?? '';
-  var delayTime = reaction?.delayDuration ?? 0;
+  print('Video path: $videoPath');
 
-  print('Selfie path: $reactionPath');
-  print('Source Path: $videoPath');
   try {
     // Validate input paths
-    if (reactionPath.isEmpty || videoPath.isEmpty) {
+    if (videoPath.isEmpty) {
       throw Exception('Invalid video or reaction path');
     }
 
@@ -31,23 +30,42 @@ Future<Map<String, dynamic>?> completeReaction(
 
     await auth.currentUser?.getIdToken(true);
 
+    // Report initial progress
+    onProgress?.call(60, 100);
+
     try {
       final callable = FirebaseFunctions.instanceFor(
         region: 'us-central1',
       ).httpsCallable(
-        'runCompleteRecord',
+        'convertVideo',
         options: HttpsCallableOptions(
           timeout: const Duration(
             minutes: 10,
           ), // Increase timeout to 10 minutes
         ),
       );
+
+      // Simulate progress during the call
+      Future.delayed(
+        Duration(milliseconds: 500),
+        () => onProgress?.call(85, 100),
+      );
+      Future.delayed(Duration(seconds: 1), () => onProgress?.call(90, 100));
+
       final result = await callable.call({
         'videoPath': videoPath,
-        'reactionPath': reactionPath,
-        'uuid': reaction?.uuid ?? '',
-        'delayTime': delayTime,
+        'outputPath': videoOutputPath,
+        'uuid': uuid,
+        'options': {
+          'resolution': options?['resolution'],
+          'format': 'mp4',
+          'fps': 30,
+        },
       });
+
+      // Report completion
+      onProgress?.call(100, 100);
+
       return result.data;
     } on FirebaseFunctionsException catch (error) {
       print("FirebaseFunctionsException:");
@@ -68,6 +86,13 @@ Future<Map<String, dynamic>?> completeReaction(
           break;
         case 'invalid-argument':
           print("Invalid arguments provided");
+          break;
+        case 'deadline-exceeded':
+          print(
+            "Function timeout - but video processing may still be running in background",
+          );
+          // You might want to return a special status here instead of null
+          // to indicate the operation might still succeed
           break;
         default:
           print("Unknown error code: ${error.code}");

@@ -1,3 +1,4 @@
+import 'package:glacier/enums/ReactionVideoOrientation.dart';
 import 'package:glacier/helpers/formatDate.dart';
 import 'package:glacier/resources/UserResource.dart';
 
@@ -9,13 +10,15 @@ class ReactionResource {
   final UserResource? assignedUser;
   final String? invitedTo;
   final String status;
-  final String videoUrl;
-  final String videoPath;
-  final String reactionUrl;
-  final String reactionPath;
-  final String recordUrl;
-  final String recordPath;
-  final int videoDuration;
+  final String? videoUrl;
+  final String? videoPath;
+  final String? reactionUrl;
+  final String? reactionPath;
+  final String? recordUrl;
+  final String? recordPath;
+  final int? videoDuration;
+  final int? delayDuration;
+  final ReactionVideoOrientation videoOrientation;
   final String? createdAt;
 
   ReactionResource({
@@ -26,13 +29,15 @@ class ReactionResource {
     this.assignedUser,
     this.invitedTo,
     required this.status,
-    required this.videoUrl,
-    required this.videoPath,
-    required this.reactionUrl,
-    required this.reactionPath,
-    required this.recordPath,
-    required this.recordUrl,
-    required this.videoDuration,
+    this.videoUrl,
+    this.videoPath,
+    this.reactionUrl,
+    this.reactionPath,
+    this.recordPath,
+    this.recordUrl,
+    this.videoDuration,
+    this.delayDuration,
+    required this.videoOrientation,
     this.createdAt,
   });
 
@@ -55,7 +60,12 @@ class ReactionResource {
       reactionPath: json['reaction_path'] ?? '',
       recordUrl: json['record_url'] ?? '',
       recordPath: json['record_path'] ?? '',
-      videoDuration: json['video_duration'] ?? 0,
+      videoDuration: int.tryParse(json['video_duration'].toString()) ?? 0,
+      delayDuration: json['delay_duration'] ?? 0,
+      videoOrientation:
+          json['video_orientation'] != null
+              ? ReactionVideoOrientation.fromValue(json['video_orientation'])
+              : ReactionVideoOrientation.portrait,
       createdAt: formatDate(
         json['created_at'] is String
             ? json['created_at']
@@ -81,6 +91,8 @@ class ReactionResource {
       'record_url': recordUrl,
       'record_path': recordPath,
       'video_duration': videoDuration,
+      'delay_duration': delayDuration,
+      'video_orientation': videoOrientation.value,
       'created_at': createdAt,
     };
   }

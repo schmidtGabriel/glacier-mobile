@@ -497,47 +497,50 @@ class _RecordedVideoPageState extends State<RecordedVideoPage> {
       _isLoading = true;
     });
 
-    var service = FirebaseStorageService();
-    final prefs = await SharedPreferences.getInstance();
+    try {
+      var service = FirebaseStorageService();
+      final prefs = await SharedPreferences.getInstance();
 
-    // Implement your send logic here
-    service
-        .uploadRecord(editedVideo!, selfiePath!)
-        .then((value) async {
-          print('Video uploaded successfully: $value');
+      // Implement your send logic here
+      service
+          .uploadRecord(editedVideo!, selfiePath!)
+          .then((value) async {
+            print('Video uploaded successfully: $value');
 
-          await updateReaction({
-            'selfie_video': 'reactions/${widget.uuid}.mp4',
-            'uuid': widget.uuid ?? '',
-            'recordDuration': 0, // Placeholder, update as needed
-            'delayDuration': 0, // Placeholder, update as needed
-          });
-          toastification.show(
-            title: Text('Video uploaded successfully'),
-            autoCloseDuration: const Duration(seconds: 5),
-            type: ToastificationType.success,
-            alignment: Alignment.bottomCenter,
-          );
-          prefs.remove('selfiePath');
-          prefs.remove('selfieName');
-          prefs.remove('videoPath');
+            await updateReaction(widget.uuid ?? '', {
+              'selfie_video': 'reactions/${widget.uuid}.mp4',
+              'recordDuration': 0, // Placeholder, update as needed
+              'delayDuration': 0, // Placeholder, update as needed
+            });
+            toastification.show(
+              title: Text('Video uploaded successfully'),
+              autoCloseDuration: const Duration(seconds: 5),
+              type: ToastificationType.success,
+              alignment: Alignment.bottomCenter,
+            );
+            prefs.remove('selfiePath');
+            prefs.remove('selfieName');
+            prefs.remove('videoPath');
 
-          setState(() {
+            setState(() {
+              _isLoading = false;
+            });
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          })
+          .catchError((error) {
+            print('Error uploading video: $error');
+            toastification.show(
+              title: Text('Error uploading video'),
+              autoCloseDuration: const Duration(seconds: 5),
+              type: ToastificationType.error,
+              alignment: Alignment.bottomCenter,
+            );
             _isLoading = false;
+            setState(() {});
           });
-          Navigator.of(context).popUntil((route) => route.isFirst);
-        })
-        .catchError((error) {
-          print('Error uploading video: $error');
-          toastification.show(
-            title: Text('Error uploading video'),
-            autoCloseDuration: const Duration(seconds: 5),
-            type: ToastificationType.error,
-            alignment: Alignment.bottomCenter,
-          );
-          _isLoading = false;
-          setState(() {});
-        });
+    } catch (e) {
+      print('Error in onSend: $e');
+    }
   }
 
   String _formatDuration(Duration duration) {

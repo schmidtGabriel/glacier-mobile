@@ -1,13 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-Future<void> updateReaction(data) async {
+Future<void> updateReaction(String? uuid, Map<String, dynamic> data) async {
+  if (uuid == null || uuid.isEmpty) {
+    print('UUID is null or empty. Cannot update reaction.');
+    return;
+  }
+
   final db = FirebaseFirestore.instance;
-  final docRef = db.collection('reactions').doc(data['uuid']);
+  final docRef = db.collection('reactions').doc(uuid);
   final docSnapshot = await docRef.get();
   if (docSnapshot.exists) {
-    await docRef.update(data);
+    await docRef.update({'uuid': uuid, ...data});
     print('Reaction updated successfully');
   } else {
-    print('Document with UUID ${data.uuid} not found in reactions.');
+    print('Document with UUID $uuid not found in reactions.');
   }
 }

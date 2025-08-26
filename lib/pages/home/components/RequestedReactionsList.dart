@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/helpers/formatStatusReaction.dart';
+import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/services/reactions/listReactions.dart';
 import 'package:glacier/themes/theme_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,7 +18,7 @@ class RequestedReactionsList extends StatefulWidget {
 }
 
 class _RequestedReactionsListState extends State<RequestedReactionsList> {
-  List reactions = [];
+  List<ReactionResource> reactions = [];
   bool isLoading = false;
 
   @override
@@ -88,8 +89,8 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                   separatorBuilder: (context, index) => SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final reaction = reactions[index];
-                    final title = reaction['title'] ?? 'No Name';
-                    final createdBy = reaction['requested'];
+                    final title = reaction.title ?? 'No Title';
+                    final createdBy = reaction.createdBy;
                     return Container(
                       decoration: ThemeContainers.card(context),
                       child: Column(
@@ -131,7 +132,7 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                             ).textTheme.titleMedium,
                                       ),
                                       Text(
-                                        reaction['created_at'] ?? 'No Date',
+                                        reaction.createdAt ?? 'No Date',
                                         style:
                                             Theme.of(
                                               context,
@@ -141,7 +142,7 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                   ),
                                 ),
 
-                                if (reaction['status'] == '0')
+                                if (reaction.status == '0')
                                   GestureDetector(
                                     onTap: () {
                                       Navigator.of(context, rootNavigator: true)
@@ -149,16 +150,18 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                             '/reaction',
                                             arguments: reaction,
                                           )
-                                          .then((_) {
+                                          .then((value) {
                                             // loadReactions();
-                                            Navigator.of(context)
-                                                .pushNamed(
-                                                  '/reaction-detail',
-                                                  arguments: reaction,
-                                                )
-                                                .then((_) {
-                                                  loadReactions();
-                                                });
+                                            if (value == true) {
+                                              Navigator.of(context)
+                                                  .pushNamed(
+                                                    '/reaction-detail',
+                                                    arguments: reaction,
+                                                  )
+                                                  .then((_) {
+                                                    loadReactions();
+                                                  });
+                                            }
                                           });
                                     },
                                     child: Container(
@@ -198,12 +201,12 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                     ),
                                     decoration: BoxDecoration(
                                       color: colorStatusReaction(
-                                        reaction['status'],
+                                        reaction.status,
                                       ),
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: Text(
-                                      formatStatusReaction(reaction['status']),
+                                      formatStatusReaction(reaction.status),
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 12,
@@ -235,7 +238,7 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            'Duration: ${reaction['video_duration'].round() ?? '0'}s',
+                                            'Duration: ${reaction.videoDuration?.round() ?? '0'}s',
                                             style:
                                                 Theme.of(
                                                   context,
@@ -311,16 +314,15 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
     });
 
     try {
-      List data = await listReactions(userId: widget.user.uuid);
-
       if (!mounted) return;
 
-      setState(() {
-        reactions = data;
-      });
+      reactions = await listReactions(userId: widget.user.uuid);
 
       final prefs = await SharedPreferences.getInstance();
-      prefs.setString('reactions', jsonEncode(data));
+      prefs.setString(
+        'reactions',
+        jsonEncode(reactions.map((e) => e.toJson()).toList()),
+      );
     } catch (e) {
       print('Error loading sent reactions: $e');
     } finally {

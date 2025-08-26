@@ -1,11 +1,15 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:glacier/enums/ReactionVideoOrientation.dart';
+import 'package:glacier/enums/ReactionVideoSegment.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/helpers/formatStatusReaction.dart';
 import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/reactions/cancelReaction.dart';
 import 'package:glacier/services/reactions/completeReaction.dart';
+import 'package:glacier/services/reactions/createReactionVideo.dart';
 import 'package:glacier/services/reactions/getReaction.dart';
 import 'package:glacier/services/reactions/updateReaction.dart';
 import 'package:glacier/themes/theme_extensions.dart';
@@ -24,6 +28,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
   ReactionResource? reaction;
   UserResource? user;
   bool _isLoading = false; // Track loading state
+  String loadingMessage = '';
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +40,9 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
     final videoUrl = reaction?.videoUrl ?? '';
     final reactionUrl = reaction?.reactionUrl ?? '';
     final recordUrl = reaction?.recordUrl ?? '';
-    final videoDuration = reaction?.videoDuration.round() ?? '0';
+    final videoDuration = reaction?.videoDuration?.round() ?? '0';
+
+    print('Record URL: $recordUrl');
 
     final isStartRecording =
         status == '0' &&
@@ -54,7 +61,22 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
     print('Reaction: ${reaction?.uuid}');
 
     return _isLoading
-        ? Scaffold(body: Center(child: CircularProgressIndicator()))
+        ? Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 20),
+                Text(
+                  loadingMessage,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+              ],
+            ),
+          ),
+        )
         : Scaffold(
           appBar: AppBar(
             title: Text(
@@ -350,7 +372,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                       height: 50,
                       child: ElevatedButton.icon(
                         onPressed: () async {
-                          // logic to send the reaction and create the merging video
+                          await _completeReaction();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.blue[600],
@@ -520,6 +542,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
 
     setState(() {
       _isLoading = true;
+      loadingMessage = 'Completing reaction...';
     });
 
     try {
@@ -527,17 +550,43 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
         // Handle progress updates if needed
       });
 
-      await updateReaction({
-        'status': '10',
-        'uuid': reaction?.uuid ?? '',
-        'record_path': resultReaction?['recordPath'],
+      if (resultReaction == null) {
+        ToastHelper.showError(
+          context,
+          description: 'Failed to complete reaction, pleasetry again.',
+        );
+        return;
+      }
+
+      setState(() {
+        loadingMessage = 'Updating reaction...';
       });
+
+      await updateReaction(reaction?.uuid, {
+        'status': '10',
+        'record_path': resultReaction['recordPath'],
+      });
+
+      createReactionVideo({
+        'reaction_id': reaction?.uuid,
+        'video_path': resultReaction['recordPath'],
+        'video_duration': reaction?.videoDuration,
+        'video_orientation': ReactionVideoOrientation.portrait.value,
+        'segment': ReactionVideoSegment.combinedVideo.value,
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      ToastHelper.showSuccess(
+        context,
+        description: 'Reaction completed successfully!',
+      );
       await _loadReactionByUuid(); // Refresh the reaction data
     } catch (e) {
       print('Error completing reaction: $e');
     } finally {
       setState(() {
         _isLoading = false;
+        loadingMessage = '';
       });
     }
   }
@@ -563,7 +612,6 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
       });
       return true;
     }
-    print('No reaction found for UUID: ${widget.uuid}');
 
     setState(() {
       _isLoading = false; // Hide loading indicator

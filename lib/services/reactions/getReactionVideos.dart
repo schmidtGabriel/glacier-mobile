@@ -17,10 +17,9 @@ Future<String> handleReaction(data) async {
 
 Future<String> handleRecord(data) async {
   try {
-    if (data['recorded_video'] != null || data['recorded_video'].isNotEmpty) {
+    if (data['record_path'] != null || data['record_path'].isNotEmpty) {
       final service = FirebaseStorageService();
-      String res = await service.getDownloadUrl(data['recorded_video']);
-
+      String res = await service.getDownloadUrl(data['record_path']);
       if (res.isNotEmpty) {
         return res;
       } else {

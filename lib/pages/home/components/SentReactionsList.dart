@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/helpers/formatStatusReaction.dart';
+import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/services/reactions/listReactions.dart';
 import 'package:glacier/themes/theme_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,7 +17,7 @@ class SentReactionsList extends StatefulWidget {
 }
 
 class _SentReactionsListState extends State<SentReactionsList> {
-  List reactions = [];
+  List<ReactionResource> reactions = [];
   bool isLoading = false;
 
   @override
@@ -83,8 +84,9 @@ class _SentReactionsListState extends State<SentReactionsList> {
                   separatorBuilder: (context, index) => SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final reaction = reactions[index];
-                    final title = reaction['title'] ?? 'No Name';
-                    final user = reaction['user'];
+                    final title = reaction.title ?? 'No Name';
+                    final user = reaction.assignedUser;
+
                     return Container(
                       decoration: ThemeContainers.card(context),
                       child: Column(
@@ -114,13 +116,11 @@ class _SentReactionsListState extends State<SentReactionsList> {
                                     horizontal: 10,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: colorStatusReaction(
-                                      reaction['status'],
-                                    ),
+                                    color: colorStatusReaction(reaction.status),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Text(
-                                    formatStatusReaction(reaction['status']),
+                                    formatStatusReaction(reaction.status),
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
@@ -129,7 +129,7 @@ class _SentReactionsListState extends State<SentReactionsList> {
                                   ),
                                 ),
                                 Text(
-                                  reaction['created_at'] ?? 'No Date',
+                                  reaction.createdAt ?? 'No Date',
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ],
@@ -156,7 +156,7 @@ class _SentReactionsListState extends State<SentReactionsList> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            'Sent to: ${user.name ?? '0'}',
+                                            'Sent to: ${user?.name ?? 'Unknown User'}',
                                             style:
                                                 Theme.of(
                                                   context,
@@ -231,16 +231,19 @@ class _SentReactionsListState extends State<SentReactionsList> {
     });
 
     try {
-      List data = await listReactions(userId: widget.user.uuid, isSent: true);
+      reactions =
+          (await listReactions(
+            userId: widget.user.uuid,
+            isSent: true,
+          )).cast<ReactionResource>();
 
       if (!mounted) return;
 
-      setState(() {
-        reactions = data;
-      });
-
       final prefs = await SharedPreferences.getInstance();
-      prefs.setString('reactions', jsonEncode(data));
+      prefs.setString(
+        'reactions',
+        jsonEncode(reactions.map((e) => e.toJson()).toList()),
+      );
     } catch (e) {
       print('Error loading sent reactions: $e');
     } finally {

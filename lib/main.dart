@@ -16,6 +16,7 @@ import 'package:glacier/pages/home/RecordPage.dart';
 import 'package:glacier/pages/home/RecordedVideoPage.dart';
 import 'package:glacier/pages/send-reaction/GalleryScreen.dart';
 import 'package:glacier/providers/theme_provider.dart';
+import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/services/auth/logReaction.dart';
 import 'package:glacier/themes/app_theme.dart';
 import 'package:provider/provider.dart';
@@ -191,9 +192,9 @@ class MyApp extends StatelessWidget {
         );
 
       case '/reaction':
-        if (args is Map<String, dynamic> && args.containsKey('uuid')) {
+        if (args is ReactionResource && args.uuid.isNotEmpty) {
           return MaterialPageRoute(
-            builder: (_) => AuthGate(child: RecordPage(uuid: args['uuid'])),
+            builder: (_) => AuthGate(child: RecordPage(uuid: args.uuid)),
           );
         }
         return _errorRoute();
@@ -267,9 +268,21 @@ class MyApp extends StatelessWidget {
   Route _errorRoute() {
     return MaterialPageRoute(
       builder:
-          (_) => Scaffold(
-            appBar: AppBar(title: Text("Error")),
-            body: Center(child: Text("Page not found or invalid arguments")),
+          (context) => Scaffold(
+            body: Center(
+              child: Column(
+                children: [
+                  Text("Page not found"),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: Text("Back"),
+                  ),
+                ],
+              ),
+            ),
           ),
     );
   }

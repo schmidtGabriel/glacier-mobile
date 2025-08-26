@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:glacier/enums/ReactionVideoOrientation.dart';
 import 'package:glacier/helpers/parseTimeStamp.dart';
 import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/services/reactions/getReactionVideos.dart';
@@ -43,6 +44,11 @@ Future<ReactionResource?> getReaction(String uuid) async {
         recordUrl: recordUrl,
         recordPath: data['record_path'] ?? '',
         videoDuration: data['video_duration'] ?? 0,
+        delayDuration: data['delay_duration'] ?? 0,
+        videoOrientation:
+            data['video_orientation'] != null
+                ? ReactionVideoOrientation.fromValue(data['video_orientation'])
+                : ReactionVideoOrientation.portrait,
         createdAt: formatTimestamp(data['created_at']),
       );
     }

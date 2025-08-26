@@ -136,28 +136,33 @@ class _GalleryScreenState extends State<GalleryScreen>
                         ],
                       ),
                       if (_currentAlbumName != null)
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.arrow_back),
-                              onPressed: () {
-                                setState(() {
-                                  _showAlbums = true;
-                                  _currentAlbumName = null;
-                                });
-                              },
-                            ),
+                        Container(
+                          padding: EdgeInsets.only(top: 5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
 
-                            Expanded(
-                              child: Text(
-                                _currentAlbumName ?? 'Videos',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.arrow_back),
+                                onPressed: () {
+                                  setState(() {
+                                    _showAlbums = true;
+                                    _currentAlbumName = null;
+                                  });
+                                },
+                              ),
+
+                              Expanded(
+                                child: Text(
+                                  _currentAlbumName ?? 'Videos',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                     ],
                   ),
