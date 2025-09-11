@@ -12,6 +12,7 @@ verifyEmailAccount(email) async {
 
     if (querySnapshot.docs.isNotEmpty) {
       var user = querySnapshot.docs.first.data();
+      print('User data: $user');
 
       if (user['hasAccount'] == true) {
         return true;

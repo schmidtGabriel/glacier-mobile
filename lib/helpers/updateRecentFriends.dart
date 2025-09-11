@@ -23,8 +23,6 @@ Future<void> updateRecentFriends(
       recentFriends = recentFriends.sublist(0, 5);
     }
 
-    print('Updated recent friends: $recentFriends');
-
     value.setString('recent_friends', jsonEncode(recentFriends));
   });
 }

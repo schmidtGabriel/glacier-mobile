@@ -1,10 +1,10 @@
+import 'package:better_player_plus/better_player_plus.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/enums/ReactionVideoOrientation.dart';
-import 'package:video_player/video_player.dart';
 
 class PreviewLayout extends StatefulWidget {
-  final VideoPlayerController? controllerVideo;
+  final BetterPlayerController? controllerVideo;
   final CameraController? controllerCamera;
   final ReactionVideoOrientation? orientation;
 
@@ -22,11 +22,9 @@ class PreviewLayout extends StatefulWidget {
 class _PreviewLayoutState extends State<PreviewLayout> {
   @override
   Widget build(BuildContext context) {
-    // final screenSize = MediaQuery.of(context).size;
-    final isScreenPortrait =
-        widget.orientation == ReactionVideoOrientation.portrait ? true : false;
-
-    return !widget.controllerVideo!.value.isInitialized ||
+    return widget.controllerVideo == null ||
+            widget.controllerCamera == null ||
+            !(widget.controllerVideo?.isVideoInitialized() ?? false) ||
             !widget.controllerCamera!.value.isInitialized
         ? const Scaffold(
           body: Center(
@@ -46,11 +44,12 @@ class _PreviewLayoutState extends State<PreviewLayout> {
         : Scaffold(
           body: Stack(
             children: [
-              // Video Player section (full screen background)
+              // BetterPlayer section (full screen background)
               Center(
                 child: AspectRatio(
-                  aspectRatio: widget.controllerVideo!.value.aspectRatio,
-                  child: VideoPlayer(widget.controllerVideo!),
+                  aspectRatio:
+                      widget.controllerVideo!.getAspectRatio() ?? 16 / 9,
+                  child: BetterPlayer(controller: widget.controllerVideo!),
                 ),
               ),
               // Camera Preview section (overlay at bottom-right)

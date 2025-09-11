@@ -15,8 +15,10 @@ import 'package:glacier/pages/TakePictureScreen.dart';
 import 'package:glacier/pages/home/RecordPage.dart';
 import 'package:glacier/pages/home/RecordedVideoPage.dart';
 import 'package:glacier/pages/send-reaction/GalleryScreen.dart';
+import 'package:glacier/pages/send-reaction/SendReactionPage.dart';
 import 'package:glacier/providers/theme_provider.dart';
 import 'package:glacier/resources/ReactionResource.dart';
+import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/auth/logReaction.dart';
 import 'package:glacier/themes/app_theme.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +27,7 @@ import 'package:toastification/toastification.dart';
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  FlutterNativeSplash.remove();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
@@ -223,6 +226,16 @@ class MyApp extends StatelessWidget {
           );
         }
         return _errorRoute();
+
+      case '/send-reaction':
+        if (args is UserResource) {
+          return MaterialPageRoute(
+            builder: (_) => AuthGate(child: SendReactionPage(sendTo: args)),
+          );
+        }
+        return MaterialPageRoute(
+          builder: (_) => AuthGate(child: SendReactionPage()),
+        );
 
       case '/gallery':
         return MaterialPageRoute(

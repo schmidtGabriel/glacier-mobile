@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
+import 'package:glacier/components/Button.dart';
 import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/services/auth/signup.dart';
 import 'package:glacier/services/auth/verifyEmail.dart';
@@ -21,6 +22,8 @@ class _SignupPageState extends State<SignupPage> {
   int _step = 0;
   bool _obscurePassword = true;
   bool _isLoading = false;
+  bool _acceptTerms = false;
+  bool _agreeSMS = false;
   final String _errorMessage = '';
   final ScrollController _scrollController =
       ScrollController(); // Add this line
@@ -54,59 +57,67 @@ class _SignupPageState extends State<SignupPage> {
         title: Text(_step == 0 ? "Sign Up" : "Invite Friends"),
       ),
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: OverflowBar(
-          alignment:
-              _step == 1
-                  ? MainAxisAlignment.spaceBetween
-                  : MainAxisAlignment.end,
-          children: [
-            if (_step == 1)
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _step = 0;
-                  });
-                },
-                child: Text("Back", style: TextStyle(color: Colors.blue)),
-              ),
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: _step == 0 ? _nextStep : _submit,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (_isLoading) ...[
-                    SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                  ],
-
-                  Text(
-                    _step == 0 ? "Next" : "Submit",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        padding: const EdgeInsets.only(
+          top: 10,
+          left: 24.0,
+          right: 24.0,
+          bottom: 30.0,
+        ),
+        child: Button(
+          label: 'Submit',
+          isLoading: _isLoading,
+          onPressed: _nextStep,
         ),
       ),
+      // bottomNavigationBar: Padding(
+      //   padding: const EdgeInsets.all(30.0),
+      //   child: OverflowBar(
+      //     children: [
+      //       // if (_step == 1)
+      //       //   TextButton(
+      //       //     onPressed: () {
+      //       //       setState(() {
+      //       //         _step = 0;
+      //       //       });
+      //       //     },
+      //       //     child: Text("Back", style: TextStyle(color: Colors.blue)),
+      //       //   ),
+      //       ElevatedButton(
+      //         style: ElevatedButton.styleFrom(
+      //           backgroundColor: Colors.blueAccent,
+      //           foregroundColor: Colors.white,
+      //         ),
+      //         onPressed: _nextStep,
+      //         child: Row(
+      //           mainAxisAlignment: MainAxisAlignment.center,
+      //           mainAxisSize: MainAxisSize.max,
+      //           children: [
+      //             if (_isLoading) ...[
+      //               SizedBox(
+      //                 width: 20,
+      //                 height: 20,
+      //                 child: CircularProgressIndicator(
+      //                   strokeWidth: 2,
+      //                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      //                 ),
+      //               ),
+      //               SizedBox(width: 12),
+      //             ],
+
+      //             Text(
+      //               "Submit",
+      //               style: TextStyle(
+      //                 fontSize: 16,
+      //                 fontWeight: FontWeight.w600,
+      //                 color: Colors.white,
+      //               ),
+      //             ),
+      //           ],
+      //         ),
+      //       ),
+      //     ],
+      //   ),
+      // ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
@@ -166,7 +177,7 @@ class _SignupPageState extends State<SignupPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 60.0),
+          padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 100.0),
           child: Center(
             child:
                 context.isDarkMode
@@ -212,7 +223,9 @@ class _SignupPageState extends State<SignupPage> {
                 keyboardType: TextInputType.emailAddress,
                 validator:
                     (value) =>
-                        value != null && value.contains("@")
+                        value == null || value.isEmpty
+                            ? "Email is required"
+                            : value.contains("@")
                             ? null
                             : "Enter a valid email",
                 onTapOutside: (event) {
@@ -258,9 +271,154 @@ class _SignupPageState extends State<SignupPage> {
                 },
                 validator:
                     (value) =>
-                        value != null && value.length >= 6
+                        value == null || value.isEmpty
+                            ? 'Password is required'
+                            : value.length >= 6
                             ? null
                             : 'Password too short',
+              ),
+
+              SizedBox(height: 12),
+
+              // Terms of Use Checkbox with Form Validation
+              FormField<bool>(
+                initialValue: _acceptTerms,
+                validator: (value) {
+                  if (value != true) {
+                    return "Please accept the terms of use to continue";
+                  }
+                  return null;
+                },
+                builder: (FormFieldState<bool> field) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _acceptTerms,
+                            onChanged: (value) {
+                              setState(() {
+                                _acceptTerms = value ?? false;
+                              });
+                              field.didChange(_acceptTerms);
+                            },
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _acceptTerms = !_acceptTerms;
+                                });
+                                field.didChange(_acceptTerms);
+                              },
+                              child: Text(
+                                "I accept the terms of use",
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (field.hasError)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0, top: 0),
+                          child: Text(
+                            field.errorText!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+
+              SizedBox(height: 4),
+
+              // SMS Agreement Checkbox with Form Validation
+              FormField<bool>(
+                initialValue: _agreeSMS,
+                validator: (value) {
+                  if (value != true) {
+                    return "Please agree to receive SMS to continue";
+                  }
+                  return null;
+                },
+                builder: (FormFieldState<bool> field) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _agreeSMS,
+                            onChanged: (value) {
+                              setState(() {
+                                _agreeSMS = value ?? false;
+                              });
+                              field.didChange(_agreeSMS);
+                            },
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _agreeSMS = !_agreeSMS;
+                                });
+                                field.didChange(_agreeSMS);
+                              },
+                              child: Text(
+                                "I agree to receive SMS",
+                                style: TextStyle(fontSize: 14),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (field.hasError)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0, top: 0),
+                          child: Text(
+                            field.errorText!,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
+              ),
+
+              SizedBox(height: 12),
+
+              Center(
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Have an account? ",
+                        style: TextStyle(color: Colors.blueAccent),
+                      ),
+                      const Text(
+                        "Sign in",
+                        style: TextStyle(
+                          color: Colors.blueAccent,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ],
           ),
@@ -315,6 +473,7 @@ class _SignupPageState extends State<SignupPage> {
 
   void _nextStep() {
     if (_formKey.currentState?.validate() != true) return;
+
     print('Form validation result: ${_formKey.currentState?.validate()}');
 
     verifyEmailAccount(_controllers['email']!.text).then((isRegistered) {
@@ -326,15 +485,16 @@ class _SignupPageState extends State<SignupPage> {
         );
       } else {
         if (_step == 0 && _formKey.currentState!.validate()) {
-          setState(() {
-            _step = 1;
-          });
+          _submit();
+          // setState(() {
+          //   _step = 1;
+          // });
 
-          _scrollController.animateTo(
-            0,
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
+          // _scrollController.animateTo(
+          //   0,
+          //   duration: Duration(milliseconds: 300),
+          //   curve: Curves.easeInOut,
+          // );
         }
       }
     });

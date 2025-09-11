@@ -1,10 +1,10 @@
+import 'package:better_player_plus/better_player_plus.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/enums/ReactionVideoOrientation.dart';
-import 'package:video_player/video_player.dart';
 
 class VerticalStackLayout extends StatefulWidget {
-  final VideoPlayerController? controllerVideo;
+  final BetterPlayerController? controllerVideo;
   final CameraController? controllerCamera;
   final ReactionVideoOrientation? orientation;
 
@@ -26,7 +26,7 @@ class _VerticalStackLayoutState extends State<VerticalStackLayout> {
     final isScreenPortrait =
         widget.orientation == ReactionVideoOrientation.portrait ? true : false;
 
-    return !widget.controllerVideo!.value.isInitialized ||
+    return !widget.controllerVideo!.videoPlayerController!.value.initialized ||
             !widget.controllerCamera!.value.isInitialized
         ? const Scaffold(
           body: Center(
@@ -54,10 +54,17 @@ class _VerticalStackLayoutState extends State<VerticalStackLayout> {
                   color: Colors.black,
                   child: Center(
                     child: AspectRatio(
-                      aspectRatio: widget.controllerVideo!.value.aspectRatio,
+                      aspectRatio:
+                          widget
+                              .controllerVideo!
+                              .videoPlayerController!
+                              .value
+                              .aspectRatio,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: VideoPlayer(widget.controllerVideo!),
+                        child: BetterPlayer(
+                          controller: widget.controllerVideo!,
+                        ),
                       ),
                     ),
                   ),

@@ -72,7 +72,7 @@ class _BottomMenuLayoutState extends State<BottomMenuLayout> {
       Navigator.of(
         context,
         rootNavigator: true,
-      ).pushReplacementNamed('/gallery');
+      ).pushReplacementNamed('/send-reaction');
     } else {
       setState(() {
         _currentIndex = index;

@@ -1,12 +1,18 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:gal/gal.dart';
+import 'package:glacier/components/VideoThumbnailWidget.dart';
 import 'package:glacier/enums/ReactionVideoOrientation.dart';
 import 'package:glacier/enums/ReactionVideoSegment.dart';
 import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/helpers/formatStatusReaction.dart';
+import 'package:glacier/pages/PreviewVideoPage.dart';
 import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/resources/UserResource.dart';
+import 'package:glacier/services/PermissionsService.dart';
 import 'package:glacier/services/reactions/cancelReaction.dart';
 import 'package:glacier/services/reactions/completeReaction.dart';
 import 'package:glacier/services/reactions/createReactionVideo.dart';
@@ -29,6 +35,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
   UserResource? user;
   bool _isLoading = false; // Track loading state
   String loadingMessage = '';
+  final _permissionsService = PermissionsService.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -228,7 +235,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                                           Theme.of(context).textTheme.bodySmall,
                                     ),
                                     Text(
-                                      assignedUser.name ?? 'Unknown',
+                                      assignedUser.name,
                                       style: Theme.of(
                                         context,
                                       ).textTheme.bodyMedium?.copyWith(
@@ -310,13 +317,6 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                             ),
                           ],
                         ),
-
-                        if (videoUrl.isNotEmpty &&
-                            user?.uuid == createdBy?.uuid) ...[
-                          SizedBox(height: 16),
-                          Divider(color: Colors.grey[200]),
-                          SizedBox(height: 16),
-                        ],
                       ],
                     ),
                   ),
@@ -394,72 +394,138 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                       ),
                     ),
                   ],
-
-                  if (isWatchRecord) ...[
-                    SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            () => Navigator.of(
-                              context,
-                              rootNavigator: true,
-                            ).pushNamed(
-                              '/preview-video',
-                              arguments: {'videoPath': recordUrl},
-                            ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.yellow[800],
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        icon: Icon(Icons.play_arrow),
-                        label: Text(
-                          'Watch Reaction',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-
                   if (isWatchVideo) ...[
                     SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            () => Navigator.of(
+                    Column(
+                      spacing: 20,
+                      children: [
+                        VideoThumbnailWidget(
+                          videoPath: videoUrl,
+                          onTap: () async {
+                            await Navigator.push<void>(
                               context,
-                              rootNavigator: true,
-                            ).pushNamed(
-                              '/preview-video',
-                              arguments: {'videoPath': videoUrl},
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => PreviewVideoPage(
+                                      videoPath: videoUrl,
+                                      hasConfirmButton: false,
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton.icon(
+                            onPressed:
+                                () => _saveToGallery(videoUrl, isUrl: true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green[600],
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 2,
                             ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[600],
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 2,
-                        ),
-                        icon: Icon(Icons.play_arrow),
-                        label: Text(
-                          'Watch Video',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            icon: Icon(Icons.download),
+                            label: Text(
+                              'Source',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
+                      ],
+                    ),
+                  ],
+                  Divider(height: 40, color: Colors.grey[200]),
+                  if (isWatchRecord) ...[
+                    Column(
+                      spacing: 20,
+                      children: [
+                        VideoThumbnailWidget(
+                          videoPath: recordUrl,
+                          onTap: () async {
+                            await Navigator.push<void>(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => PreviewVideoPage(
+                                      videoPath: recordUrl,
+                                      hasConfirmButton: false,
+                                    ),
+                              ),
+                            );
+                          },
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          spacing: 10,
+                          children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 50,
+                                child: ElevatedButton.icon(
+                                  onPressed:
+                                      () => _saveToGallery(
+                                        reactionUrl,
+                                        isUrl: true,
+                                      ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue[900],
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 2,
+                                  ),
+                                  icon: Icon(Icons.download),
+                                  label: Text(
+                                    'Reaction',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            if (recordUrl.isNotEmpty) ...[
+                              Expanded(
+                                child: SizedBox(
+                                  height: 50,
+                                  child: ElevatedButton.icon(
+                                    onPressed:
+                                        () => _saveToGallery(
+                                          recordUrl,
+                                          isUrl: true,
+                                        ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.blue[900],
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 2,
+                                    ),
+                                    icon: Icon(Icons.download),
+                                    label: Text(
+                                      'Final',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
                     ),
                   ],
 
@@ -604,7 +670,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
       user = null; // Handle case where user data is not available
     }
 
-    var currentReaction = await getReaction(widget.uuid ?? '');
+    var currentReaction = await getReaction(widget.uuid);
     if (currentReaction != null) {
       setState(() {
         reaction = currentReaction;
@@ -617,5 +683,35 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
       _isLoading = false; // Hide loading indicator
     });
     return false; // Return false if no reaction is found
+  }
+
+  Future<void> _saveToGallery(videoPath, {bool isUrl = false}) async {
+    try {
+      final granted = await _permissionsService.isGalleryAccessGranted();
+
+      if (granted) {
+        if (!isUrl) {
+          await Gal.putVideo(videoPath);
+          return;
+        } else {
+          final path = '${Directory.systemTemp.path}/${reaction?.uuid}.mp4';
+          await Dio().download(videoPath, path);
+          await Gal.putVideo(path);
+
+          File(path).delete();
+          ToastHelper.showSuccess(
+            context,
+            description: 'Video saved to gallery successfully!',
+          );
+          return;
+        }
+      } else {
+        await _permissionsService.requestGalleryPermission();
+        _saveToGallery(videoPath, isUrl: isUrl);
+      }
+    } catch (e) {
+      print('Error saving video to gallery: $e');
+    }
+    // Implement saving video to gallery if needed
   }
 }

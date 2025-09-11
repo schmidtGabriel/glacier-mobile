@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:glacier/helpers/convertVideo.dart';
 import 'package:glacier/services/user/updateUserData.dart';
+import 'package:native_media_converter/native_media_converter.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -109,6 +110,21 @@ class FirebaseStorageService {
 
       final tempVideoPath =
           '${tempDir.path}/${videoName.endsWith('.mp4') ? videoName : '$videoName.mp4'}';
+
+      NativeMediaConverter.progressStream().listen((progress) {
+        print("Progress: ${(progress * 100).toStringAsFixed(1)}%");
+      });
+
+      // const MethodChannel('media_converter_flutter').invokeMethod('transcode', {
+      //   'inputPath': videoPath,
+      //   'outputPath': tempVideoPath,
+      //   'crop': {'x': 100, 'y': 100, 'w': 800, 'h': 600},
+      //   'resolution': {'w': 1280, 'h': 720},
+      //   'bitrate': 5000000,
+      //   'fps': 30,
+      //   'codec': 'h264',
+      //   'hdr': true,
+      // });
 
       await convertVideo(
         videoPath: videoPath,

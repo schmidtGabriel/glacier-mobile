@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:glacier/components/VideoGallery/AlbumGridView.dart';
 import 'package:glacier/components/VideoGallery/VideoGridView.dart';
 import 'package:glacier/pages/PreviewVideoPage.dart';
-import 'package:glacier/pages/send-reaction/SendReactionPage.dart';
 import 'package:glacier/services/PermissionsService.dart';
 import 'package:photo_manager/photo_manager.dart';
 
@@ -28,14 +27,6 @@ class _GalleryScreenState extends State<GalleryScreen>
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: true,
-      onPopInvoked: (didPop) {
-        if (didPop) {
-          Navigator.of(
-            context,
-          ).pushReplacementNamed('/', arguments: {'index': 0});
-        }
-      },
       child:
           isLoading
               ? Center(child: CircularProgressIndicator())
@@ -83,14 +74,6 @@ class _GalleryScreenState extends State<GalleryScreen>
                       AppBar(
                         title: Text(pageTitle),
 
-                        leading: CloseButton(
-                          onPressed: () {
-                            Navigator.of(context).pushReplacementNamed(
-                              '/',
-                              arguments: {'index': 0},
-                            );
-                          },
-                        ),
                         actions: [
                           if (_currentAlbumName == null && !isLoading) ...[
                             IconButton(
@@ -213,17 +196,17 @@ class _GalleryScreenState extends State<GalleryScreen>
 
                             if (selectedVideo != null) {
                               // var path = await selectedVideo.file;
-                              // Navigator.of(context).pop(selectedVideo);
-                              await Navigator.push<AssetEntity?>(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => SendReactionPage(
-                                        video: selectedVideo['video'],
-                                        duration: selectedVideo['duration'],
-                                      ),
-                                ),
-                              );
+                              Navigator.of(context).pop(selectedVideo);
+                              // await Navigator.push<AssetEntity?>(
+                              //   context,
+                              //   MaterialPageRoute(
+                              //     builder:
+                              //         (context) => SendReactionPage(
+                              //           video: selectedVideo['video'],
+                              //           duration: selectedVideo['duration'],
+                              //         ),
+                              //   ),
+                              // );
                             }
                           },
                         ),

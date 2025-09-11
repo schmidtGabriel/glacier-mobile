@@ -17,6 +17,7 @@ Future<List<ReactionResource>> listReactions({
           .where('requested', isEqualTo: userId)
           .where(
             Filter.or(
+              Filter('status', isEqualTo: '-1'),
               Filter('status', isEqualTo: '0'),
               Filter('status', isEqualTo: '1'),
               Filter('status', isEqualTo: '10'),
@@ -63,6 +64,7 @@ Future<List<ReactionResource>> listReactions({
                       data['video_orientation'],
                     )
                     : ReactionVideoOrientation.portrait,
+            invitedTo: data['invited_to'] ?? '',
           );
         } catch (e) {
           print('Error processing reaction document ${doc.id}: $e');

@@ -1,10 +1,13 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:better_player_plus/better_player_plus.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:glacier/components/Record/PreviewLayout.dart';
-import 'package:glacier/components/Record/VerticalStackLayout.dart';
+import 'package:flutter/services.dart';
+import 'package:glacier/components/Record/steps/CameraReadyStep.dart';
+import 'package:glacier/components/Record/steps/CountdownStep.dart';
+import 'package:glacier/components/Record/steps/RecordingStep.dart';
 import 'package:glacier/enums/ReactionVideoOrientation.dart';
 import 'package:glacier/enums/ReactionVideoSegment.dart';
 import 'package:glacier/helpers/ToastHelper.dart';
@@ -13,7 +16,6 @@ import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/createReactionVideo.dart';
 import 'package:glacier/services/reactions/getReaction.dart';
 import 'package:glacier/services/reactions/updateReaction.dart';
-import 'package:video_player/video_player.dart';
 
 class RecordPage extends StatefulWidget {
   final String? uuid;
@@ -31,7 +33,7 @@ class _RecordPageState extends State<RecordPage> {
   String progressMessage = 'Loading, please wait...';
   double _uploadProgress = 0.0; // Track upload progress
 
-  VideoPlayerController? _controllerVideo;
+  BetterPlayerController? _controllerVideo;
   bool isPlaying = false;
   bool isVideoFinished = false;
   CameraController? _controllerCamera;
@@ -54,6 +56,9 @@ class _RecordPageState extends State<RecordPage> {
 
   String layout = 'preview'; // Default layout is 'preview' | 'vertical'
 
+  // Step tracking: 1 = camera ready, 2 = countdown, 3 = recording
+  int currentStep = 1;
+
   @override
   Widget build(BuildContext context) {
     return _isLoading
@@ -72,223 +77,7 @@ class _RecordPageState extends State<RecordPage> {
             ),
           ),
         )
-        : Scaffold(
-          body: ValueListenableBuilder<bool>(
-            valueListenable: ValueNotifier(_isLoading),
-            builder: (context, value, child) {
-              if (!_isLoading &&
-                  (_controllerVideo == null ||
-                      !_controllerVideo!.value.isInitialized)) {
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text('Video not available ${(widget.uuid)}'),
-                      SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop(false);
-                        },
-                        child: Text('Back'),
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return GestureDetector(
-                onTap: () {
-                  _handleControlsVisibility();
-                },
-                child: Stack(
-                  children: [
-                    if (layout == 'vertical')
-                      VerticalStackLayout(
-                        controllerVideo: _controllerVideo,
-                        controllerCamera: _controllerCamera,
-                        orientation: currentReaction?.videoOrientation,
-                      )
-                    else
-                      PreviewLayout(
-                        controllerVideo: _controllerVideo,
-                        controllerCamera: _controllerCamera,
-                        orientation: currentReaction?.videoOrientation,
-                      ),
-
-                    Visibility(
-                      visible: showControls,
-                      child: Positioned(
-                        bottom: 20,
-                        left: 50,
-                        right: 50,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.black38,
-                            borderRadius: BorderRadius.circular(40),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              // Left side - Timer display
-                              Expanded(
-                                flex: 1,
-                                child: StreamBuilder<DateTime>(
-                                  stream:
-                                      _realtimeTimer != null
-                                          ? Stream.periodic(
-                                            Duration(milliseconds: 100),
-                                            (_) => DateTime.now(),
-                                          )
-                                          : null,
-                                  builder: (context, snapshot) {
-                                    final duration =
-                                        _timerStartTime != null
-                                            ? DateTime.now().difference(
-                                              _timerStartTime!,
-                                            )
-                                            : Duration.zero;
-                                    return Text(
-                                      '${duration.inSeconds.toString()}s',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-
-                              // Center - Play/Pause/Stop button
-                              Expanded(
-                                flex: 1,
-                                child:
-                                    _controllerVideo != null
-                                        ? ValueListenableBuilder<
-                                          VideoPlayerValue
-                                        >(
-                                          valueListenable: _controllerVideo!,
-                                          builder: (
-                                            context,
-                                            videoValue,
-                                            child,
-                                          ) {
-                                            return IconButton(
-                                              style: ButtonStyle(
-                                                padding:
-                                                    WidgetStateProperty.all(
-                                                      EdgeInsets.all(2),
-                                                    ),
-                                                backgroundColor:
-                                                    WidgetStateProperty.all(
-                                                      Colors.black54,
-                                                    ),
-                                              ),
-                                              icon: Icon(
-                                                size: 20,
-                                                isVideoFinished
-                                                    ? Icons.stop
-                                                    : videoValue.isPlaying
-                                                    ? Icons.pause
-                                                    : Icons.play_arrow,
-                                                color:
-                                                    isVideoFinished
-                                                        ? Colors.red
-                                                        : Colors.white,
-                                              ),
-                                              onPressed: () async {
-                                                if (isVideoFinished &&
-                                                    !videoValue.isPlaying) {
-                                                  _controllerVideo!.pause();
-                                                  if (_controllerVideo!
-                                                      .value
-                                                      .isCompleted) {
-                                                    _realtimeTimer?.cancel();
-                                                    finishReation();
-                                                  }
-                                                } else {
-                                                  if (videoValue.isPlaying) {
-                                                    _controllerVideo!.pause();
-                                                    _handleControlsVisibility();
-                                                    setState(() {
-                                                      isPlaying = false;
-                                                    });
-                                                  } else {
-                                                    await _controllerVideo!
-                                                        .seekTo(Duration.zero);
-                                                    _controllerVideo!.play();
-                                                    _delayVideo =
-                                                        _currentRecordingDuration;
-
-                                                    _handleControlsVisibility();
-
-                                                    setState(() {
-                                                      isPlaying = true;
-                                                    });
-
-                                                    print(
-                                                      'Timer stopped. Duration: ${_delayVideo.inSeconds} seconds',
-                                                    );
-                                                  }
-                                                }
-                                              },
-                                            );
-                                          },
-                                        )
-                                        : SizedBox(),
-                              ),
-
-                              // Right side - Refresh button or empty space
-                              Expanded(
-                                flex: 1,
-                                child:
-                                    isVideoFinished && !isPlaying
-                                        ? Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            IconButton(
-                                              onPressed:
-                                                  () =>
-                                                      _numberRefresh > 0
-                                                          ? _refreshReaction()
-                                                          : null,
-                                              icon: Icon(
-                                                Icons.refresh_sharp,
-                                                color:
-                                                    _numberRefresh > 0
-                                                        ? Colors.blue
-                                                        : Colors.grey,
-                                              ),
-                                            ),
-                                            Text(
-                                              _numberRefresh.toString(),
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color:
-                                                    _numberRefresh > 0
-                                                        ? Colors.blue
-                                                        : Colors.grey,
-                                              ),
-                                            ),
-                                          ],
-                                        )
-                                        : SizedBox(), // Empty space when not showing refresh
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
+        : Scaffold(body: _buildCurrentStep());
   }
 
   @override
@@ -416,6 +205,103 @@ class _RecordPageState extends State<RecordPage> {
     _currentRecordingDuration = Duration.zero;
   }
 
+  Widget _buildCurrentStep() {
+    // Check for video availability first
+    if (!_isLoading && (_controllerVideo == null)) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Video not available ${widget.uuid ?? ''}'),
+            SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: Text('Back'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    switch (currentStep) {
+      case 1:
+        return CameraReadyStep(
+          cameraController: _controllerCamera,
+          layout: layout,
+          onLayoutChanged: (newLayout) {
+            setState(() {
+              layout = newLayout;
+            });
+          },
+          onReadyPressed: () {
+            setState(() {
+              currentStep = 2;
+              countdown = 3;
+              startCountdown = true;
+            });
+            _startCountdown();
+          },
+        );
+      case 2:
+        return CountdownStep(countdown: countdown);
+      case 3:
+        return RecordingStep(
+          betterPlayerController: _controllerVideo,
+          cameraController: _controllerCamera,
+          orientation: currentReaction?.videoOrientation,
+          layout: layout,
+          isLoading: _isLoading,
+          showControls: showControls,
+          realtimeTimer: _realtimeTimer,
+          timerStartTime: _timerStartTime,
+          isPlaying: isPlaying,
+          isVideoFinished: isVideoFinished,
+          numberRefresh: _numberRefresh,
+          uuid: widget.uuid,
+          onControlsVisibility: _handleControlsVisibility,
+          onFinishReaction: () {
+            _realtimeTimer?.cancel();
+            finishReation();
+          },
+          onRefreshReaction: _numberRefresh > 0 ? _refreshReaction : null,
+          onBackPressed: () {
+            Navigator.of(context).pop(false);
+          },
+          onPlayingStateChanged: (playing) {
+            setState(() {
+              isPlaying = playing;
+            });
+          },
+          onDelayVideoChanged: (delay) {
+            setState(() {
+              _delayVideo = delay;
+            });
+            print('Timer stopped. Duration: ${_delayVideo.inSeconds} seconds');
+          },
+        );
+      default:
+        return CameraReadyStep(
+          cameraController: _controllerCamera,
+          layout: layout,
+          onLayoutChanged: (newLayout) {
+            setState(() {
+              layout = newLayout;
+            });
+          },
+          onReadyPressed: () {
+            setState(() {
+              currentStep = 2;
+              countdown = 3;
+              startCountdown = true;
+            });
+            _startCountdown();
+          },
+        );
+    }
+  }
+
   void _handleControlsVisibility() {
     setState(() {
       showControls = true;
@@ -444,6 +330,7 @@ class _RecordPageState extends State<RecordPage> {
           enableAudio: true,
         );
         await _controllerCamera!.initialize();
+        setState(() {});
       } else {
         print('No cameras found');
       }
@@ -464,23 +351,38 @@ class _RecordPageState extends State<RecordPage> {
     }
 
     if (_controllerVideo != null) {
-      await _controllerVideo!.dispose();
+      _controllerVideo!.dispose();
     }
 
-    _controllerVideo = VideoPlayerController.networkUrl(
-      Uri.parse(videoUrl),
-      viewType: VideoViewType.textureView,
-      videoPlayerOptions: VideoPlayerOptions(mixWithOthers: true),
+    _controllerVideo = BetterPlayerController(
+      BetterPlayerConfiguration(
+        aspectRatio: 9 / 16,
+
+        autoDetectFullscreenDeviceOrientation: true,
+
+        deviceOrientationsOnFullScreen: [
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.landscapeRight,
+        ],
+        deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
+        fit: BoxFit.contain,
+        controlsConfiguration: BetterPlayerControlsConfiguration(
+          showControls: false,
+        ),
+      ),
+      betterPlayerDataSource: BetterPlayerDataSource(
+        BetterPlayerDataSourceType.network,
+        Uri.parse(videoUrl).toString(),
+      ),
     );
 
-    await _controllerVideo!.initialize();
-    _controllerVideo!.setLooping(false);
-
-    _controllerVideo!.addListener(() async {
+    _controllerVideo!.videoPlayerController!.addListener(() async {
       final bool isFinished =
-          _controllerVideo!.value.position >= _controllerVideo!.value.duration;
+          _controllerVideo!.videoPlayerController!.value.position >=
+          _controllerVideo!.videoPlayerController!.value.duration!;
 
-      if (isFinished && !_controllerVideo!.value.isPlaying) {
+      if (isFinished &&
+          !_controllerVideo!.videoPlayerController!.value.isPlaying) {
         setState(() {
           isPlaying = false;
           isVideoFinished = true;
@@ -488,8 +390,6 @@ class _RecordPageState extends State<RecordPage> {
         });
       }
     });
-
-    _showCountdownDialog();
 
     setState(() {});
     return true;
@@ -529,7 +429,8 @@ class _RecordPageState extends State<RecordPage> {
       }
     }
 
-    if (_controllerVideo != null && _controllerVideo!.value.isInitialized) {
+    if (_controllerVideo != null &&
+        _controllerVideo!.videoPlayerController!.value.initialized) {
       _controllerVideo?.pause();
       _controllerVideo?.seekTo(Duration.zero);
     }
@@ -544,13 +445,8 @@ class _RecordPageState extends State<RecordPage> {
       isVideoFinished = false;
       countdown = 3;
       startCountdown = false;
+      currentStep = 1; // Go back to step 1
     });
-
-    try {
-      _showCountdownDialog();
-    } catch (e) {
-      print('Error starting video recording: $e');
-    }
   }
 
   Future<void> _refreshReaction() async {
@@ -602,129 +498,28 @@ class _RecordPageState extends State<RecordPage> {
     }
   }
 
-  // Show countdown dialog
-  void _showCountdownDialog() {
-    late StateSetter dialogState;
-    late BuildContext dialogContext;
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            dialogState = setState;
-            dialogContext = context;
-            return AlertDialog(
-              title: Text('Recording Countdown'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  if (!startCountdown)
-                    Column(
-                      children: [
-                        Text(
-                          'Click and get ready!',
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        SizedBox(height: 10),
-
-                        DropdownButton<String>(
-                          value: layout,
-                          isExpanded: true,
-                          items: [
-                            DropdownMenuItem(
-                              value: 'preview',
-                              child: Text('Preview Layout'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'vertical',
-                              child: Text('Vertical Layout'),
-                            ),
-                          ],
-                          style: TextStyle(fontSize: 16),
-
-                          borderRadius: BorderRadius.circular(8),
-                          onChanged: (String? newValue) {
-                            if (newValue != null) {
-                              // Update the main widget's state
-                              this.setState(() {
-                                layout = newValue;
-                              });
-                              // Update the dialog's state
-                              dialogState(() {});
-                            }
-                          },
-                        ),
-                        SizedBox(height: 10),
-                        Center(
-                          child: Text(
-                            'AND',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.white30,
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 10),
-                        ElevatedButton(
-                          onPressed: () {
-                            // Reset timer for new recording cycle
-                            resetTimer();
-
-                            setState(() {
-                              startCountdown = true;
-                            });
-                            dialogState(() {});
-                            _startCountdown(dialogState, dialogContext);
-                          },
-                          child: Text('Start Recording'),
-                        ),
-                      ],
-                    ),
-
-                  if (startCountdown)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('Recording will start in...'),
-                          SizedBox(height: 20),
-                          Text('$countdown', style: TextStyle(fontSize: 48)),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   // Start countdown and recording
-  void _startCountdown(
-    StateSetter dialogState,
-    BuildContext dialogContext,
-  ) async {
-    for (int i = countdown - 1; i >= 0; i--) {
+  void _startCountdown() async {
+    for (int i = countdown; i > 0; i--) {
+      if (mounted) {
+        setState(() {
+          countdown = i;
+        });
+      }
       await Future.delayed(Duration(seconds: 1));
-      dialogState(() => countdown = i);
+    }
+
+    // Move to step 3 (recording screen)
+    if (mounted) {
       setState(() {
-        if (countdown == 1) {
-          showCamera = true;
-        }
+        currentStep = 3;
+        showCamera = true;
       });
     }
-    Navigator.pop(dialogContext); // Close the dialog
 
     if (_controllerCamera != null && _controllerCamera!.value.isInitialized) {
       try {
         await _controllerCamera!.startVideoRecording();
-
         _startRealtimeTimer();
       } catch (e) {
         print('Error starting video recording: $e');

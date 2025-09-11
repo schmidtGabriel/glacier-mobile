@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:glacier/themes/app_colors.dart';
+import 'package:glacier/themes/theme_extensions.dart';
 
 class Button extends StatefulWidget {
   final bool? isLoading;
   final String label;
   final String? loadingLabel;
+  final bool? outline;
   final VoidCallback onPressed;
   final ButtonStyle? style;
 
   const Button({
     super.key,
     this.isLoading,
+    this.outline = false,
     this.label = 'Submit',
     this.loadingLabel = 'Loading...',
     required this.onPressed,
@@ -28,7 +32,24 @@ class _ButtonState extends State<Button> {
       height: 50,
       child: ElevatedButton(
         onPressed: widget.isLoading == true ? null : widget.onPressed,
-        style: widget.style,
+        style: widget.style?.copyWith(
+          backgroundColor:
+              widget.outline == true
+                  ? WidgetStateProperty.all(Colors.transparent)
+                  : null,
+          side:
+              widget.outline == true
+                  ? WidgetStateProperty.all(
+                    BorderSide(
+                      color:
+                          context.isDarkMode
+                              ? AppColors.lightOnSurfaceVariant
+                              : AppColors.darkOnSurfaceVariant,
+                    ),
+                  )
+                  : null,
+        ),
+
         child:
             widget.isLoading == true
                 ? Row(

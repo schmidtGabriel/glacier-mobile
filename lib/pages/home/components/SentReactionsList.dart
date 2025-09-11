@@ -156,7 +156,7 @@ class _SentReactionsListState extends State<SentReactionsList> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            'Sent to: ${user?.name ?? 'Unknown User'}',
+                                            'Sent to: ${user?.name ?? reaction.invitedTo}',
                                             style:
                                                 Theme.of(
                                                   context,

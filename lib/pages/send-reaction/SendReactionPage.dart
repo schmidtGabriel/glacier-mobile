@@ -1,31 +1,34 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/components/Button.dart';
-import 'package:glacier/components/UserAvatar.dart';
+import 'package:glacier/components/FriendAutocomplete.dart';
+import 'package:glacier/components/VideoThumbnailWidget.dart';
 import 'package:glacier/enums/ReactionVideoOrientation.dart';
 import 'package:glacier/enums/ReactionVideoSegment.dart';
 import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/helpers/updateRecentFriends.dart';
 import 'package:glacier/pages/PreviewVideoPage.dart';
-import 'package:glacier/pages/UserInvite.dart';
-import 'package:glacier/pages/UserList.dart';
+import 'package:glacier/pages/send-reaction/GalleryScreen.dart';
+import 'package:glacier/resources/FriendResource.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/createReaction.dart';
 import 'package:glacier/services/reactions/createReactionVideo.dart';
 import 'package:glacier/services/reactions/updateReaction.dart';
+import 'package:glacier/services/user/getUserFriends.dart';
+import 'package:glacier/themes/app_colors.dart';
+import 'package:glacier/themes/theme_extensions.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 
 class SendReactionPage extends StatefulWidget {
-  final AssetEntity? video;
+  final UserResource? sendTo;
   final int duration;
 
-  const SendReactionPage({super.key, required this.video, this.duration = 0});
+  const SendReactionPage({super.key, this.sendTo, this.duration = 0});
 
   @override
   State<SendReactionPage> createState() => _SendReactionPageState();
@@ -36,19 +39,23 @@ class _SendReactionPageState extends State<SendReactionPage> {
   String? email;
   String? name;
 
-  List friends = [];
   bool isLoading = false;
   bool isLoadingSubmit = false;
   String _filePath = '';
   int _duration = 0;
   String userId = '';
 
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _controllerFriend = TextEditingController();
   UserResource? selectedFriend;
   String? selectedFriendEmail;
   String? selectedVideoType;
   AssetEntity? _selectedVideo;
+
+  List<FriendResource> friends = [];
+  List<FriendResource> filteredFriends = [];
 
   final uploadService = FirebaseStorageService();
 
@@ -56,320 +63,255 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Send Reaction'),
-        leading: BackButton(
-          onPressed: () {
-            clearTextFields();
-            Navigator.of(context).pop();
-          },
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Send Reaction'),
+          leading: CloseButton(
+            onPressed: () {
+              final confirmDiscart = AlertDialog(
+                title: const Text('Discard Reaction?'),
+                content: const Text(
+                  'Are you sure you want to discard this reaction?',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(true),
+                    child: Text('Discard'),
+                  ),
+                ],
+              );
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return confirmDiscart;
+                },
+              ).then((value) {
+                if (value == true) {
+                  clearTextFields();
+                  Navigator.of(
+                    context,
+                  ).pushReplacementNamed('/', arguments: {'index': 0});
+                }
+              });
+            },
+          ),
         ),
-      ),
 
-      body: SafeArea(
-        child:
-            isLoading
-                ? Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_selectedVideo != null)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Align(
-                            alignment: Alignment.topLeft,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: FutureBuilder<Uint8List?>(
-                                future: _selectedVideo?.thumbnailDataWithSize(
-                                  ThumbnailSize(200, 200),
-                                ),
-                                builder: (_, snapshot) {
-                                  final thumb = snapshot.data;
-                                  if (thumb == null) {
-                                    return Container(color: Colors.grey);
-                                  }
-                                  return GestureDetector(
-                                    onTap: () async {
-                                      await Navigator.push<AssetEntity?>(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder:
-                                              (context) => PreviewVideoPage(
-                                                localVideo: _selectedVideo,
-                                                hasConfirmButton: false,
-                                              ),
-                                        ),
-                                      );
-                                    },
-                                    child: AspectRatio(
-                                      aspectRatio: 16 / 9,
-
-                                      child: Stack(
-                                        fit: StackFit.expand,
-                                        children: [
-                                          Image.memory(
-                                            thumb,
-                                            fit: BoxFit.cover,
-                                          ),
-                                          Positioned(
-                                            bottom: 4,
-                                            right: 4,
-                                            child: Icon(
-                                              Icons.play_circle_fill,
-                                              color: Colors.white70,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
+        body: SafeArea(
+          child:
+              isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Title",
+                            style: Theme.of(context).textTheme.labelLarge,
                           ),
-                        ),
+                          SizedBox(height: 8),
+                          TextFormField(
+                            controller: _titleController,
+                            decoration: InputDecoration(
+                              labelText: "Enter title",
+                            ),
+                            onTapOutside: (event) {
+                              FocusScope.of(context).unfocus();
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter a title';
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: 16),
 
-                      SizedBox(height: 16),
+                          Text(
+                            "Description",
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                          SizedBox(height: 8),
+                          TextFormField(
+                            minLines: 2,
+                            maxLines: 6,
+                            controller: _descriptionController,
+                            decoration: InputDecoration(
+                              labelText: "Enter description",
+                            ),
+                            onTapOutside: (event) {
+                              FocusScope.of(context).unfocus();
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please enter a description';
+                              }
+                              return null;
+                            },
+                          ),
 
-                      Text(
-                        "Title",
-                        style: Theme.of(context).textTheme.labelLarge,
-                      ),
-                      SizedBox(height: 8),
-                      TextFormField(
-                        controller: _titleController,
-                        decoration: InputDecoration(labelText: "Enter title"),
-                        onTapOutside: (event) {
-                          FocusScope.of(context).unfocus();
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a title';
-                          }
-                          return null;
-                        },
-                      ),
-                      SizedBox(height: 16),
+                          SizedBox(height: 16),
 
-                      Text(
-                        "Description",
-                        style: Theme.of(context).textTheme.labelLarge,
-                      ),
-                      SizedBox(height: 8),
-                      TextFormField(
-                        minLines: 4,
-                        maxLines: 6,
-                        controller: _descriptionController,
-                        decoration: InputDecoration(
-                          labelText: "Enter description",
-                        ),
-                        onTapOutside: (event) {
-                          FocusScope.of(context).unfocus();
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter a description';
-                          }
-                          return null;
-                        },
-                      ),
+                          Text(
+                            "Send to",
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
+                          SizedBox(height: 8),
 
-                      SizedBox(height: 20),
-
-                      SizedBox(
-                        height: 50,
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            // Clear focus from any text fields before navigation
-                            FocusScope.of(context).unfocus();
-
-                            final selectedUser =
-                                await Navigator.push<UserResource>(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => UserList(),
-                                  ),
-                                );
-
-                            if (selectedUser != null) {
+                          FriendAutocomplete(
+                            value: selectedFriend,
+                            controller: _controllerFriend,
+                            formKey: _formKey,
+                            onFriendSelected: (friend) {
                               setState(() {
-                                selectedFriend = selectedUser;
-                                selectedFriendEmail = selectedUser.email;
+                                selectedFriend = friend;
+                                selectedFriendEmail = null;
                               });
-                            }
-                          },
-
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                          ),
-                          child: const Text(
-                            'Find friend',
-                            style: TextStyle(fontSize: 16, color: Colors.white),
-                          ),
-                        ),
-                      ),
-
-                      SizedBox(height: 8),
-
-                      Center(
-                        child: Text(
-                          'OR',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 8),
-
-                      SizedBox(
-                        height: 30,
-                        width: double.infinity,
-                        child: GestureDetector(
-                          onTap: () async {
-                            // Clear focus from any text fields before navigation
-                            FocusScope.of(context).unfocus();
-
-                            final selectedUser = await Navigator.push<String?>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => UserInvite(),
-                              ),
-                            );
-
-                            if (selectedUser != null) {
+                            },
+                            onNewFriendCreated: (name, email) {
                               setState(() {
                                 selectedFriend = null;
-                                selectedFriendEmail = selectedUser;
+                                selectedFriendEmail = email;
                               });
-                            }
-                          },
-                          child: Center(
-                            child: Text(
-                              'Enter an email or SMS to invite a user',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.blue.shade700,
-                              ),
-                            ),
+                            },
+
+                            hintText: 'Select a friend to send reaction...',
                           ),
-                        ),
-                      ),
 
-                      SizedBox(height: 16),
+                          SizedBox(height: 16),
 
-                      if (selectedFriend != null ||
-                          selectedFriendEmail != null) ...[
-                        SizedBox(height: 8),
-
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Sending to:",
-                              textAlign: TextAlign.start,
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-
-                            SizedBox(height: 8),
-
-                            Row(
-                              children: [
-                                UserAvatar(
-                                  userName: selectedFriend?.name,
-                                  pictureUrl: selectedFriend?.profilePic,
-                                ),
-                                SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        selectedFriend?.name ??
-                                            'Glacier`s Invitation',
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Text(
-                                        selectedFriend?.email ??
-                                            selectedFriendEmail ??
-                                            '',
-                                        style: TextStyle(
-                                          color: Colors.grey.shade700,
-                                          fontSize: 14,
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-
-                        if (selectedFriend == null) ...[
+                          Text(
+                            "Video Source",
+                            style: Theme.of(context).textTheme.labelLarge,
+                          ),
                           SizedBox(height: 8),
-                          Text(
-                            'An invitation will be sent to their email.',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.red.shade400,
-                            ),
-                          ),
-                          SizedBox(height: 2),
 
-                          Text(
-                            'They’ll need to join the app to connect with you.',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.red.shade400,
-                            ),
-                          ),
-                        ],
-                        SizedBox(height: 24),
+                          if (_selectedVideo != null) ...[
+                            VideoThumbnailWidget(
+                              videoPath: _filePath,
 
-                        isLoading
-                            ? const Center(child: CircularProgressIndicator())
-                            : Button(
-                              isLoading: isLoadingSubmit,
-                              loadingLabel:
-                                  '${(_uploadProgress * 100).toStringAsFixed(0)}% Sending...',
-                              onPressed: _sendReaction,
-                              label: 'Send Reaction',
+                              onTap: () async {
+                                await Navigator.push<void>(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => PreviewVideoPage(
+                                          localVideo: _selectedVideo,
+                                          hasConfirmButton: false,
+                                        ),
+                                  ),
+                                );
+                              },
+                            ),
+                            SizedBox(height: 8),
+                            Button(
+                              outline: true,
+                              onPressed: () {
+                                _handlePickVideo();
+                              },
+                              label: 'Change Video',
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
+                                side: BorderSide(
+                                  color:
+                                      context.isDarkMode
+                                          ? AppColors.lightOnSurfaceVariant
+                                          : AppColors.darkOnSurfaceVariant,
+                                ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12.0),
                                 ),
                               ),
                             ),
-
-                        if (_uploadProgress > 0) ...[
-                          SizedBox(height: 10),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                            child: LinearProgressIndicator(
-                              value: _uploadProgress,
+                          ] else ...[
+                            GestureDetector(
+                              onTap: () async {
+                                _handlePickVideo();
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color:
+                                        context.isDarkMode
+                                            ? AppColors.lightOnSurfaceVariant
+                                            : AppColors.darkOnSurfaceVariant,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  color:
+                                      context.isDarkMode
+                                          ? AppColors.darkSurface
+                                          : AppColors.lightSurface,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  spacing: 10,
+                                  children: [
+                                    Text(
+                                      'Upload Video',
+                                      style: TextStyle(
+                                        color:
+                                            context.isDarkMode
+                                                ? Colors.grey.shade300
+                                                : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.camera_alt_outlined,
+                                      color:
+                                          context.isDarkMode
+                                              ? Colors.grey.shade300
+                                              : Colors.grey.shade600,
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
-                          ),
-                          SizedBox(height: 10),
+                          ],
+                          SizedBox(height: 20),
+
+                          isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : Button(
+                                isLoading: isLoadingSubmit,
+                                loadingLabel:
+                                    '${(_uploadProgress * 100).toStringAsFixed(0)}% Sending...',
+                                onPressed: _sendReaction,
+                                label: 'Send Reaction',
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                  ),
+                                ),
+                              ),
+
+                          if (_uploadProgress > 0) ...[
+                            SizedBox(height: 10),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 8.0,
+                              ),
+                              child: LinearProgressIndicator(
+                                value: _uploadProgress,
+                              ),
+                            ),
+                            SizedBox(height: 10),
+                          ],
                         ],
-                      ],
-                    ],
+                      ),
+                    ),
                   ),
-                ),
+        ),
       ),
     );
   }
@@ -469,35 +411,63 @@ class _SendReactionPageState extends State<SendReactionPage> {
   @override
   void initState() {
     super.initState();
-    loadVideo();
+    loadFriends();
   }
 
-  void loadVideo() async {
-    if (widget.video == null) return;
-
+  Future<void> loadFriends() async {
     setState(() {
       isLoading = true;
     });
 
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    selectedFriend =
-        prefs.getString('request_user') != null
-            ? UserResource.fromJson(
-              jsonDecode(prefs.getString('request_user')!),
-            )
-            : null;
-    _selectedVideo = widget.video;
-    _duration = widget.duration;
+    try {
+      friends = (await getUserFriends()).cast<FriendResource>();
+      filteredFriends = friends;
+      SharedPreferences.getInstance().then((pref) {
+        pref.setString('friends', jsonEncode(friends));
+      });
+
+      if (widget.sendTo != null) {
+        selectedFriend = widget.sendTo;
+      }
+
+      setState(() {});
+    } catch (e) {
+      print('Error fetching friends: $e');
+      friends = [];
+    }
 
     setState(() {
       isLoading = false;
     });
   }
 
-  Future<void> _sendReaction() async {
+  _handlePickVideo() async {
     setState(() {
-      isLoadingSubmit = true;
+      _selectedVideo = null;
+      _duration = 0;
+      _filePath = '';
     });
+
+    final selectedVideo = await Navigator.push<Map<String, dynamic>?>(
+      context,
+      MaterialPageRoute(builder: (context) => GalleryScreen()),
+    );
+    if (selectedVideo != null && mounted) {
+      final video = selectedVideo['video'] as AssetEntity?;
+      final duration = selectedVideo['duration'] ?? 0;
+      final file = await video?.file;
+      final filePath = file?.path ?? '';
+
+      setState(() {
+        _selectedVideo = video;
+        _duration = duration;
+        _filePath = filePath;
+      });
+    }
+  }
+
+  Future<void> _sendReaction() async {
+    if (_formKey.currentState?.validate() != true) return;
 
     if (_selectedVideo == null) {
       toastification.show(
@@ -507,11 +477,13 @@ class _SendReactionPageState extends State<SendReactionPage> {
         type: ToastificationType.warning,
         alignment: Alignment.bottomCenter,
       );
-      setState(() {
-        isLoadingSubmit = false;
-      });
+
       return;
     }
+
+    setState(() {
+      isLoadingSubmit = true;
+    });
 
     // Get video dimensions and rotation
     int videoWidth = _selectedVideo?.width ?? 0;
@@ -555,7 +527,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
         'description': _descriptionController.text.trim(),
       });
 
-      var uploadResult = await uploadService.uploadVideo(
+      await uploadService.uploadVideo(
         file?.path ?? '',
         'sources',
         reactionId!,
@@ -574,9 +546,8 @@ class _SendReactionPageState extends State<SendReactionPage> {
       //   reactionId,
       //   videoOrientationEnum.value == 1 ? '1080x1920' : '1920x1080',
       // );
-      print(uploadResult);
 
-      print('Reaction ID: $reactionId');
+      // print('Reaction ID: $reactionId');
       updateReaction(reactionId, {
         'video_path': 'sources/$reactionId.mp4',
         'video_duration': _duration.round(),

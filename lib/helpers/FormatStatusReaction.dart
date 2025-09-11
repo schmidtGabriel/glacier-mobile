@@ -8,6 +8,8 @@ Color colorStatusReaction(String status) {
       return Colors.blue.shade600; // Sent;
     case '10':
       return Colors.green.shade700; //
+    case '-1':
+      return Colors.purple.shade700; //
     case '-10':
       return Colors.red.shade800; //
     default:
@@ -23,6 +25,8 @@ String formatStatusReaction(String status) {
       return 'Recorded';
     case '10':
       return 'Finished';
+    case '-1':
+      return 'Waiting';
     case '-10':
       return 'Rejected';
     default:

@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:glacier/components/Button.dart';
 import 'package:glacier/services/auth/signin.dart';
 import 'package:glacier/themes/theme_extensions.dart';
@@ -80,7 +79,9 @@ class _SigninPageState extends State<SigninPage> {
                             ),
                             validator:
                                 (value) =>
-                                    value != null && value.contains('@')
+                                    value == null || value.isEmpty
+                                        ? 'Email is required'
+                                        : value.contains('@')
                                         ? null
                                         : 'Invalid email',
                             onTapOutside: (event) {
@@ -112,7 +113,9 @@ class _SigninPageState extends State<SigninPage> {
                             ),
                             validator:
                                 (value) =>
-                                    value != null && value.length >= 6
+                                    value == null || value.isEmpty
+                                        ? 'Password is required'
+                                        : value.length >= 6
                                         ? null
                                         : 'Password too short',
 
@@ -132,12 +135,22 @@ class _SigninPageState extends State<SigninPage> {
                               onTap: () {
                                 Navigator.pushNamed(context, '/signup');
                               },
-                              child: const Text(
-                                "Don't have an account? Sign up",
-                                style: TextStyle(
-                                  color: Colors.blueAccent,
-                                  decoration: TextDecoration.underline,
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Text(
+                                    "Don't have an account?",
+                                    style: TextStyle(color: Colors.blueAccent),
+                                  ),
+                                  const Text(
+                                    " Sign up",
+                                    style: TextStyle(
+                                      color: Colors.blueAccent,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -164,7 +177,7 @@ class _SigninPageState extends State<SigninPage> {
   @override
   void initState() {
     super.initState();
-    FlutterNativeSplash.remove();
+    // FlutterNativeSplash.remove();
   }
 
   Future<void> _signIn() async {

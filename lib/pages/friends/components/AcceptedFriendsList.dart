@@ -1,11 +1,8 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/resources/FriendResource.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/themes/theme_extensions.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AcceptedFriendsList extends StatelessWidget {
   final List<FriendResource> friends;
@@ -98,16 +95,19 @@ class AcceptedFriendsList extends StatelessWidget {
 
                           GestureDetector(
                             onTap: () {
-                              SharedPreferences.getInstance().then((prefs) {
-                                prefs.setString(
-                                  'request_user',
-                                  jsonEncode(friend.toJson()),
-                                );
-                              });
+                              // SharedPreferences.getInstance().then((prefs) {
+                              //   prefs.setString(
+                              //     'request_user',
+                              //     jsonEncode(friend.toJson()),
+                              //   );
+                              // });
                               Navigator.of(
                                 context,
                                 rootNavigator: true,
-                              ).pushReplacementNamed('/gallery');
+                              ).pushReplacementNamed(
+                                '/send-reaction',
+                                arguments: friend,
+                              );
                             },
                             child: Icon(
                               Icons.send,
