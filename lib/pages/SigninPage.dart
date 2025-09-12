@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/Button.dart';
 import 'package:glacier/services/auth/signin.dart';
+import 'package:glacier/themes/app_colors.dart';
 import 'package:glacier/themes/theme_extensions.dart';
 import 'package:toastification/toastification.dart';
 
@@ -29,22 +30,19 @@ class _SigninPageState extends State<SigninPage> {
             padding: EdgeInsets.only(
               left: 24.0,
               right: 24.0,
-              top: 0.0,
+              top: 10.0,
               bottom: MediaQuery.of(context).viewInsets.bottom,
             ),
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: Center(
+              child: IntrinsicHeight(
                 child: Column(
                   mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
+                    Expanded(child: Container()),
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 60.0,
-                        vertical: 0,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 60.0),
                       child: Center(
                         child:
                             context.isDarkMode
@@ -52,6 +50,7 @@ class _SigninPageState extends State<SigninPage> {
                                 : Image.asset('lib/assets/logo.png'),
                       ),
                     ),
+                    const SizedBox(height: 5),
                     Form(
                       key: _formKey,
                       child: Column(
@@ -129,32 +128,35 @@ class _SigninPageState extends State<SigninPage> {
                             isLoading: _isLoading,
                             onPressed: _signIn,
                           ),
-                          const SizedBox(height: 16),
-                          Center(
-                            child: GestureDetector(
-                              onTap: () {
-                                Navigator.pushNamed(context, '/signup');
-                              },
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text(
-                                    "Don't have an account?",
-                                    style: TextStyle(color: Colors.blueAccent),
-                                  ),
-                                  const Text(
-                                    " Sign up",
-                                    style: TextStyle(
-                                      color: Colors.blueAccent,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
                         ],
+                      ),
+                    ),
+                    Expanded(child: Container()),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 40, top: 20),
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(context, '/signup');
+                          },
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Don't have an account? ",
+                                style: TextStyle(color: Colors.blueAccent),
+                              ),
+                              const Text(
+                                "Sign up",
+                                style: TextStyle(
+                                  color: AppColors.secondary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ],

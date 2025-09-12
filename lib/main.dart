@@ -13,7 +13,6 @@ import 'package:glacier/pages/SigninPage.dart';
 import 'package:glacier/pages/SignupPage.dart';
 import 'package:glacier/pages/TakePictureScreen.dart';
 import 'package:glacier/pages/home/RecordPage.dart';
-import 'package:glacier/pages/home/RecordedVideoPage.dart';
 import 'package:glacier/pages/send-reaction/GalleryScreen.dart';
 import 'package:glacier/pages/send-reaction/SendReactionPage.dart';
 import 'package:glacier/providers/theme_provider.dart';
@@ -198,21 +197,6 @@ class MyApp extends StatelessWidget {
         if (args is ReactionResource && args.uuid.isNotEmpty) {
           return MaterialPageRoute(
             builder: (_) => AuthGate(child: RecordPage(uuid: args.uuid)),
-          );
-        }
-        return _errorRoute();
-
-      case '/recorded-video':
-        if (args is Map<String, dynamic>) {
-          return MaterialPageRoute(
-            builder:
-                (_) => AuthGate(
-                  child: RecordedVideoPage(
-                    videoPath: args['videoPath'],
-                    videoName: args['videoName'],
-                    uuid: args['uuid'],
-                  ),
-                ),
           );
         }
         return _errorRoute();

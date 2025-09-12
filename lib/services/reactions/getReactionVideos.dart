@@ -1,5 +1,24 @@
 import 'package:glacier/services/FirebaseStorageService.dart';
 
+Future<String> handleFinal(data) async {
+  try {
+    if (data['final_path'] != null || data['final_path'].isNotEmpty) {
+      final service = FirebaseStorageService();
+      String res = await service.getDownloadUrl(data['final_path']);
+      if (res.isNotEmpty) {
+        return res;
+      } else {
+        return '';
+      }
+    } else {
+      return '';
+    }
+  } catch (e) {
+    // print('Error fetching video URL: $e');
+    return '';
+  }
+}
+
 Future<String> handleReaction(data) async {
   try {
     if (data['reaction_path'] != null || data['reaction_path'].isNotEmpty) {
@@ -11,25 +30,6 @@ Future<String> handleReaction(data) async {
     }
   } catch (e) {
     // print('Error fetching selfie URL: $e');
-    return '';
-  }
-}
-
-Future<String> handleRecord(data) async {
-  try {
-    if (data['record_path'] != null || data['record_path'].isNotEmpty) {
-      final service = FirebaseStorageService();
-      String res = await service.getDownloadUrl(data['record_path']);
-      if (res.isNotEmpty) {
-        return res;
-      } else {
-        return '';
-      }
-    } else {
-      return '';
-    }
-  } catch (e) {
-    // print('Error fetching video URL: $e');
     return '';
   }
 }

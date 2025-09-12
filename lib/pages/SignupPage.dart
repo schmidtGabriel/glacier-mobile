@@ -6,7 +6,7 @@ import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/services/auth/signup.dart';
 import 'package:glacier/services/auth/verifyEmail.dart';
 import 'package:glacier/services/user/getMe.dart';
-import 'package:glacier/themes/theme_extensions.dart';
+import 'package:glacier/themes/app_colors.dart';
 import 'package:toastification/toastification.dart';
 
 class SignupPage extends StatefulWidget {
@@ -54,89 +54,24 @@ class _SignupPageState extends State<SignupPage> {
                   },
                 )
                 : null,
-        title: Text(_step == 0 ? "Sign Up" : "Invite Friends"),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(
-          top: 10,
-          left: 24.0,
-          right: 24.0,
-          bottom: 30.0,
-        ),
-        child: Button(
-          label: 'Submit',
-          isLoading: _isLoading,
-          onPressed: _nextStep,
-        ),
-      ),
-      // bottomNavigationBar: Padding(
-      //   padding: const EdgeInsets.all(30.0),
-      //   child: OverflowBar(
-      //     children: [
-      //       // if (_step == 1)
-      //       //   TextButton(
-      //       //     onPressed: () {
-      //       //       setState(() {
-      //       //         _step = 0;
-      //       //       });
-      //       //     },
-      //       //     child: Text("Back", style: TextStyle(color: Colors.blue)),
-      //       //   ),
-      //       ElevatedButton(
-      //         style: ElevatedButton.styleFrom(
-      //           backgroundColor: Colors.blueAccent,
-      //           foregroundColor: Colors.white,
-      //         ),
-      //         onPressed: _nextStep,
-      //         child: Row(
-      //           mainAxisAlignment: MainAxisAlignment.center,
-      //           mainAxisSize: MainAxisSize.max,
-      //           children: [
-      //             if (_isLoading) ...[
-      //               SizedBox(
-      //                 width: 20,
-      //                 height: 20,
-      //                 child: CircularProgressIndicator(
-      //                   strokeWidth: 2,
-      //                   valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-      //                 ),
-      //               ),
-      //               SizedBox(width: 12),
-      //             ],
 
-      //             Text(
-      //               "Submit",
-      //               style: TextStyle(
-      //                 fontSize: 16,
-      //                 fontWeight: FontWeight.w600,
-      //                 color: Colors.white,
-      //               ),
-      //             ),
-      //           ],
-      //         ),
-      //       ),
-      //     ],
-      //   ),
-      // ),
       body: LayoutBuilder(
         builder: (context, constraints) {
           return SingleChildScrollView(
             controller: _scrollController, // Add this line
 
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(
-                24.0,
-                24.0,
-                24.0,
-                24.0 + MediaQuery.of(context).viewInsets.bottom,
-              ),
+            padding: EdgeInsets.fromLTRB(
+              24.0,
+              10.0,
+              24.0,
+              MediaQuery.of(context).viewInsets.bottom,
+            ),
 
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [if (_step == 0) _buildStep1() else _buildStep2()],
-                ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: _step == 0 ? _buildStep1() : _buildStep2(),
               ),
             ),
           );
@@ -173,22 +108,20 @@ class _SignupPageState extends State<SignupPage> {
 
   Widget _buildStep1() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.max,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 100.0),
-          child: Center(
-            child:
-                context.isDarkMode
-                    ? Image.asset('lib/assets/logo-dark.png')
-                    : Image.asset('lib/assets/logo.png'),
-          ),
-        ),
+        Expanded(child: Container()),
         Form(
           key: _formKey,
           child: Column(
             children: [
+              Text(
+                "Create Your Account",
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+              SizedBox(height: 20),
+
               if (_errorMessage.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 12.0),
@@ -278,7 +211,7 @@ class _SignupPageState extends State<SignupPage> {
                             : 'Password too short',
               ),
 
-              SizedBox(height: 12),
+              SizedBox(height: 5),
 
               // Terms of Use Checkbox with Form Validation
               FormField<bool>(
@@ -292,6 +225,7 @@ class _SignupPageState extends State<SignupPage> {
                 builder: (FormFieldState<bool> field) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Row(
                         children: [
@@ -322,7 +256,7 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       if (field.hasError)
                         Padding(
-                          padding: const EdgeInsets.only(left: 16.0, top: 0),
+                          padding: const EdgeInsets.only(left: 16.0, top: 4.0),
                           child: Text(
                             field.errorText!,
                             style: TextStyle(
@@ -336,8 +270,6 @@ class _SignupPageState extends State<SignupPage> {
                 },
               ),
 
-              SizedBox(height: 4),
-
               // SMS Agreement Checkbox with Form Validation
               FormField<bool>(
                 initialValue: _agreeSMS,
@@ -350,6 +282,8 @@ class _SignupPageState extends State<SignupPage> {
                 builder: (FormFieldState<bool> field) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+
                     children: [
                       Row(
                         children: [
@@ -393,34 +327,50 @@ class _SignupPageState extends State<SignupPage> {
                   );
                 },
               ),
-
               SizedBox(height: 12),
-
-              Center(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context);
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Have an account? ",
-                        style: TextStyle(color: Colors.blueAccent),
-                      ),
-                      const Text(
-                        "Sign in",
-                        style: TextStyle(
-                          color: Colors.blueAccent,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ],
-                  ),
+              Padding(
+                padding: const EdgeInsets.only(
+                  top: 10,
+                  left: 0.0,
+                  right: 0.0,
+                  bottom: 10.0,
+                ),
+                child: Button(
+                  label: 'Submit',
+                  isLoading: _isLoading,
+                  onPressed: _nextStep,
                 ),
               ),
             ],
+          ),
+        ),
+
+        Expanded(child: Container()),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 40, top: 20),
+          child: Center(
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    "Have an account? ",
+                    style: TextStyle(color: Colors.blueAccent),
+                  ),
+                  const Text(
+                    "Sign in",
+                    style: TextStyle(
+                      color: AppColors.secondary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ],

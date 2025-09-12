@@ -4,8 +4,10 @@ import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:glacier/helpers/convertVideo.dart';
+import 'package:glacier/helpers/editReactionVideo.dart';
+import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/services/user/updateUserData.dart';
-import 'package:native_media_converter/native_media_converter.dart';
+// import 'package:native_media_converter/native_media_converter.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -62,37 +64,35 @@ class FirebaseStorageService {
   }
 
   /// Uploads a video file to Firebase Storage
-  Future<String?> uploadRecord(String videoPath, String selfiePath) async {
+  Future<Map<String, String>?> uploadRecord(ReactionResource? reaction) async {
     try {
-      final videoFile = File(videoPath);
-      final selfieFile = File(selfiePath);
-
-      if (!videoFile.existsSync()) {
-        print('Video file does not exist at path: $videoPath');
+      if (reaction == null) {
+        print('Reaction is null.');
         return null;
       }
 
-      if (!selfieFile.existsSync()) {
-        print('Selfie file does not exist at path: $selfiePath');
+      var resultReaction = await processVideo(reaction);
+
+      if (resultReaction == null || resultReaction.isEmpty) {
+        print('Processed video path is invalid.');
         return null;
       }
 
+      final finalVideoPath = File(resultReaction);
+      print('Final video path: $finalVideoPath');
       // Upload screen recording
-      final fileName = basename(videoPath);
-      final storageRef = _storage.ref().child('records/$fileName');
+      final fileName = basename(resultReaction);
+      final path = 'finals/$fileName';
+      final storageRef = _storage.ref().child(path);
 
-      UploadTask uploadTask = storageRef.putFile(videoFile);
+      UploadTask uploadTask = storageRef.putFile(finalVideoPath);
       TaskSnapshot snapshot = await uploadTask;
 
-      // Upload selfie video
-      final storageRefSelfie = _storage.ref().child('reactions/$fileName');
-
-      UploadTask uploadTaskSelfie = storageRefSelfie.putFile(selfieFile);
-      await uploadTaskSelfie;
+      finalVideoPath.delete();
 
       // Get the screen recording download URL
       final downloadUrl = await snapshot.ref.getDownloadURL();
-      return downloadUrl;
+      return {'url': downloadUrl, 'filePath': path};
     } catch (e) {
       print('Upload failed: $e');
       return null;
@@ -111,9 +111,9 @@ class FirebaseStorageService {
       final tempVideoPath =
           '${tempDir.path}/${videoName.endsWith('.mp4') ? videoName : '$videoName.mp4'}';
 
-      NativeMediaConverter.progressStream().listen((progress) {
-        print("Progress: ${(progress * 100).toStringAsFixed(1)}%");
-      });
+      // NativeMediaConverter.progressStream().listen((progress) {
+      //   print("Progress: ${(progress * 100).toStringAsFixed(1)}%");
+      // });
 
       // const MethodChannel('media_converter_flutter').invokeMethod('transcode', {
       //   'inputPath': videoPath,

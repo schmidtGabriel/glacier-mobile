@@ -54,6 +54,9 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
           }
           return null;
         },
+        onTapOutside: (event) {
+          if (_controller.text.isEmpty) FocusScope.of(context).unfocus();
+        },
         focusNode: _focusNode,
         decoration: InputDecoration(
           hintText: widget.hintText,
@@ -207,7 +210,7 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
               CompositedTransformFollower(
                 link: _layerLink,
                 showWhenUnlinked: false,
-                offset: Offset(0.0, size.height + 5.0),
+                offset: Offset(0.0, size.height),
                 child: Material(
                   elevation: 4.0,
                   borderRadius: BorderRadius.circular(8.0),

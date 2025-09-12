@@ -8,25 +8,18 @@ flutter_native_splash:
   image_dark: lib/assets/logo-dark.png
   
   # Android 12+ specific configuration
-  android_12:
-    image: lib/assets/logo.png
-    icon_background_color: "#ffffff"
-    image_dark: lib/assets/logo-dark.png
-    icon_background_color_dark: "#121212"
+  # android_12:
+  #   image: lib/assets/logo.png
+  #   icon_background_color: "#ffffff"
+  #   image_dark: lib/assets/logo-dark.png
+  #   icon_background_color_dark: "#121212"
   
-  # iOS specific settings to eliminate white flash
-  ios:
-    image: lib/assets/logo.png
-    color: "#ffffff"
-    image_dark: lib/assets/logo-dark.png
-    color_dark: "#121212"
-    
-  # Android specific settings
-  android:
-    image: lib/assets/logo.png
-    color: "#ffffff"
-    image_dark: lib/assets/logo-dark.png
-    color_dark: "#121212"
+
+   # Disable ios splash screen
+  ios: false
+
+   # Disable android splash screen
+  android: false
     
   # Disable web splash screen
   web: false

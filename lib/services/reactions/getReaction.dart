@@ -27,7 +27,7 @@ Future<ReactionResource?> getReaction(String uuid) async {
 
       final videoUrl = await handleVideo(data);
       final reactionUrl = await handleReaction(data);
-      final recordUrl = await handleRecord(data);
+      final finalUrl = await handleFinal(data);
 
       return ReactionResource(
         uuid: uuid,
@@ -41,8 +41,8 @@ Future<ReactionResource?> getReaction(String uuid) async {
         videoPath: data['video_path'] ?? '',
         reactionUrl: reactionUrl,
         reactionPath: data['reaction_path'] ?? '',
-        recordUrl: recordUrl,
-        recordPath: data['record_path'] ?? '',
+        finalUrl: finalUrl,
+        finalPath: data['final_path'] ?? '',
         videoDuration: data['video_duration'] ?? 0,
         delayDuration: data['delay_duration'] ?? 0,
         videoOrientation:

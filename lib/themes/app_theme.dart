@@ -68,7 +68,7 @@ class AppTheme {
       ),
       prefixIconColor: AppColors.secondary,
       filled: true,
-      fillColor: AppColors.lightSurface,
+      fillColor: AppColors.lightBackground,
     ),
   );
 
@@ -89,7 +89,6 @@ class AppTheme {
     fontFamily: 'Raleway',
     appBarTheme: const AppBarTheme(
       backgroundColor: AppColors.darkSurface,
-
       foregroundColor: AppColors.darkOnSurface,
       elevation: 0,
       shadowColor: AppColors.darkShadow,
@@ -133,9 +132,9 @@ class AppTheme {
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: AppColors.secondaryLight),
       ),
-      prefixIconColor: AppColors.secondaryLight,
+      prefixIconColor: AppColors.darkDivider,
       filled: true,
-      fillColor: AppColors.darkSurface,
+      fillColor: AppColors.darkBackground,
     ),
   );
 }

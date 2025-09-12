@@ -53,6 +53,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
   String? selectedFriendEmail;
   String? selectedVideoType;
   AssetEntity? _selectedVideo;
+  String _fileName = '';
 
   List<FriendResource> friends = [];
   List<FriendResource> filteredFriends = [];
@@ -127,6 +128,11 @@ class _SendReactionPageState extends State<SendReactionPage> {
                             onTapOutside: (event) {
                               FocusScope.of(context).unfocus();
                             },
+                            onChanged: (value) {
+                              if (_formKey.currentState != null) {
+                                _formKey.currentState?.validate();
+                              }
+                            },
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter a title';
@@ -145,6 +151,11 @@ class _SendReactionPageState extends State<SendReactionPage> {
                             minLines: 2,
                             maxLines: 6,
                             controller: _descriptionController,
+                            onChanged: (value) {
+                              if (_formKey.currentState != null) {
+                                _formKey.currentState?.validate();
+                              }
+                            },
                             decoration: InputDecoration(
                               labelText: "Enter description",
                             ),
@@ -213,24 +224,35 @@ class _SendReactionPageState extends State<SendReactionPage> {
                               },
                             ),
                             SizedBox(height: 8),
-                            Button(
-                              outline: true,
-                              onPressed: () {
-                                _handlePickVideo();
-                              },
-                              label: 'Change Video',
-                              style: ElevatedButton.styleFrom(
-                                side: BorderSide(
-                                  color:
-                                      context.isDarkMode
-                                          ? AppColors.lightOnSurfaceVariant
-                                          : AppColors.darkOnSurfaceVariant,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.0),
-                                ),
+                            Center(
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      _fileName,
+                                      overflow: TextOverflow.ellipsis,
+
+                                      style: TextStyle(
+                                        color:
+                                            context.isDarkMode
+                                                ? Colors.grey.shade300
+                                                : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.change_circle_outlined),
+                                    onPressed: () {
+                                      _handlePickVideo();
+                                    },
+                                  ),
+                                ],
                               ),
                             ),
+
+                            SizedBox(height: 8),
                           ] else ...[
                             GestureDetector(
                               onTap: () async {
@@ -248,8 +270,8 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                   borderRadius: BorderRadius.circular(8),
                                   color:
                                       context.isDarkMode
-                                          ? AppColors.darkSurface
-                                          : AppColors.lightSurface,
+                                          ? AppColors.darkBackground
+                                          : AppColors.lightBackground,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -446,6 +468,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
       _selectedVideo = null;
       _duration = 0;
       _filePath = '';
+      _fileName = '';
     });
 
     final selectedVideo = await Navigator.push<Map<String, dynamic>?>(
@@ -457,11 +480,13 @@ class _SendReactionPageState extends State<SendReactionPage> {
       final duration = selectedVideo['duration'] ?? 0;
       final file = await video?.file;
       final filePath = file?.path ?? '';
+      final fileName = file?.path.split('/').last ?? '';
 
       setState(() {
         _selectedVideo = video;
         _duration = duration;
         _filePath = filePath;
+        _fileName = fileName;
       });
     }
   }
@@ -559,7 +584,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
         'video_path': 'sources/$reactionId.mp4',
         'video_duration': _duration.round(),
         'video_orientation': videoOrientationEnum.value,
-        'video_name': _selectedVideo?.title ?? file?.path.split('/').last ?? '',
+        'video_name': _fileName ?? '',
         'segment': ReactionVideoSegment.sourceVideo.value,
         'created_at': DateTime.now().toIso8601String(),
       });

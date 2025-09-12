@@ -176,28 +176,6 @@ class _RecordPage2State extends State<RecordPage2> {
         print('Video recording finished $videoPath');
         setState(() {
           isRecording = false;
-          Navigator.of(context, rootNavigator: true)
-              .pushNamed(
-                '/recorded-video',
-                arguments: {
-                  'videoPath': videoPath,
-                  'videoName': videoName,
-                  'uuid': widget.uuid,
-                },
-              )
-              .then(
-                (value) => {
-                  if (value == true)
-                    {
-                      setState(() {
-                        showCamera = false;
-                        countdown = 3;
-                        startCountdown = false;
-                      }),
-                      _initializeVideo(),
-                    },
-                },
-              );
         });
       }
     });

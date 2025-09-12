@@ -14,8 +14,8 @@ class ReactionResource {
   final String? videoPath;
   final String? reactionUrl;
   final String? reactionPath;
-  final String? recordUrl;
-  final String? recordPath;
+  final String? finalUrl;
+  final String? finalPath;
   final int? videoDuration;
   final int? delayDuration;
   final ReactionVideoOrientation videoOrientation;
@@ -33,8 +33,8 @@ class ReactionResource {
     this.videoPath,
     this.reactionUrl,
     this.reactionPath,
-    this.recordPath,
-    this.recordUrl,
+    this.finalPath,
+    this.finalUrl,
     this.videoDuration,
     this.delayDuration,
     required this.videoOrientation,
@@ -58,8 +58,8 @@ class ReactionResource {
       videoPath: json['video_path'] ?? '',
       reactionUrl: json['reaction_url'] ?? '',
       reactionPath: json['reaction_path'] ?? '',
-      recordUrl: json['record_url'] ?? '',
-      recordPath: json['record_path'] ?? '',
+      finalUrl: json['final_url'] ?? '',
+      finalPath: json['final_path'] ?? '',
       videoDuration: int.tryParse(json['video_duration'].toString()) ?? 0,
       delayDuration: json['delay_duration'] ?? 0,
       videoOrientation:
@@ -88,8 +88,8 @@ class ReactionResource {
       'video_path': videoPath,
       'reaction_url': reactionUrl,
       'reaction_path': reactionPath,
-      'record_url': recordUrl,
-      'record_path': recordPath,
+      'final_url': finalUrl,
+      'final_path': finalPath,
       'video_duration': videoDuration,
       'delay_duration': delayDuration,
       'video_orientation': videoOrientation.value,

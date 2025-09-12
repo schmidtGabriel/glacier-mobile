@@ -9,12 +9,11 @@ import 'package:glacier/enums/ReactionVideoOrientation.dart';
 import 'package:glacier/enums/ReactionVideoSegment.dart';
 import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/helpers/formatStatusReaction.dart';
-import 'package:glacier/pages/PreviewVideoPage.dart';
 import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/resources/UserResource.dart';
+import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/PermissionsService.dart';
 import 'package:glacier/services/reactions/cancelReaction.dart';
-import 'package:glacier/services/reactions/completeReaction.dart';
 import 'package:glacier/services/reactions/createReactionVideo.dart';
 import 'package:glacier/services/reactions/getReaction.dart';
 import 'package:glacier/services/reactions/updateReaction.dart';
@@ -36,6 +35,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
   bool _isLoading = false; // Track loading state
   String loadingMessage = '';
   final _permissionsService = PermissionsService.instance;
+  final uploadService = FirebaseStorageService();
 
   @override
   Widget build(BuildContext context) {
@@ -46,10 +46,10 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
     final createdAt = reaction?.createdAt ?? 'No Date';
     final videoUrl = reaction?.videoUrl ?? '';
     final reactionUrl = reaction?.reactionUrl ?? '';
-    final recordUrl = reaction?.recordUrl ?? '';
+    final finalUrl = reaction?.finalUrl ?? '';
     final videoDuration = reaction?.videoDuration?.round() ?? '0';
 
-    print('Record URL: $recordUrl');
+    print('Final URL: $finalUrl ');
 
     final isStartRecording =
         status == '0' &&
@@ -61,7 +61,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
         user?.uuid != createdBy?.uuid &&
         videoUrl.isNotEmpty &&
         reactionUrl.isNotEmpty;
-    final isWatchRecord = status == '10' && recordUrl.isNotEmpty;
+    final isWatchRecord = status == '10' && finalUrl.isNotEmpty;
     final isWatchVideo = videoUrl.isNotEmpty && user?.uuid == createdBy?.uuid;
     final isCancelRequest = status == '0' && user?.uuid == createdBy?.uuid;
 
@@ -402,15 +402,15 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                         VideoThumbnailWidget(
                           videoPath: videoUrl,
                           onTap: () async {
-                            await Navigator.push<void>(
+                            await Navigator.of(
                               context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => PreviewVideoPage(
-                                      videoPath: videoUrl,
-                                      hasConfirmButton: false,
-                                    ),
-                              ),
+                              rootNavigator: true,
+                            ).pushNamed(
+                              '/preview-video',
+                              arguments: {
+                                'videoPath': videoUrl,
+                                'hasConfirmButton': false,
+                              },
                             );
                           },
                         ),
@@ -441,23 +441,24 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                       ],
                     ),
                   ],
-                  Divider(height: 40, color: Colors.grey[200]),
+
                   if (isWatchRecord) ...[
+                    Divider(height: 40, color: Colors.grey[100]),
                     Column(
                       spacing: 20,
                       children: [
                         VideoThumbnailWidget(
-                          videoPath: recordUrl,
+                          videoPath: finalUrl,
                           onTap: () async {
-                            await Navigator.push<void>(
+                            await Navigator.of(
                               context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => PreviewVideoPage(
-                                      videoPath: recordUrl,
-                                      hasConfirmButton: false,
-                                    ),
-                              ),
+                              rootNavigator: true,
+                            ).pushNamed(
+                              '/preview-video',
+                              arguments: {
+                                'videoPath': finalUrl,
+                                'hasConfirmButton': false,
+                              },
                             );
                           },
                         ),
@@ -493,14 +494,14 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                                 ),
                               ),
                             ),
-                            if (recordUrl.isNotEmpty) ...[
+                            if (finalUrl.isNotEmpty) ...[
                               Expanded(
                                 child: SizedBox(
                                   height: 50,
                                   child: ElevatedButton.icon(
                                     onPressed:
                                         () => _saveToGallery(
-                                          recordUrl,
+                                          finalUrl,
                                           isUrl: true,
                                         ),
                                     style: ElevatedButton.styleFrom(
@@ -612,15 +613,10 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
     });
 
     try {
-      var resultReaction = await completeReaction(reaction, (progress, total) {
-        // Handle progress updates if needed
-      });
+      final resultReaction = await uploadService.uploadRecord(reaction);
 
       if (resultReaction == null) {
-        ToastHelper.showError(
-          context,
-          description: 'Failed to complete reaction, pleasetry again.',
-        );
+        ToastHelper.showError(context, description: 'Reaction submit failed!');
         return;
       }
 
@@ -630,12 +626,12 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
 
       await updateReaction(reaction?.uuid, {
         'status': '10',
-        'record_path': resultReaction['recordPath'],
+        'final_path': resultReaction['filePath'],
       });
 
       createReactionVideo({
         'reaction_id': reaction?.uuid,
-        'video_path': resultReaction['recordPath'],
+        'video_path': resultReaction['filePath'],
         'video_duration': reaction?.videoDuration,
         'video_orientation': ReactionVideoOrientation.portrait.value,
         'segment': ReactionVideoSegment.combinedVideo.value,
