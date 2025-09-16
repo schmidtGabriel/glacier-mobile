@@ -9,6 +9,7 @@
 .buildlog/
 .history
 .migrate_working_dir/
+.env
 
 # IntelliJ related
 *.iml

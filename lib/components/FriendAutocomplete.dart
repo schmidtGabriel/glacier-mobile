@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:glacier/components/AddFriendBottomSheet.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/resources/FriendResource.dart';
 import 'package:glacier/resources/UserResource.dart';
@@ -287,10 +288,6 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
       return;
     }
 
-    if (widget.formKey?.currentState != null) {
-      widget.formKey?.currentState!.validate();
-    }
-
     _filterFriends(_controller.text);
   }
 
@@ -298,93 +295,23 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
     final nameController = TextEditingController(text: _controller.text);
     final emailController = TextEditingController();
 
-    showModalBottomSheet(
+    AddFriendBottomSheet.show(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Add New Friend',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-                ),
-                autofocus: true,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email or Phone',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        final name = nameController.text.trim();
-                        final emailOrPhone = emailController.text.trim();
+      initialName: _controller.text,
+      onSubmit: (String name, String emailOrPhone) {
+        final name = nameController.text.trim();
+        final emailOrPhone = emailController.text.trim();
 
-                        if (name.isNotEmpty && emailOrPhone.isNotEmpty) {
-                          widget.onNewFriendCreated?.call(name, emailOrPhone);
-                          _isSettingTextProgrammatically = true;
-                          _controller.text = name;
-                          Navigator.of(context).pop();
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Please fill in both fields'),
-                            ),
-                          );
-                        }
-                      },
-                      child: const Text('Add'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
+        if (name.isNotEmpty && emailOrPhone.isNotEmpty) {
+          widget.onNewFriendCreated?.call(name, emailOrPhone);
+          _isSettingTextProgrammatically = true;
+          _controller.text = name;
+          Navigator.of(context).pop();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Please fill in both fields')),
+          );
+        }
       },
     );
   }

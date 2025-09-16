@@ -14,8 +14,6 @@ class AuthGate extends StatefulWidget {
 }
 
 class _AuthGateState extends State<AuthGate> {
-  bool _hasNavigatedToHome = false;
-
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
@@ -46,7 +44,6 @@ class _AuthGateState extends State<AuthGate> {
           );
         } else {
           // Reset navigation flag when user logs out
-          _hasNavigatedToHome = false;
           return const SigninPage();
         }
       },
@@ -56,12 +53,7 @@ class _AuthGateState extends State<AuthGate> {
   Future<bool> _ensureUserDataExists() async {
     final isAuth = FirebaseAuth.instance.currentUser != null;
     if (isAuth) {
-      final prefs = await SharedPreferences.getInstance();
-      final userString = prefs.getString('user');
-      // Only fetch user data if it doesn't exist in SharedPreferences
-      if (userString == null || userString.isEmpty) {
-        await getMe();
-      }
+      await getMe();
       // FlutterNativeSplash.remove();
       return true; // User data now exists
     } else {

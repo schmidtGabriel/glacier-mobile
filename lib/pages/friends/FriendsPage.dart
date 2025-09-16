@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:glacier/components/AddFriendBottomSheet.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/pages/friends/components/AcceptedFriendsList.dart';
 import 'package:glacier/pages/friends/components/PendingFriendsList.dart';
 import 'package:glacier/resources/FriendResource.dart';
@@ -30,8 +32,6 @@ class _FriendsPageState extends State<FriendsPage>
   bool isLoadingDialog = false;
   late TabController _tabController;
 
-  final _dialogEmailController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -47,12 +47,7 @@ class _FriendsPageState extends State<FriendsPage>
                       TabBar(
                         controller: _tabController,
                         tabs: [Tab(text: 'Friends'), Tab(text: 'Invites')],
-                        labelColor: Colors.blue,
-                        unselectedLabelColor: Colors.grey,
-                        dividerColor: Colors.transparent,
-                        indicatorColor: Colors.blue,
-                        indicatorWeight: 2.0,
-                        indicatorSize: TabBarIndicatorSize.tab,
+
                         indicatorPadding: EdgeInsets.symmetric(
                           horizontal: 16.0,
                         ),
@@ -64,7 +59,7 @@ class _FriendsPageState extends State<FriendsPage>
                             AcceptedFriendsList(
                               friends: friends,
                               user: user,
-                              onInviteFriend: showInviteFriendDialog,
+                              onInviteFriend: _showAddFriendBottomSheet,
                             ),
                             PendingFriendsList(
                               pendingFriends: pendingFriends,
@@ -82,7 +77,6 @@ class _FriendsPageState extends State<FriendsPage>
 
   @override
   void dispose() {
-    _dialogEmailController.dispose();
     _tabController.dispose();
     super.dispose();
   }
@@ -159,21 +153,13 @@ class _FriendsPageState extends State<FriendsPage>
     initFriends();
 
     SharedPreferences.getInstance().then((prefs) {
-      prefs.getBool('invite') ?? false ? showInviteFriendDialog() : null;
+      prefs.getBool('invite') ?? false ? _showAddFriendBottomSheet() : null;
       prefs.remove('invite'); // Clear invite flag after showing dialog
     });
   }
 
-  Future<void> inviteFriendFromDialog(
-    BuildContext dialogContext,
-    StateSetter setDialogState,
-  ) async {
-    final email = _dialogEmailController.text.trim();
+  Future<void> inviteFriendFromDialog(String name, String email) async {
     if (email.isEmpty) return;
-
-    setDialogState(() {
-      isLoadingDialog = true;
-    });
 
     final prefs = await SharedPreferences.getInstance();
     Map<String, dynamic> userMap = jsonDecode(prefs.getString('user') ?? '{}');
@@ -186,39 +172,20 @@ class _FriendsPageState extends State<FriendsPage>
             await getFriends(),
             await getPendingFriends(),
 
-            toastification.show(
-              title: Text(value.error == true ? 'Error!' : 'Success!'),
-              description: Text(
-                value.error == true
-                    ? 'Error: ${value.message.toString()}'
-                    : 'A friend request has been sent to $email.',
-              ),
-              autoCloseDuration: const Duration(seconds: 5),
-              type:
-                  value.error == true
-                      ? ToastificationType.error
-                      : ToastificationType.success,
-              alignment: Alignment.bottomCenter,
+            ToastHelper.showSuccess(
+              context,
+              message: 'Friend Request Sent',
+              description: 'A friend request has been sent to $email.',
             ),
-
-            Navigator.of(dialogContext).pop(),
-            _dialogEmailController.clear(),
-            setDialogState(() {
-              isLoadingDialog = false;
-            }),
           },
         )
         .catchError((error) {
-          toastification.show(
-            title: Text('Friend Request failed'),
-            description: Text('Error: ${error.message.toString()}'),
-            autoCloseDuration: const Duration(seconds: 5),
-            type: ToastificationType.error,
-            alignment: Alignment.bottomCenter,
+          ToastHelper.showError(
+            context,
+            message: 'Friend Request failed',
+            description: error.message.toString(),
           );
-          setDialogState(() {
-            isLoadingDialog = false;
-          });
+
           return error;
         });
   }
@@ -236,85 +203,12 @@ class _FriendsPageState extends State<FriendsPage>
     });
   }
 
-  void showInviteFriendDialog() {
-    showDialog(
+  void _showAddFriendBottomSheet() {
+    AddFriendBottomSheet.show(
       context: context,
-      barrierDismissible: false,
-
-      builder: (BuildContext dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: Text('Invite Friend'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Send an invitation to a friend by entering their email address.',
-                  ),
-                  SizedBox(height: 16),
-                  TextFormField(
-                    controller: _dialogEmailController,
-                    keyboardType: TextInputType.emailAddress,
-                    autocorrect: false,
-                    decoration: InputDecoration(labelText: "Friend's Email"),
-                    validator: (value) {
-                      //validate if the value is an email or phone number
-                      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                      final phoneRegex = RegExp(r'^\+?[1-9]\d{1,14}$');
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter an email address';
-                      }
-                      if (!emailRegex.hasMatch(value) &&
-                          !phoneRegex.hasMatch(value)) {
-                        return 'Please enter a valid email address or phone number';
-                      }
-                      return null;
-                    },
-                    autofocus: true,
-                    autovalidateMode: AutovalidateMode.onUserInteraction,
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    _dialogEmailController.clear();
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: Text('Cancel'),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
-                  onPressed:
-                      isLoadingDialog
-                          ? null
-                          : () => inviteFriendFromDialog(
-                            dialogContext,
-                            setDialogState,
-                          ),
-                  child:
-                      isLoadingDialog
-                          ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
-                          )
-                          : Text(
-                            'Invite',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                ),
-              ],
-            );
-          },
-        );
+      initialName: '',
+      onSubmit: (String name, String emailOrPhone) {
+        inviteFriendFromDialog(name, emailOrPhone);
       },
     );
   }

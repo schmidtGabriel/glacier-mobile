@@ -69,6 +69,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Send Reaction'),
+          elevation: 0,
           leading: CloseButton(
             onPressed: () {
               final confirmDiscart = AlertDialog(

@@ -5,6 +5,7 @@ class UserResource {
   final String name;
   final String email;
   final String profilePic;
+  final bool hasActiveSubscription;
   final String? createdAt;
 
   UserResource({
@@ -12,6 +13,8 @@ class UserResource {
     required this.name,
     required this.email,
     this.profilePic = '',
+    required this.hasActiveSubscription,
+
     this.createdAt,
   });
 
@@ -22,6 +25,7 @@ class UserResource {
       name: json['name'],
       email: json['email'],
       profilePic: json['profile_picture'] ?? '',
+      hasActiveSubscription: json['has_active_subscription'] ?? false,
       createdAt: formatDate(
         json['created_at'] is String
             ? json['created_at']
@@ -37,6 +41,7 @@ class UserResource {
       'name': name,
       'email': email,
       'profile_picture': profilePic,
+      'has_active_subscription': hasActiveSubscription,
       'created_at': createdAt,
     };
   }

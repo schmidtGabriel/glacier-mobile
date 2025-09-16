@@ -17,9 +17,10 @@ class AppTheme {
     cardColor: AppColors.lightSurface,
     dividerColor: AppColors.lightDivider,
     shadowColor: AppColors.lightShadow,
+
     fontFamily: 'Raleway',
     appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.lightSurface,
+      backgroundColor: AppColors.lightBackground,
       foregroundColor: AppColors.lightOnSurface,
       elevation: 0,
       shadowColor: AppColors.lightShadow,
@@ -49,6 +50,13 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.secondary,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -70,6 +78,61 @@ class AppTheme {
       filled: true,
       fillColor: AppColors.lightBackground,
     ),
+    checkboxTheme: CheckboxThemeData(
+      fillColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return AppColors.lightOnSurfaceVariant;
+        }
+        if (states.contains(WidgetState.selected)) {
+          return AppColors.secondary;
+        }
+        return AppColors.lightOnSurfaceVariant;
+      }),
+      checkColor: WidgetStateProperty.all<Color>(Colors.white),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: AppColors.lightBackground,
+      titleTextStyle: const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: AppColors.lightOnSurface,
+      ),
+      contentTextStyle: const TextStyle(
+        fontSize: 16,
+        color: AppColors.lightOnSurfaceVariant,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: AppColors.lightBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.secondary,
+        textStyle: const TextStyle(fontSize: 16),
+      ),
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: AppColors.secondary,
+    ),
+    tabBarTheme: TabBarThemeData(
+      labelColor: Colors.white,
+      labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      unselectedLabelColor: AppColors.lightOnSurfaceVariant,
+      unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal),
+      dividerColor: Colors.transparent,
+      indicatorSize: TabBarIndicatorSize.tab,
+      indicator: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(50),
+        border: Border(bottom: BorderSide(color: AppColors.primary, width: 2)),
+      ),
+      indicatorAnimation: TabIndicatorAnimation.elastic,
+    ),
   );
 
   static final darkTheme = ThemeData(
@@ -88,14 +151,14 @@ class AppTheme {
     shadowColor: AppColors.darkShadow,
     fontFamily: 'Raleway',
     appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.darkSurface,
+      backgroundColor: AppColors.darkBackground,
       foregroundColor: AppColors.darkOnSurface,
       elevation: 0,
       shadowColor: AppColors.darkShadow,
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: AppColors.darkSurface,
-      selectedItemColor: AppColors.primary,
+      backgroundColor: AppColors.darkBackground,
+      selectedItemColor: AppColors.secondary,
       unselectedItemColor: AppColors.darkOnSurfaceVariant,
     ),
     textTheme: const TextTheme(
@@ -110,7 +173,14 @@ class AppTheme {
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppColors.primaryLight,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        backgroundColor: AppColors.secondaryLight,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -135,6 +205,60 @@ class AppTheme {
       prefixIconColor: AppColors.darkDivider,
       filled: true,
       fillColor: AppColors.darkBackground,
+    ),
+    checkboxTheme: CheckboxThemeData(
+      fillColor: WidgetStateProperty.resolveWith<Color>((states) {
+        if (states.contains(WidgetState.disabled)) {
+          return AppColors.darkOnSurfaceVariant;
+        }
+        if (states.contains(WidgetState.selected)) {
+          return AppColors.secondaryLight;
+        }
+        return AppColors.darkOnSurfaceVariant;
+      }),
+      checkColor: WidgetStateProperty.all<Color>(Colors.white),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: AppColors.darkBackground,
+      titleTextStyle: const TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: AppColors.darkOnSurface,
+      ),
+      contentTextStyle: const TextStyle(
+        fontSize: 16,
+        color: AppColors.darkOnSurfaceVariant,
+      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: AppColors.darkBackground,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: AppColors.secondaryLight,
+        textStyle: const TextStyle(fontSize: 16),
+      ),
+    ),
+    progressIndicatorTheme: const ProgressIndicatorThemeData(
+      color: AppColors.secondaryLight,
+    ),
+    tabBarTheme: TabBarThemeData(
+      labelColor: Colors.white,
+      labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      unselectedLabelColor: AppColors.darkOnSurfaceVariant,
+      dividerColor: Colors.transparent,
+      indicatorSize: TabBarIndicatorSize.tab,
+      indicator: BoxDecoration(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(50),
+        border: Border(bottom: BorderSide(color: AppColors.primary, width: 2)),
+      ),
+      indicatorAnimation: TabIndicatorAnimation.elastic,
     ),
   );
 }

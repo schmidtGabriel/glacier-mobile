@@ -91,12 +91,7 @@ class _HomePageState extends State<HomePage>
                       TabBar(
                         controller: _tabController,
                         tabs: [Tab(text: 'Received'), Tab(text: 'Sent')],
-                        labelColor: Colors.blue,
-                        unselectedLabelColor: Colors.grey,
-                        dividerColor: Colors.transparent,
-                        indicatorColor: Colors.blue,
-                        indicatorWeight: 2.0,
-                        indicatorSize: TabBarIndicatorSize.tab,
+
                         indicatorPadding: EdgeInsets.symmetric(
                           horizontal: 16.0,
                         ),
@@ -171,10 +166,23 @@ class _HomePageState extends State<HomePage>
           prefs.setBool('permissionsGranted', true);
           initFCM();
           setState(() {});
+          // openSubscriptionPage();
         },
       );
     } else {
       initFCM();
+      // openSubscriptionPage();
+    }
+  }
+
+  void openSubscriptionPage() async {
+    if (user.hasActiveSubscription == false) {
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).pushNamed('/subscription').then((_) {
+        // Reload the current page after permissions are granted
+      });
     }
   }
 }

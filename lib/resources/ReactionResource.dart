@@ -9,7 +9,7 @@ class ReactionResource {
   final UserResource? createdBy;
   final UserResource? assignedUser;
   final String? invitedTo;
-  final String status;
+  final String status; // waiting , pending, sent, completed, failed
   final String? videoUrl;
   final String? videoPath;
   final String? reactionUrl;

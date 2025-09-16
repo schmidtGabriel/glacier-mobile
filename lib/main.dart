@@ -7,6 +7,7 @@ import 'package:glacier/components/BottomMenuLayout.dart';
 import 'package:glacier/firebase_options.dart';
 import 'package:glacier/gate/AuthGate.dart';
 import 'package:glacier/pages/ImageCropPage.dart';
+import 'package:glacier/pages/PaymentPage.dart';
 import 'package:glacier/pages/PermissionsPage.dart';
 import 'package:glacier/pages/PreviewVideoPage.dart';
 import 'package:glacier/pages/SigninPage.dart';
@@ -255,6 +256,11 @@ class MyApp extends StatelessWidget {
       case '/permissions':
         return MaterialPageRoute(
           builder: (_) => AuthGate(child: PermissionsPage()),
+        );
+
+      case '/subscription':
+        return MaterialPageRoute(
+          builder: (_) => AuthGate(child: PaymentPage()),
         );
 
       default:
