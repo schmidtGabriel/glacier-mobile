@@ -11,6 +11,7 @@ import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/user/getMe.dart';
 import 'package:glacier/services/user/updateUserData.dart';
+import 'package:glacier/themes/app_colors.dart';
 import 'package:glacier/themes/theme_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -142,6 +143,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                         context,
                                       ).colorScheme.onSurfaceVariant,
                                 ),
+                                fillColor:
+                                    context.isDarkMode
+                                        ? AppColors.darkSurface
+                                        : AppColors.lightSurface,
                               ),
 
                               onTapOutside: (event) {
@@ -169,6 +174,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                         context,
                                       ).colorScheme.onSurfaceVariant,
                                 ),
+                                fillColor:
+                                    context.isDarkMode
+                                        ? AppColors.darkSurface
+                                        : AppColors.lightSurface,
                               ),
 
                               keyboardType: TextInputType.emailAddress,
@@ -203,6 +212,10 @@ class _ProfileEditPageState extends State<ProfileEditPage> {
                                         context,
                                       ).colorScheme.onSurfaceVariant,
                                 ),
+                                fillColor:
+                                    context.isDarkMode
+                                        ? AppColors.darkSurface
+                                        : AppColors.lightSurface,
                               ),
 
                               readOnly: true,

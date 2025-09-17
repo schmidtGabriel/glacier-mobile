@@ -5,11 +5,11 @@ class AppColors {
   static const primaryLight = Color(0xFFBBE9FF);
   static const primaryDark = Color(0xFF009DC5);
 
-  static const secondary = Color(0xFFFF86A0);
-  static const secondaryLight = Color(0xFFFFB2BF);
-  static const secondaryDark = Color(0xFFF65882);
+  static const secondary = Color(0xFF002370);
+  static const secondaryLight = Color(0xFF0051FF);
+  static const secondaryDark = Color(0xFF002370);
 
-  static const tertiary = Color(0xFFFF86A0);
+  static const tertiary = Color(0xFFFF5F89);
   static const tertiaryLight = Color(0xFFFFB2BF);
   static const tertiaryDark = Color(0xFFF65882);
 

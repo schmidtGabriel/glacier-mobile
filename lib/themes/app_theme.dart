@@ -24,12 +24,29 @@ class AppTheme {
       foregroundColor: AppColors.lightOnSurface,
       elevation: 0,
       shadowColor: AppColors.lightShadow,
+      titleTextStyle: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+        color: AppColors.secondaryDark,
+      ),
+      iconTheme: IconThemeData(color: AppColors.secondaryDark),
     ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+    navigationBarTheme: NavigationBarThemeData(
       backgroundColor: AppColors.lightSurface,
-      selectedItemColor: AppColors.primary,
-      unselectedItemColor: AppColors.lightOnSurfaceVariant,
+      indicatorColor: AppColors.primaryLight,
+
+      labelTextStyle: WidgetStateProperty.all(
+        const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.secondary,
+        ),
+      ),
+      iconTheme: WidgetStateProperty.all(
+        const IconThemeData(size: 30, color: AppColors.secondary),
+      ),
     ),
+
     textTheme: const TextTheme(
       titleLarge: TextStyle(
         fontSize: 20,
@@ -52,7 +69,7 @@ class AppTheme {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.secondary,
+        backgroundColor: AppColors.tertiary,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -68,12 +85,14 @@ class AppTheme {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.primary),
+        borderSide: BorderSide(color: AppColors.secondary),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.secondary),
+        borderSide: BorderSide(color: AppColors.tertiaryDark),
       ),
+      floatingLabelStyle: TextStyle(color: AppColors.secondary),
+      // labelStyle: const TextStyle(color: AppColors.secondary),
       prefixIconColor: AppColors.secondary,
       filled: true,
       fillColor: AppColors.lightBackground,
@@ -86,7 +105,7 @@ class AppTheme {
         if (states.contains(WidgetState.selected)) {
           return AppColors.secondary;
         }
-        return AppColors.lightOnSurfaceVariant;
+        return AppColors.lightBackground;
       }),
       checkColor: WidgetStateProperty.all<Color>(Colors.white),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
@@ -156,10 +175,20 @@ class AppTheme {
       elevation: 0,
       shadowColor: AppColors.darkShadow,
     ),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: AppColors.darkBackground,
-      selectedItemColor: AppColors.secondary,
-      unselectedItemColor: AppColors.darkOnSurfaceVariant,
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: AppColors.darkSurface,
+      indicatorColor: AppColors.tertiaryLight,
+
+      labelTextStyle: WidgetStateProperty.all(
+        const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: AppColors.tertiaryDark,
+        ),
+      ),
+      iconTheme: WidgetStateProperty.all(
+        const IconThemeData(size: 30, color: AppColors.tertiaryDark),
+      ),
     ),
     textTheme: const TextTheme(
       titleLarge: TextStyle(
@@ -180,7 +209,7 @@ class AppTheme {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.secondaryLight,
+        backgroundColor: AppColors.tertiaryLight,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -192,7 +221,7 @@ class AppTheme {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.lightOnSurfaceVariant),
+        borderSide: BorderSide(color: AppColors.primaryLight),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -200,11 +229,13 @@ class AppTheme {
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.secondaryLight),
+        borderSide: BorderSide(color: AppColors.tertiaryLight),
       ),
       prefixIconColor: AppColors.darkDivider,
       filled: true,
       fillColor: AppColors.darkBackground,
+      floatingLabelStyle: TextStyle(color: AppColors.secondary),
+      hintStyle: const TextStyle(color: AppColors.darkOnSurfaceVariant),
     ),
     checkboxTheme: CheckboxThemeData(
       fillColor: WidgetStateProperty.resolveWith<Color>((states) {
@@ -214,7 +245,7 @@ class AppTheme {
         if (states.contains(WidgetState.selected)) {
           return AppColors.secondaryLight;
         }
-        return AppColors.darkOnSurfaceVariant;
+        return AppColors.darkBackground;
       }),
       checkColor: WidgetStateProperty.all<Color>(Colors.white),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
@@ -226,6 +257,7 @@ class AppTheme {
         fontWeight: FontWeight.bold,
         color: AppColors.darkOnSurface,
       ),
+
       contentTextStyle: const TextStyle(
         fontSize: 16,
         color: AppColors.darkOnSurfaceVariant,
@@ -240,7 +272,7 @@ class AppTheme {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: AppColors.secondaryLight,
+        foregroundColor: AppColors.tertiary,
         textStyle: const TextStyle(fontSize: 16),
       ),
     ),

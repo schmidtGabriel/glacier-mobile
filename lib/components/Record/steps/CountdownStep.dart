@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:glacier/themes/app_colors.dart';
 
 class CountdownStep extends StatelessWidget {
   final int countdown;
@@ -11,7 +12,7 @@ class CountdownStep extends StatelessWidget {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        color: Colors.black,
+        color: AppColors.secondaryDark,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

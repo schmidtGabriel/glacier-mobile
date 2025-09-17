@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:glacier/components/ReactionStatusTag.dart';
 import 'package:glacier/components/UserAvatar.dart';
 import 'package:glacier/helpers/formatDate.dart';
 import 'package:glacier/resources/ReactionResource.dart';
@@ -136,7 +137,7 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                           color:
                                               context.isDarkMode
                                                   ? Colors.white
-                                                  : AppColors.primaryDark,
+                                                  : AppColors.secondary,
                                         ),
                                       ),
                                       Text(
@@ -166,12 +167,15 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                                         color:
                                             context.isDarkMode
                                                 ? Colors.grey
-                                                : AppColors.primaryDark,
+                                                : AppColors.secondaryDark,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    _buildStatus(reaction),
+                                    ReactionStatusTag(
+                                      reaction: reaction,
+                                      loadReactions: loadReactions,
+                                    ),
                                   ],
                                 ),
                               ],
@@ -225,100 +229,6 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
           isLoading = false;
         });
       }
-    }
-  }
-
-  Widget _buildStatus(ReactionResource reaction) {
-    switch (reaction.status) {
-      case '-1':
-        return Container(
-          padding: EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: Colors.purple,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            'Waiting',
-            style: TextStyle(color: Colors.white, fontSize: 12),
-          ),
-        );
-      case '0':
-        return GestureDetector(
-          onTap: () {
-            Navigator.of(
-              context,
-              rootNavigator: true,
-            ).pushNamed('/reaction', arguments: reaction).then((value) {
-              // loadReactions();
-              if (value == true) {
-                Navigator.of(
-                  context,
-                ).pushNamed('/reaction-detail', arguments: reaction).then((_) {
-                  loadReactions();
-                });
-              }
-            });
-          },
-          child: Container(
-            padding: EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppColors.secondary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              'To record',
-              style: TextStyle(color: Colors.white, fontSize: 12),
-            ),
-          ),
-        );
-      case '1':
-        return Container(
-          padding: EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: Colors.blue,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            'Completed',
-            style: TextStyle(color: Colors.white, fontSize: 12),
-          ),
-        );
-      case '10':
-        return Container(
-          padding: EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: Colors.green,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            'Completed',
-            style: TextStyle(color: Colors.white, fontSize: 12),
-          ),
-        );
-      case '-10':
-        return Container(
-          padding: EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: Colors.red,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            'Failed',
-            style: TextStyle(color: Colors.white, fontSize: 12),
-          ),
-        );
-      default:
-        return Container(
-          padding: EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: Colors.grey,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Text(
-            'Unknown',
-            style: TextStyle(color: Colors.white, fontSize: 12),
-          ),
-        );
     }
   }
 }

@@ -29,6 +29,7 @@ class _TakePictureScreenState extends State<TakePictureScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         iconTheme: IconThemeData(color: Colors.grey.shade400),

@@ -61,6 +61,8 @@ class _PreviewVideoPageState extends State<PreviewVideoPage> {
         : Scaffold(
           appBar: AppBar(
             elevation: 0,
+            backgroundColor: Colors.black,
+            systemOverlayStyle: SystemUiOverlayStyle.light,
             leading: IconButton(
               icon: Icon(Icons.close, color: Colors.white, size: 28),
               onPressed: () => Navigator.of(context).pop(),
@@ -122,7 +124,7 @@ class _PreviewVideoPageState extends State<PreviewVideoPage> {
             valueListenable: ValueNotifier(!_isLoading),
             builder: (context, value, child) {
               return Container(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black,
                 child: Stack(
                   children: [
                     Center(

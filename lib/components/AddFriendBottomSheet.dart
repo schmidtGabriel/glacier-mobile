@@ -1,8 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:glacier/components/Button.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
+import 'package:glacier/resources/UserResource.dart';
+import 'package:glacier/services/user/saveFriend.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 typedef OnAddFriend = void Function(String name, String emailOrPhone);
 
-class AddFriendBottomSheet extends StatelessWidget {
+class AddFriendBottomSheet extends StatefulWidget {
   final String initialName;
   final OnAddFriend onSubmit;
 
@@ -13,10 +20,16 @@ class AddFriendBottomSheet extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final nameController = TextEditingController(text: initialName);
-    final emailController = TextEditingController();
+  State<AddFriendBottomSheet> createState() => _AddFriendBottomSheetState();
+}
 
+class _AddFriendBottomSheetState extends State<AddFriendBottomSheet> {
+  late final TextEditingController nameController;
+  late final TextEditingController emailController;
+  bool isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -70,14 +83,14 @@ class AddFriendBottomSheet extends StatelessWidget {
               ),
               const SizedBox(width: 16),
               Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
+                child: Button(
+                  isLoading: isLoading,
+                  onPressed: () async {
                     final name = nameController.text.trim();
                     final emailOrPhone = emailController.text.trim();
 
                     if (name.isNotEmpty && emailOrPhone.isNotEmpty) {
-                      onSubmit(name, emailOrPhone);
-                      Navigator.of(context).pop();
+                      inviteFriend(name, emailOrPhone);
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -86,7 +99,7 @@ class AddFriendBottomSheet extends StatelessWidget {
                       );
                     }
                   },
-                  child: const Text('Add'),
+                  label: 'Add',
                 ),
               ),
             ],
@@ -97,23 +110,69 @@ class AddFriendBottomSheet extends StatelessWidget {
     );
   }
 
-  static Future<void> show({
-    required BuildContext context,
-    required String initialName,
-    required OnAddFriend onSubmit,
-  }) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (BuildContext context) {
-        return AddFriendBottomSheet(
-          initialName: initialName,
-          onSubmit: onSubmit,
-        );
-      },
-    );
+  @override
+  void dispose() {
+    nameController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.initialName);
+    emailController = TextEditingController();
+  }
+
+  Future<void> inviteFriend(String name, String email) async {
+    if (email.isEmpty) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    Map<String, dynamic> userMap = jsonDecode(prefs.getString('user') ?? '{}');
+    var user = UserResource.fromJson(userMap);
+
+    setState(() {
+      isLoading = true;
+    });
+
+    saveFriend(user.uuid, email)
+        .then(
+          (value) async => {
+            if (mounted)
+              {
+                setState(() {}),
+                if (!value.error)
+                  {
+                    ToastHelper.showSuccess(
+                      context,
+                      message: 'Friend Request Sent',
+                      description: 'A friend request has been sent to $email.',
+                    ),
+                    widget.onSubmit(name, email),
+                  }
+                else
+                  {
+                    ToastHelper.showError(
+                      context,
+                      message: 'Friend Request failed',
+                      description: value.message,
+                    ),
+                  },
+
+                setState(() {
+                  isLoading = false;
+                }),
+              },
+          },
+        )
+        .catchError((error) {
+          ToastHelper.showError(
+            context,
+            message: 'Friend Request failed',
+            description: error.message.toString(),
+          );
+
+          return error;
+        });
   }
 }

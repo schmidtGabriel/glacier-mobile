@@ -60,60 +60,62 @@ class _ImageCropPageState extends State<ImageCropPage> {
       return const Center(child: Text('No image to preview'));
     }
 
-    return Column(
-      children: [
-        Expanded(
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.file(
-                File(imagePath),
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.error, size: 64, color: Colors.red),
-                        SizedBox(height: 16),
-                        Text('Failed to load image'),
-                      ],
-                    ),
-                  );
-                },
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.file(
+                  File(imagePath),
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error, size: 64, color: Colors.red),
+                          SizedBox(height: 16),
+                          Text('Failed to load image'),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _cropImage,
-                  child: const Text('Crop Again'),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context, croppedImagePath);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _cropImage,
+                    child: const Text('Crop Again'),
                   ),
-                  child: const Text('Use Image'),
                 ),
-              ),
-            ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context, croppedImagePath);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Use Image'),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -121,7 +123,6 @@ class _ImageCropPageState extends State<ImageCropPage> {
     setState(() {
       isLoading = true;
     });
-    // print('Starting image cropping for: ${widget.imagePath}');
 
     try {
       // Validate the source image path
@@ -136,43 +137,39 @@ class _ImageCropPageState extends State<ImageCropPage> {
         );
       }
 
-      // print('Starting image crop for: ${widget.imagePath}');
+      print('Starting image crop for: ${widget.imagePath}');
 
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: widget.imagePath,
-        compressFormat: ImageCompressFormat.jpg,
-        compressQuality: 85,
+        compressFormat: ImageCompressFormat.png,
+        compressQuality: 90,
         maxWidth: 1024,
         maxHeight: 1024,
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Crop Profile Picture',
-            toolbarColor: Theme.of(context).primaryColor,
+            toolbarColor: Colors.deepOrange,
             toolbarWidgetColor: Colors.white,
-            initAspectRatio: CropAspectRatioPreset.square,
+            initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false,
-            statusBarColor: Theme.of(context).primaryColor,
-            backgroundColor: Colors.black,
-            activeControlsWidgetColor: Theme.of(context).primaryColor,
-            dimmedLayerColor: Colors.black.withOpacity(0.8),
-            cropFrameColor: Theme.of(context).primaryColor,
-            cropGridColor: Colors.white.withOpacity(0.5),
-            cropFrameStrokeWidth: 2,
-            cropGridStrokeWidth: 1,
-            showCropGrid: true,
-            hideBottomControls: false,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9,
+            ],
           ),
           IOSUiSettings(
             title: 'Crop Profile Picture',
-            doneButtonTitle: 'Done',
-            cancelButtonTitle: 'Cancel',
-            minimumAspectRatio: 0.2,
-            rectX: 0,
-            rectY: 0,
-            rectWidth: 0,
-            rectHeight: 0,
-            showActivitySheetOnDone: false,
-            showCancelConfirmationDialog: true,
+            embedInNavigationController: true,
+            aspectRatioPresets: [
+              CropAspectRatioPreset.original,
+              CropAspectRatioPreset.square,
+              CropAspectRatioPreset.ratio3x2,
+              CropAspectRatioPreset.ratio4x3,
+              CropAspectRatioPreset.ratio16x9,
+            ],
           ),
           WebUiSettings(
             context: context,
@@ -184,7 +181,10 @@ class _ImageCropPageState extends State<ImageCropPage> {
         ],
       );
 
+      print('Crop result: ${croppedFile?.path ?? "null"}');
+
       if (croppedFile != null) {
+        print('Cropping successful: ${croppedFile.path}');
         setState(() {
           croppedImagePath = croppedFile.path;
           isLoading = false;
@@ -205,7 +205,7 @@ class _ImageCropPageState extends State<ImageCropPage> {
         isLoading = false;
       });
       if (mounted) {
-        ToastHelper.showError(context, description: e.toString());
+        ToastHelper.showError(context, description: 'Error cropping image: $e');
         Navigator.pop(context);
       }
     }

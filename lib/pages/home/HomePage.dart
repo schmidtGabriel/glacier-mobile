@@ -7,6 +7,8 @@ import 'package:glacier/pages/home/components/SentReactionsList.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/auth/getFCMToken.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
+import 'package:glacier/themes/app_colors.dart';
+import 'package:glacier/themes/theme_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -65,10 +67,14 @@ class _HomePageState extends State<HomePage>
                                       children: [
                                         Text(
                                           'Hello ${user.name}',
-                                          style:
-                                              Theme.of(
-                                                context,
-                                              ).textTheme.titleLarge,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.titleLarge?.copyWith(
+                                            color:
+                                                context.isDarkMode
+                                                    ? AppColors.primaryDark
+                                                    : AppColors.secondaryDark,
+                                          ),
                                         ),
 
                                         Text(

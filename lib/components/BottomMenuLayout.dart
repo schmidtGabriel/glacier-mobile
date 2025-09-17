@@ -24,24 +24,18 @@ class _BottomMenuLayoutState extends State<BottomMenuLayout> {
     return Scaffold(
       body: _pages[_currentIndex],
 
-      bottomNavigationBar: Theme(
-        data: Theme.of(context),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: _onTabTapped,
-          type: BottomNavigationBarType.fixed,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
-          iconSize: 30,
-          items: [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-            BottomNavigationBarItem(icon: Icon(Icons.phone_android), label: ''),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_reaction_sharp),
-              label: '',
-            ),
-          ],
-        ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: _onTabTapped,
+
+        destinations: [
+          NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.phone_android), label: 'New'),
+          NavigationDestination(
+            icon: Icon(Icons.add_reaction_sharp),
+            label: 'Friends',
+          ),
+        ],
       ),
     );
   }

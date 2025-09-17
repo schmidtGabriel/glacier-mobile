@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/Button.dart';
+import 'package:glacier/pages/ResetPasswordPage.dart';
 import 'package:glacier/services/auth/signin.dart';
 import 'package:glacier/themes/app_colors.dart';
 import 'package:glacier/themes/theme_extensions.dart';
@@ -131,6 +132,23 @@ class _SigninPageState extends State<SigninPage> {
                         ],
                       ),
                     ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 40, top: 20),
+                      child: Center(
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ResetPasswordPage(),
+                              ),
+                            );
+                          },
+                          child: const Text("Reset Password"),
+                        ),
+                      ),
+                    ),
+
                     Expanded(child: Container()),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 40, top: 20),
@@ -143,14 +161,14 @@ class _SigninPageState extends State<SigninPage> {
                             mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Text(
+                              Text(
                                 "Don't have an account? ",
-                                style: TextStyle(color: Colors.blueAccent),
+                                style: TextStyle(color: Colors.grey.shade600),
                               ),
                               const Text(
                                 "Sign up",
                                 style: TextStyle(
-                                  color: AppColors.secondary,
+                                  color: AppColors.tertiary,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),

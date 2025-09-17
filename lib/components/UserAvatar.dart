@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:glacier/themes/app_colors.dart';
+import 'package:glacier/themes/theme_extensions.dart';
 
 class UserAvatar extends StatefulWidget {
   final String? userName;
@@ -21,7 +23,10 @@ class _UserAvatarState extends State<UserAvatar> {
   Widget build(BuildContext context) {
     return CircleAvatar(
       radius: widget.size / 2,
-      backgroundColor: Colors.grey.shade300,
+      backgroundColor:
+          context.isDarkMode
+              ? AppColors.darkSurfaceVariant
+              : AppColors.lightSurfaceVariant,
       backgroundImage:
           widget.pictureUrl!.isNotEmpty
               ? NetworkImage(widget.pictureUrl!)

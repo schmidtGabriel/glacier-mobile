@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -17,7 +16,6 @@ import 'package:glacier/services/FirebaseStorageService.dart';
 import 'package:glacier/services/reactions/createReaction.dart';
 import 'package:glacier/services/reactions/createReactionVideo.dart';
 import 'package:glacier/services/reactions/updateReaction.dart';
-import 'package:glacier/services/user/getUserFriends.dart';
 import 'package:glacier/themes/app_colors.dart';
 import 'package:glacier/themes/theme_extensions.dart';
 import 'package:photo_manager/photo_manager.dart';
@@ -129,11 +127,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
                             onTapOutside: (event) {
                               FocusScope.of(context).unfocus();
                             },
-                            onChanged: (value) {
-                              if (_formKey.currentState != null) {
-                                _formKey.currentState?.validate();
-                              }
-                            },
+                            autovalidateMode:
+                                AutovalidateMode.onUserInteraction,
+
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter a title';
@@ -152,11 +148,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
                             minLines: 2,
                             maxLines: 6,
                             controller: _descriptionController,
-                            onChanged: (value) {
-                              if (_formKey.currentState != null) {
-                                _formKey.currentState?.validate();
-                              }
-                            },
+                            autovalidateMode:
+                                AutovalidateMode.onUserInteraction,
+
                             decoration: InputDecoration(
                               labelText: "Enter description",
                             ),
@@ -189,7 +183,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                 selectedFriendEmail = null;
                               });
                             },
-                            onNewFriendCreated: (name, email) {
+                            onNewFriendCreated: (name, email) async {
                               setState(() {
                                 selectedFriend = null;
                                 selectedFriendEmail = email;
@@ -262,17 +256,15 @@ class _SendReactionPageState extends State<SendReactionPage> {
                               child: Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
+                                  color: AppColors.primaryLight,
+
                                   border: Border.all(
                                     color:
                                         context.isDarkMode
-                                            ? AppColors.lightOnSurfaceVariant
-                                            : AppColors.darkOnSurfaceVariant,
+                                            ? AppColors.secondaryLight
+                                            : AppColors.secondary,
                                   ),
                                   borderRadius: BorderRadius.circular(8),
-                                  color:
-                                      context.isDarkMode
-                                          ? AppColors.darkBackground
-                                          : AppColors.lightBackground,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
@@ -284,16 +276,17 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                       style: TextStyle(
                                         color:
                                             context.isDarkMode
-                                                ? Colors.grey.shade300
-                                                : Colors.grey.shade600,
+                                                ? AppColors.secondaryLight
+                                                : AppColors.secondary,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
                                     Icon(
                                       Icons.camera_alt_outlined,
                                       color:
                                           context.isDarkMode
-                                              ? Colors.grey.shade300
-                                              : Colors.grey.shade600,
+                                              ? AppColors.secondaryLight
+                                              : AppColors.secondary,
                                     ),
                                   ],
                                 ),
@@ -310,12 +303,6 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                     '${(_uploadProgress * 100).toStringAsFixed(0)}% Sending...',
                                 onPressed: _sendReaction,
                                 label: 'Send Reaction',
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.0),
-                                  ),
-                                ),
                               ),
 
                           if (_uploadProgress > 0) ...[
@@ -434,34 +421,6 @@ class _SendReactionPageState extends State<SendReactionPage> {
   @override
   void initState() {
     super.initState();
-    loadFriends();
-  }
-
-  Future<void> loadFriends() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      friends = (await getUserFriends()).cast<FriendResource>();
-      filteredFriends = friends;
-      SharedPreferences.getInstance().then((pref) {
-        pref.setString('friends', jsonEncode(friends));
-      });
-
-      if (widget.sendTo != null) {
-        selectedFriend = widget.sendTo;
-      }
-
-      setState(() {});
-    } catch (e) {
-      print('Error fetching friends: $e');
-      friends = [];
-    }
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   _handlePickVideo() async {

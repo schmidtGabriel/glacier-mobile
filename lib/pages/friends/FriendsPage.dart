@@ -2,14 +2,12 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/components/AddFriendBottomSheet.dart';
-import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/pages/friends/components/AcceptedFriendsList.dart';
 import 'package:glacier/pages/friends/components/PendingFriendsList.dart';
 import 'package:glacier/resources/FriendResource.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/user/getPendingUserFriends.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
-import 'package:glacier/services/user/saveFriend.dart';
 import 'package:glacier/services/user/updateFriendRequest.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
@@ -158,38 +156,6 @@ class _FriendsPageState extends State<FriendsPage>
     });
   }
 
-  Future<void> inviteFriendFromDialog(String name, String email) async {
-    if (email.isEmpty) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    Map<String, dynamic> userMap = jsonDecode(prefs.getString('user') ?? '{}');
-    var user = UserResource.fromJson(userMap);
-
-    saveFriend(user.uuid, email)
-        .then(
-          (value) async => {
-            if (mounted) {setState(() {})},
-            await getFriends(),
-            await getPendingFriends(),
-
-            ToastHelper.showSuccess(
-              context,
-              message: 'Friend Request Sent',
-              description: 'A friend request has been sent to $email.',
-            ),
-          },
-        )
-        .catchError((error) {
-          ToastHelper.showError(
-            context,
-            message: 'Friend Request failed',
-            description: error.message.toString(),
-          );
-
-          return error;
-        });
-  }
-
   Future<void> loadUserData() async {
     setState(() {
       isLoading = true;
@@ -204,11 +170,20 @@ class _FriendsPageState extends State<FriendsPage>
   }
 
   void _showAddFriendBottomSheet() {
-    AddFriendBottomSheet.show(
+    showModalBottomSheet(
       context: context,
-      initialName: '',
-      onSubmit: (String name, String emailOrPhone) {
-        inviteFriendFromDialog(name, emailOrPhone);
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext context) {
+        return AddFriendBottomSheet(
+          initialName: '',
+          onSubmit: (String name, String emailOrPhone) async {
+            getPendingUserFriends();
+            Navigator.of(context).pop();
+          },
+        );
       },
     );
   }

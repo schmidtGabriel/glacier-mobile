@@ -8,7 +8,8 @@ import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
 
 typedef FriendSelected = void Function(UserResource user);
-typedef NewFriendCreated = void Function(String name, String emailOrPhone);
+typedef NewFriendCreated =
+    Future<void> Function(String name, String emailOrPhone);
 
 class FriendAutocomplete extends StatefulWidget {
   final UserResource? value;
@@ -58,7 +59,9 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
         onTapOutside: (event) {
           if (_controller.text.isEmpty) FocusScope.of(context).unfocus();
         },
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         focusNode: _focusNode,
+
         decoration: InputDecoration(
           hintText: widget.hintText,
 
@@ -105,11 +108,18 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
 
   void loadFriends() async {
     try {
-      _allFriends = (await getUserFriends()).cast<FriendResource>();
+      _allFriends = (await getUserFriends(isAll: true)).cast<FriendResource>();
     } catch (e) {
       print('Error fetching friends: $e');
       _allFriends = [];
     }
+  }
+
+  void showDropdownOverlay() {
+    if (_overlayEntry != null) return;
+
+    _overlayEntry = _createOverlayEntry();
+    Overlay.of(context).insert(_overlayEntry!);
   }
 
   Widget _buildAddNewFriendOption() {
@@ -148,42 +158,52 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
       );
     }
 
-    if (_filteredFriends.isEmpty && _controller.text.isNotEmpty) {
-      return _buildAddNewFriendOption();
+    // Calculate total items: filtered friends + add new friend option (if text is not empty)
+    final int totalItems =
+        _filteredFriends.length + (_controller.text.isNotEmpty ? 1 : 0);
+
+    if (totalItems == 0) {
+      return const SizedBox.shrink();
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(0),
       shrinkWrap: true,
-      itemCount: _filteredFriends.length,
+      padding: const EdgeInsets.all(0),
+      itemCount: totalItems,
       itemBuilder: (context, index) {
-        final friendResource = _filteredFriends[index];
-        final friend = friendResource.friend;
+        // Show friends first, then add new friend option at the end
+        if (index < _filteredFriends.length) {
+          final friendResource = _filteredFriends[index];
+          final friend = friendResource.friend;
 
-        if (friend == null) return const SizedBox.shrink();
+          if (friend == null) return const SizedBox.shrink();
 
-        return ListTile(
-          leading: UserAvatar(
-            pictureUrl: friend.profilePic,
-            userName: friend.name,
-            size: 32,
-          ),
-          title: Text(
-            friend.name,
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          subtitle: Text(
-            friend.email,
-            style: TextStyle(color: Colors.grey.shade600),
-          ),
-          onTap: () {
-            _isSettingTextProgrammatically = true;
-            _controller.text = friend.name;
-            _hideDropdown();
-            widget.onFriendSelected(friend);
-            FocusScope.of(context).unfocus();
-          },
-        );
+          return ListTile(
+            leading: UserAvatar(
+              pictureUrl: friend.profilePic,
+              userName: friend.name,
+              size: 32,
+            ),
+            title: Text(
+              friend.name,
+              style: const TextStyle(fontWeight: FontWeight.w500),
+            ),
+            subtitle: Text(
+              friend.email,
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+            onTap: () {
+              _isSettingTextProgrammatically = true;
+              _controller.text = friend.name;
+              _hideDropdown();
+              widget.onFriendSelected(friend);
+              FocusScope.of(context).unfocus();
+            },
+          );
+        } else {
+          // Show add new friend option at the end
+          return _buildAddNewFriendOption();
+        }
       },
     );
   }
@@ -191,6 +211,10 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
   OverlayEntry _createOverlayEntry() {
     RenderBox renderBox = context.findRenderObject() as RenderBox;
     var size = renderBox.size;
+
+    // Calculate the height of just the input field (without error message)
+    // Standard Material input field height is approximately 56 pixels
+    const double inputFieldHeight = 60.0;
 
     return OverlayEntry(
       builder:
@@ -211,7 +235,7 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
               CompositedTransformFollower(
                 link: _layerLink,
                 showWhenUnlinked: false,
-                offset: Offset(0.0, size.height),
+                offset: Offset(0.0, inputFieldHeight),
                 child: Material(
                   elevation: 4.0,
                   borderRadius: BorderRadius.circular(8.0),
@@ -265,7 +289,7 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
       _filteredFriends = filtered;
     });
 
-    _showDropdownOverlay();
+    showDropdownOverlay();
   }
 
   void _hideDropdown() {
@@ -292,34 +316,36 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
   }
 
   void _showAddFriendBottomSheet() {
-    final nameController = TextEditingController(text: _controller.text);
-    final emailController = TextEditingController();
+    bool isLoading = false;
 
-    AddFriendBottomSheet.show(
+    showModalBottomSheet(
       context: context,
-      initialName: _controller.text,
-      onSubmit: (String name, String emailOrPhone) {
-        final name = nameController.text.trim();
-        final emailOrPhone = emailController.text.trim();
-
-        if (name.isNotEmpty && emailOrPhone.isNotEmpty) {
-          widget.onNewFriendCreated?.call(name, emailOrPhone);
-          _isSettingTextProgrammatically = true;
-          _controller.text = name;
-          Navigator.of(context).pop();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Please fill in both fields')),
-          );
-        }
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (BuildContext context) {
+        return AddFriendBottomSheet(
+          initialName: _controller.text,
+          onSubmit: (String name, String emailOrPhone) async {
+            if (name.isNotEmpty && emailOrPhone.isNotEmpty) {
+              setState(() {
+                _isSettingTextProgrammatically = true;
+                _controller.text = name;
+              });
+              loadFriends();
+              Navigator.of(context).pop();
+            } else {
+              setState(() {
+                isLoading = false;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Please fill in both fields')),
+              );
+            }
+          },
+        );
       },
     );
-  }
-
-  void _showDropdownOverlay() {
-    if (_overlayEntry != null) return;
-
-    _overlayEntry = _createOverlayEntry();
-    Overlay.of(context).insert(_overlayEntry!);
   }
 }

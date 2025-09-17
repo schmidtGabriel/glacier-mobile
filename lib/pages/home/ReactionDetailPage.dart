@@ -4,11 +4,11 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:gal/gal.dart';
+import 'package:glacier/components/ReactionStatusTag.dart';
 import 'package:glacier/components/VideoThumbnailWidget.dart';
 import 'package:glacier/enums/ReactionVideoOrientation.dart';
 import 'package:glacier/enums/ReactionVideoSegment.dart';
 import 'package:glacier/helpers/ToastHelper.dart';
-import 'package:glacier/helpers/formatStatusReaction.dart';
 import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/FirebaseStorageService.dart';
@@ -118,24 +118,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                                     ?.copyWith(fontWeight: FontWeight.w600),
                               ),
                             ),
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                vertical: 6,
-                                horizontal: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colorStatusReaction(status),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                formatStatusReaction(status),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
+                            ReactionStatusTag(reaction: reaction!),
                           ],
                         ),
                         SizedBox(height: 12),
@@ -637,11 +620,12 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
         'segment': ReactionVideoSegment.combinedVideo.value,
         'created_at': DateTime.now().toIso8601String(),
       });
-
-      ToastHelper.showSuccess(
-        context,
-        description: 'Reaction completed successfully!',
-      );
+      if (mounted) {
+        ToastHelper.showSuccess(
+          context,
+          description: 'Reaction completed successfully!',
+        );
+      }
       await _loadReactionByUuid(); // Refresh the reaction data
     } catch (e) {
       print('Error completing reaction: $e');

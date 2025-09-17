@@ -27,6 +27,7 @@ class _PreviewLayoutState extends State<PreviewLayout> {
             !(widget.controllerVideo?.isVideoInitialized() ?? false) ||
             !widget.controllerCamera!.value.isInitialized
         ? const Scaffold(
+          backgroundColor: Colors.black,
           body: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

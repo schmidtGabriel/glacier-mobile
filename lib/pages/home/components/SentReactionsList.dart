@@ -1,9 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:glacier/helpers/formatStatusReaction.dart';
+import 'package:glacier/components/ReactionStatusTag.dart';
+import 'package:glacier/components/UserAvatar.dart';
+import 'package:glacier/helpers/formatDate.dart';
 import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/services/reactions/listReactions.dart';
+import 'package:glacier/themes/app_colors.dart';
 import 'package:glacier/themes/theme_extensions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -84,128 +87,97 @@ class _SentReactionsListState extends State<SentReactionsList> {
                     separatorBuilder: (context, index) => SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final reaction = reactions[index];
-                      final title = reaction.title ?? 'No Name';
+                      final title = reaction.title ?? 'No Title';
+                      final createdBy = reaction.createdBy;
                       final user = reaction.assignedUser;
 
-                      return Container(
-                        decoration: ThemeContainers.card(context),
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                vertical: 15,
-                                horizontal: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    context.isDarkMode
-                                        ? Colors.blueGrey.shade800
-                                        : Colors.blueGrey.shade200,
-
-                                borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(8),
-                                  topRight: Radius.circular(8),
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.of(context)
+                              .pushNamed(
+                                '/reaction-detail',
+                                arguments: reaction,
+                              )
+                              .then((_) {
+                                loadReactions();
+                              });
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 16,
+                          ),
+                          decoration: ThemeContainers.card(context),
+                          child: IntrinsicHeight(
+                            child: Row(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              spacing: 12,
+                              children: [
+                                UserAvatar(
+                                  userName: user?.name,
+                                  pictureUrl: user?.profilePic,
+                                  size: 55,
                                 ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      vertical: 3,
-                                      horizontal: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: colorStatusReaction(
-                                        reaction.status,
+
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        title,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 20,
+                                          color:
+                                              context.isDarkMode
+                                                  ? Colors.white
+                                                  : AppColors.secondary,
+                                        ),
                                       ),
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    child: Text(
-                                      formatStatusReaction(reaction.status),
+                                      Text(
+                                        'Duration: ${reaction.videoDuration?.round() ?? '0'}s',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                      Text(
+                                        'To: ${user?.name ?? 'Unknown'}',
+                                        style: TextStyle(fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                Column(
+                                  mainAxisSize: MainAxisSize.max,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      formatDate(
+                                        reaction.createdAt,
+                                        format: 'LLL dd',
+                                      ),
                                       style: TextStyle(
-                                        color: Colors.white,
+                                        color:
+                                            context.isDarkMode
+                                                ? Colors.grey
+                                                : AppColors.secondaryDark,
                                         fontSize: 12,
-                                        fontWeight: FontWeight.w700,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  ),
-                                  Text(
-                                    reaction.createdAt ?? 'No Date',
-                                    style:
-                                        Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            Padding(
-                              padding: EdgeInsets.all(8),
-
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-
-                                      children: [
-                                        // Text(reaction['url'] ?? 'No Description'),
-                                        // SizedBox(height: 8),
-                                        Text(title),
-                                        SizedBox(height: 2),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(
-                                              'Sent to: ${user?.name ?? reaction.invitedTo}',
-                                              style:
-                                                  Theme.of(
-                                                    context,
-                                                  ).textTheme.bodySmall,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                    ReactionStatusTag(
+                                      reaction: reaction,
+                                      loadReactions: loadReactions,
                                     ),
-                                  ),
-
-                                  GestureDetector(
-                                    onTap: () {
-                                      Navigator.of(context)
-                                          .pushNamed(
-                                            '/reaction-detail',
-                                            arguments: reaction,
-                                          )
-                                          .then((value) {
-                                            loadReactions();
-                                          });
-                                    },
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          'Details',
-                                          style: TextStyle(
-                                            color: Colors.blue,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                        SizedBox(width: 4),
-                                        Icon(
-                                          Icons.arrow_forward_ios,
-                                          color: Colors.blue,
-                                          size: 14,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                  ],
+                                ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
                       );
                     },
