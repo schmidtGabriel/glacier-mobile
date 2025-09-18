@@ -128,6 +128,7 @@ class _GalleryScreenState extends State<GalleryScreen>
                               IconButton(
                                 icon: Icon(Icons.arrow_back),
                                 onPressed: () {
+                                  // Back button always goes to albums view
                                   setState(() {
                                     _showAlbums = true;
                                     _currentAlbumName = null;
@@ -179,6 +180,22 @@ class _GalleryScreenState extends State<GalleryScreen>
                           albums: _albums,
                           openAlbum: (album) => openAlbum(album),
                         )
+                        : _videos.isEmpty
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'No videos found in ${_currentAlbumName ?? "this album"}',
+                              ),
+                              SizedBox(height: 16),
+                              Text('Debug info:'),
+                              Text('Current album: $_currentAlbumName'),
+                              Text('Show albums: $_showAlbums'),
+                              Text('Videos count: ${_videos.length}'),
+                            ],
+                          ),
+                        )
                         : VideoGridView(
                           videos: _videos,
                           previewVideo: (video) async {
@@ -197,16 +214,6 @@ class _GalleryScreenState extends State<GalleryScreen>
                             if (selectedVideo != null) {
                               // var path = await selectedVideo.file;
                               Navigator.of(context).pop(selectedVideo);
-                              // await Navigator.push<AssetEntity?>(
-                              //   context,
-                              //   MaterialPageRoute(
-                              //     builder:
-                              //         (context) => SendReactionPage(
-                              //           video: selectedVideo['video'],
-                              //           duration: selectedVideo['duration'],
-                              //         ),
-                              //   ),
-                              // );
                             }
                           },
                         ),
@@ -238,15 +245,22 @@ class _GalleryScreenState extends State<GalleryScreen>
 
   void openAlbum(AssetPathEntity album) {
     setState(() {
+      _videos = [];
       _currentAlbumName = album.name;
       _showAlbums = false;
+      pageTitle = album.name;
     });
 
-    album.getAssetListPaged(page: 0, size: 100).then((videos) {
-      setState(() {
-        _videos = videos;
-      });
-    });
+    album
+        .getAssetListPaged(page: 0, size: 100)
+        .then((videos) {
+          setState(() {
+            _videos = videos;
+          });
+        })
+        .catchError((error) {
+          print('Error loading videos from album ${album.name}: $error');
+        });
   }
 
   Future<void> _checkAndRefreshPermissions() async {
@@ -291,19 +305,39 @@ class _GalleryScreenState extends State<GalleryScreen>
           });
         }
       }
-      if (_showAlbums) {
-        List<AssetEntity> allVideos = [];
-        for (var album in albums) {
-          final albumVideos = await album.getAssetListPaged(page: 0, size: 100);
-          allVideos.addAll(albumVideos);
-        }
-        print('Found ${allVideos.length} videos in all albums');
+
+      // Auto-load "Recents" folder on first launch
+      AssetPathEntity? currentAlbum;
+      try {
+        currentAlbum = albums.firstWhere(
+          (album) => album.name == _currentAlbumName,
+        );
+      } catch (e) {
+        // If "Recents" not found, use the first album with videos
+        currentAlbum = _albums.isNotEmpty ? _albums.first : null;
+      }
+
+      if (currentAlbum != null) {
+        // Load Recents folder by default
         setState(() {
-          _videos = allVideos;
+          _currentAlbumName = currentAlbum!.name;
+          _showAlbums = false;
+          pageTitle = currentAlbum.name;
+        });
+
+        final recentVideos = await currentAlbum.getAssetListPaged(
+          page: 0,
+          size: 100,
+        );
+        setState(() {
+          _videos = recentVideos;
         });
       } else {
-        final ab = albums.firstWhere((album) => album.name == 'Recents');
-        openAlbum(ab);
+        // Fallback: show albums if no videos found
+        setState(() {
+          _showAlbums = true;
+          pageTitle = 'Gallery';
+        });
       }
     }
 

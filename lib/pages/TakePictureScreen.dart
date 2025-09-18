@@ -119,13 +119,6 @@ class _TakePictureScreenState extends State<TakePictureScreen>
   void dispose() {
     _controller.dispose();
 
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarIconBrightness:
-            Brightness.dark, // Dark icons on light background
-        statusBarBrightness: Brightness.light, // For iOS
-      ),
-    );
     WidgetsBinding.instance.removeObserver(this);
 
     super.dispose();

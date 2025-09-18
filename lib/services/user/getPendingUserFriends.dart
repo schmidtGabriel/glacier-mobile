@@ -14,12 +14,15 @@ Future<List<FriendResource>> getPendingUserFriends() async {
     final querySnapshot =
         await FirebaseFirestore.instance
             .collection('friend_invitations')
-            .where('status', isEqualTo: 0)
             .where(
-              Filter.or(
-                Filter('requested_user', isEqualTo: uid),
-                Filter('invited_to', isEqualTo: email),
-                Filter('invited_user', isEqualTo: uid),
+              Filter.and(
+                Filter('status', isEqualTo: 0),
+
+                Filter.or(
+                  Filter('requested_user', isEqualTo: uid),
+                  Filter('invited_to', isEqualTo: email),
+                  Filter('invited_user', isEqualTo: uid),
+                ),
               ),
             )
             .get();
@@ -39,19 +42,17 @@ Future<List<FriendResource>> getPendingUserFriends() async {
           friend = null; // Skip if both users are the current user
         }
 
-        if (friend != null) {
-          pendingUsers = [
-            ...pendingUsers,
-            FriendResource.fromJson({
-              'uuid': data['uuid'] ?? '',
-              'invited_to': data['invited_to'] ?? '',
-              'status': data['status'] ?? '',
-              'friend': friend,
-              'created_at': formatTimestamp(data['created_at']),
-              'isRequested': uid == data['requested_user'] ? true : false,
-            }),
-          ];
-        }
+        pendingUsers = [
+          ...pendingUsers,
+          FriendResource.fromJson({
+            'uuid': data['uuid'] ?? '',
+            'invited_to': data['invited_to'] ?? '',
+            'status': data['status'] ?? '',
+            'friend': friend,
+            'created_at': formatTimestamp(data['created_at']),
+            'isRequested': uid == data['requested_user'] ? true : false,
+          }),
+        ];
       }).toList(),
     );
     // print('Pending: $pendingUsers');

@@ -24,7 +24,6 @@ Future<ReactionResource?> getReaction(String uuid) async {
         print('No data found for UUID: $uuid');
         return null;
       }
-
       final videoUrl = await handleVideo(data);
       final reactionUrl = await handleReaction(data);
       final finalUrl = await handleFinal(data);
@@ -34,7 +33,7 @@ Future<ReactionResource?> getReaction(String uuid) async {
         title: data['title'] ?? '',
         description: data['description'] ?? '',
         createdBy: await getUser(data['requested']),
-        assignedUser: await getUser(data['user']),
+        assignedUser: data['user'] != null ? await getUser(data['user']) : null,
         invitedTo: data['invited_to'],
         status: data['status'] ?? '',
         videoUrl: videoUrl,
@@ -57,5 +56,4 @@ Future<ReactionResource?> getReaction(String uuid) async {
     print('Error fetching reaction: $e');
     return null;
   }
-  return null;
 }

@@ -163,6 +163,7 @@ class _ImageCropPageState extends State<ImageCropPage> {
           IOSUiSettings(
             title: 'Crop Profile Picture',
             embedInNavigationController: true,
+
             aspectRatioPresets: [
               CropAspectRatioPreset.original,
               CropAspectRatioPreset.square,

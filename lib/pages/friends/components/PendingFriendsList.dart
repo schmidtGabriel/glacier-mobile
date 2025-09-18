@@ -36,7 +36,8 @@ class PendingFriendsList extends StatelessWidget {
                   itemBuilder: (context, index) {
                     final friendData = pendingFriends[index];
                     final friend = friendData.friend;
-                    final name = friendData.friend?.name ?? '';
+                    final name =
+                        friendData.friend?.name ?? friendData.invitedTo ?? '';
                     final email = friendData.friend?.email ?? '';
 
                     return Container(
@@ -45,15 +46,22 @@ class PendingFriendsList extends StatelessWidget {
                       child: Row(
                         children: [
                           UserAvatar(
-                            userName: name,
-                            pictureUrl: friendData.friend?.profilePic,
+                            userName: name ?? '',
+                            pictureUrl: friendData.friend?.profilePic ?? '',
                           ),
                           SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(name, overflow: TextOverflow.ellipsis),
+                                Text(
+                                  name,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: friend == null ? 14 : 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 email.isEmpty
                                     ? SizedBox.shrink()
                                     : Text(

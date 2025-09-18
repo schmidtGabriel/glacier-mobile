@@ -20,13 +20,22 @@ class AlbumGridView extends StatefulWidget {
 class _AlbumData {
   final AssetPathEntity album;
   final int assetCount;
+  final Uint8List? thumbnailData;
+  final AssetEntity? coverAsset;
 
-  _AlbumData({required this.album, required this.assetCount});
+  _AlbumData({
+    required this.album,
+    required this.assetCount,
+    this.thumbnailData,
+    this.coverAsset,
+  });
 }
 
 class _AlbumGridViewState extends State<AlbumGridView> {
   bool isLoading = true;
   List<_AlbumData> albumDataList = [];
+  final Map<String, Uint8List> _thumbnailCache = {};
+  final Map<String, int> _assetCountCache = {};
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +52,7 @@ class _AlbumGridViewState extends State<AlbumGridView> {
               top: 8,
               bottom: 20,
             ),
-            itemCount: widget.albums.length,
+            itemCount: albumDataList.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               mainAxisSpacing: 8,
@@ -51,84 +60,53 @@ class _AlbumGridViewState extends State<AlbumGridView> {
               childAspectRatio: 3 / 2,
             ),
             itemBuilder: (context, index) {
-              final album = widget.albums[index];
-              return FutureBuilder<List<AssetEntity>>(
-                future: album.getAssetListRange(start: 0, end: 1),
-                builder: (context, snapshot) {
-                  final assets = snapshot.data;
-                  final cover =
-                      (assets != null && assets.isNotEmpty)
-                          ? assets.first
-                          : null;
-                  return GestureDetector(
-                    onTap: () async {
-                      final albumVideos = await album.getAssetListPaged(
-                        page: 0,
-                        size: 100,
-                      );
-                      setState(() {
-                        widget.openAlbum(album);
-                      });
-                    },
-                    child: Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(0),
-                      ),
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child:
-                                cover != null
-                                    ? FutureBuilder<Uint8List?>(
-                                      future: cover.thumbnailDataWithSize(
-                                        ThumbnailSize(200, 200),
-                                      ),
-                                      builder: (context, thumbSnapshot) {
-                                        if (thumbSnapshot.connectionState ==
-                                                ConnectionState.waiting ||
-                                            thumbSnapshot.data == null) {
-                                          return Container(color: Colors.grey);
-                                        }
-                                        return Image.memory(
-                                          thumbSnapshot.data!,
-                                          width: double.infinity,
-                                          fit: BoxFit.cover,
-                                        );
-                                      },
-                                    )
-                                    : Container(color: Colors.grey),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(4.0),
-                            child: Column(
-                              children: [
-                                Text(
-                                  album.name,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                FutureBuilder<int>(
-                                  future: album.assetCountAsync,
-                                  builder: (context, countSnapshot) {
-                                    final count = countSnapshot.data ?? 0;
-                                    return Text(
-                                      '$count videos',
-                                      style: TextStyle(fontSize: 12),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
+              final albumData = albumDataList[index];
+              final album = albumData.album;
+
+              return GestureDetector(
+                onTap: () async {
+                  // Load videos on demand, not all at once
+                  widget.openAlbum(album);
                 },
+                child: Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(0),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child:
+                            albumData.thumbnailData != null
+                                ? Image.memory(
+                                  albumData.thumbnailData!,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                )
+                                : Container(color: Colors.grey),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Column(
+                          children: [
+                            Text(
+                              album.name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              '${albumData.assetCount} videos',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               );
             },
           ),
@@ -139,6 +117,9 @@ class _AlbumGridViewState extends State<AlbumGridView> {
 
   @override
   void dispose() {
+    // Clear thumbnail cache to free memory
+    _thumbnailCache.clear();
+    _assetCountCache.clear();
     super.dispose();
   }
 
@@ -148,15 +129,70 @@ class _AlbumGridViewState extends State<AlbumGridView> {
     loadAlbum();
   }
 
-  loadAlbum() {
+  Future<void> loadAlbum() async {
     setState(() {
       isLoading = true;
     });
 
-    Future.delayed(Duration(milliseconds: 300), () async {
-      setState(() {
-        isLoading = false;
-      });
-    });
+    try {
+      // Pre-load album data with caching
+      final List<_AlbumData> tempAlbumData = [];
+
+      for (final album in widget.albums) {
+        // Cache asset count
+        int assetCount;
+        if (_assetCountCache.containsKey(album.id)) {
+          assetCount = _assetCountCache[album.id]!;
+        } else {
+          assetCount = await album.assetCountAsync;
+          _assetCountCache[album.id] = assetCount;
+        }
+
+        // Cache thumbnail
+        Uint8List? thumbnailData;
+        if (_thumbnailCache.containsKey(album.id)) {
+          thumbnailData = _thumbnailCache[album.id];
+        } else {
+          try {
+            final assets = await album.getAssetListRange(start: 0, end: 1);
+            if (assets.isNotEmpty) {
+              final cover = assets.first;
+              // Use smaller thumbnail size to reduce memory usage
+              thumbnailData = await cover.thumbnailDataWithSize(
+                ThumbnailSize(150, 150), // Reduced from 200x200
+              );
+              if (thumbnailData != null) {
+                _thumbnailCache[album.id] = thumbnailData;
+              }
+            }
+          } catch (e) {
+            print('Error loading thumbnail for album ${album.name}: $e');
+          }
+        }
+
+        tempAlbumData.add(
+          _AlbumData(
+            album: album,
+            assetCount: assetCount,
+            thumbnailData: thumbnailData,
+            coverAsset: null,
+          ),
+        );
+      }
+
+      if (mounted) {
+        setState(() {
+          albumDataList = tempAlbumData;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error loading albums: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
   }
 }

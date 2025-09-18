@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -5,48 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 
-/// A widget that displays a video thumbnail with automatic orientation detection.
-///
-/// Features:
-/// - Automatically detects video orientation and sets appropriate aspect ratio
-/// - Generates thumbnail from video URL or local file path
-/// - Supports custom aspect ratio override
-/// - Provides orientation detection callback
-/// - Supports tap gestures
-/// - Works with both network URLs and local file paths
-///
-/// Example usage:
-/// ```dart
-/// // With URL
-/// VideoThumbnailWidget(
-///   videoPath: 'https://example.com/video.mp4',
-///   onTap: () => playVideo(),
-///   onOrientationDetected: (aspectRatio, isPortrait) {
-///     print('Video is ${isPortrait ? 'portrait' : 'landscape'}');
-///   },
-/// )
-///
-/// // With local file path
-/// VideoThumbnailWidget(
-///   videoPath: '/storage/emulated/0/DCIM/Camera/video.mp4',
-///   onTap: () => playVideo(),
-/// )
-///
-/// // With custom aspect ratio (overrides auto-detection)
-/// VideoThumbnailWidget(
-///   videoPath: 'path/to/video.mp4',
-///   aspectRatio: 16 / 9,
-/// )
-/// ```
-///
-/// For getting video info without creating a widget:
-/// ```dart
-/// final videoInfo = await VideoThumbnailWidget.getVideoInfo(videoPath);
-/// final isPortrait = videoInfo['isPortrait'];
-/// final aspectRatio = videoInfo['aspectRatio'];
-/// final duration = videoInfo['duration'];
-/// ```
-class VideoThumbnailWidget extends StatelessWidget {
+class VideoThumbnailWidget extends StatefulWidget {
   final String videoPath;
   final double? aspectRatio;
   final VoidCallback? onTap;
@@ -59,6 +19,36 @@ class VideoThumbnailWidget extends StatelessWidget {
     this.onTap,
     this.onOrientationDetected,
   });
+
+  @override
+  State<VideoThumbnailWidget> createState() => _VideoThumbnailWidgetState();
+}
+
+// Static cache for thumbnails to avoid regenerating them
+class _ThumbnailCache {
+  static final Map<String, Uint8List> _cache = {};
+  static const int maxCacheSize =
+      50; // Limit cache size to prevent memory bloat
+
+  static void clear() => _cache.clear();
+
+  static Uint8List? get(String key) => _cache[key];
+
+  static void put(String key, Uint8List data) {
+    if (_cache.length >= maxCacheSize) {
+      // Remove oldest entry when cache is full
+      final firstKey = _cache.keys.first;
+      _cache.remove(firstKey);
+    }
+    _cache[key] = data;
+  }
+}
+
+class _VideoThumbnailWidgetState extends State<VideoThumbnailWidget> {
+  int _retryKey = 0;
+  Completer<List<dynamic>>? _thumbnailCompleter;
+  VideoPlayerController? _controller;
+
   @override
   Widget build(BuildContext context) {
     bool isPortrait = true;
@@ -67,13 +57,11 @@ class VideoThumbnailWidget extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
         child: FutureBuilder<List<dynamic>>(
-          future: Future.wait([
-            _generateThumbnail(videoPath),
-            _getVideoAspectRatio(),
-          ]),
+          key: ValueKey(_retryKey), // Add key to force rebuild on retry
+          future: _loadThumbnailData(),
           builder: (_, snapshot) {
             if (!snapshot.hasData) {
-              final defaultAspectRatio = aspectRatio ?? 16 / 9;
+              final defaultAspectRatio = widget.aspectRatio ?? 16 / 9;
               return Container(
                 width: 200,
                 height: defaultAspectRatio == 9 / 16 ? 355 : 112,
@@ -94,21 +82,30 @@ class VideoThumbnailWidget extends StatelessWidget {
 
             // Notify parent about detected orientation
             isPortrait = detectedAspectRatio < 1.0;
-            if (onOrientationDetected != null) {
+            if (widget.onOrientationDetected != null) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                onOrientationDetected!(detectedAspectRatio, isPortrait);
+                widget.onOrientationDetected!(detectedAspectRatio, isPortrait);
               });
             }
 
             if (thumb == null) {
-              return Container(
-                width: 200,
-                height: detectedAspectRatio == 9 / 16 ? 355 : 112,
-                color: Colors.grey,
-                child: const Icon(
-                  Icons.video_library,
-                  size: 40,
-                  color: Colors.white,
+              return GestureDetector(
+                onTap: _retryLoading,
+                child: Container(
+                  width: 200,
+                  height: detectedAspectRatio == 9 / 16 ? 355 : 112,
+                  color: Colors.grey,
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.refresh, size: 40, color: Colors.white),
+                      SizedBox(height: 8),
+                      Text(
+                        'Tap to retry',
+                        style: TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }
@@ -120,7 +117,20 @@ class VideoThumbnailWidget extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image.memory(thumb, fit: BoxFit.cover),
+                    Image.memory(
+                      thumb,
+                      fit: BoxFit.cover,
+                      cacheWidth: 400, // Limit cache width to reduce memory
+                      cacheHeight:
+                          (400 / detectedAspectRatio)
+                              .round(), // Proportional height
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey,
+                          child: const Icon(Icons.error, color: Colors.white),
+                        );
+                      },
+                    ),
                     const Positioned(
                       bottom: 4,
                       right: 4,
@@ -134,8 +144,11 @@ class VideoThumbnailWidget extends StatelessWidget {
               ),
             );
 
-            if (onTap != null) {
-              return GestureDetector(onTap: onTap, child: thumbnailContent);
+            if (widget.onTap != null) {
+              return GestureDetector(
+                onTap: widget.onTap,
+                child: thumbnailContent,
+              );
             }
 
             return thumbnailContent;
@@ -147,16 +160,38 @@ class VideoThumbnailWidget extends StatelessWidget {
     return thumbnail;
   }
 
-  /// Method to generate thumbnail from video path (URL or local file)
+  @override
+  void dispose() {
+    // Cancel any ongoing operations
+    _thumbnailCompleter = null;
+    // Dispose controller if still active
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  /// Method to generate thumbnail from video path (URL or local file) with caching
   Future<Uint8List?> _generateThumbnail(String videoPath) async {
+    // Check cache first
+    final cachedThumbnail = _ThumbnailCache.get(videoPath);
+    if (cachedThumbnail != null) {
+      return cachedThumbnail;
+    }
+
     try {
       final thumbnailData = await VideoThumbnail.thumbnailData(
         video: videoPath,
-        imageFormat: ImageFormat.PNG,
-        maxWidth: 0,
-        maxHeight: 0,
-        quality: 75,
+        imageFormat:
+            ImageFormat.JPEG, // Use JPEG instead of PNG for smaller size
+        maxWidth: 400, // Limit width to reduce memory usage
+        maxHeight: 400, // Limit height to reduce memory usage
+        quality: 75, // Reduced quality for smaller file size
       );
+
+      // Cache the thumbnail if generation was successful
+      if (thumbnailData != null) {
+        _ThumbnailCache.put(videoPath, thumbnailData);
+      }
+
       return thumbnailData;
     } catch (e) {
       print('Error generating thumbnail: $e');
@@ -164,25 +199,28 @@ class VideoThumbnailWidget extends StatelessWidget {
     }
   }
 
-  /// Get video orientation and calculate aspect ratio
+  /// Get video orientation and calculate aspect ratio with proper disposal
   Future<double> _getVideoAspectRatio() async {
-    if (aspectRatio != null) {
-      return aspectRatio!;
+    if (widget.aspectRatio != null) {
+      return widget.aspectRatio!;
     }
 
+    VideoPlayerController? controller;
     try {
-      final VideoPlayerController controller;
-
-      if (_isUrl(videoPath)) {
-        controller = VideoPlayerController.networkUrl(Uri.parse(videoPath));
+      if (_isUrl(widget.videoPath)) {
+        controller = VideoPlayerController.networkUrl(
+          Uri.parse(widget.videoPath),
+        );
       } else {
-        controller = VideoPlayerController.file(File(videoPath));
+        controller = VideoPlayerController.file(File(widget.videoPath));
       }
+
+      // Store reference for disposal
+      _controller = controller;
 
       await controller.initialize();
 
       final size = controller.value.size;
-      controller.dispose();
 
       if (size.width > 0 && size.height > 0) {
         return size.width / size.height;
@@ -192,6 +230,10 @@ class VideoThumbnailWidget extends StatelessWidget {
     } catch (e) {
       print('Error getting video orientation: $e');
       return 16 / 9; // Default fallback
+    } finally {
+      // Always dispose controller after getting aspect ratio
+      controller?.dispose();
+      _controller = null;
     }
   }
 
@@ -200,66 +242,33 @@ class VideoThumbnailWidget extends StatelessWidget {
     return path.startsWith('http://') || path.startsWith('https://');
   }
 
-  /// Static method to get video orientation without creating a widget
-  static Future<Map<String, dynamic>> getVideoInfo(String videoPath) async {
+  /// Load thumbnail data with caching and proper disposal
+  Future<List<dynamic>> _loadThumbnailData() async {
+    final completer = Completer<List<dynamic>>();
+    _thumbnailCompleter = completer;
+
     try {
-      final VideoPlayerController controller;
+      final results = await Future.wait([
+        _generateThumbnail(widget.videoPath),
+        _getVideoAspectRatio(),
+      ]);
 
-      if (_isUrlStatic(videoPath)) {
-        controller = VideoPlayerController.networkUrl(Uri.parse(videoPath));
-      } else {
-        controller = VideoPlayerController.file(File(videoPath));
+      // Check if widget is still mounted and completer is still active
+      if (mounted && _thumbnailCompleter == completer) {
+        completer.complete(results);
       }
-
-      await controller.initialize();
-
-      final size = controller.value.size;
-      final duration = controller.value.duration;
-      controller.dispose();
-
-      if (size.width > 0 && size.height > 0) {
-        final aspectRatio = size.width / size.height;
-        final isPortrait = aspectRatio < 1.0;
-        final isLandscape = aspectRatio > 1.0;
-        final isSquare = aspectRatio == 1.0;
-
-        return {
-          'aspectRatio': aspectRatio,
-          'isPortrait': isPortrait,
-          'isLandscape': isLandscape,
-          'isSquare': isSquare,
-          'width': size.width,
-          'height': size.height,
-          'duration': duration,
-        };
-      }
-
-      return {
-        'aspectRatio': 16 / 9,
-        'isPortrait': false,
-        'isLandscape': true,
-        'isSquare': false,
-        'width': 0.0,
-        'height': 0.0,
-        'duration': Duration.zero,
-      };
     } catch (e) {
-      print('Error getting video info: $e');
-      return {
-        'aspectRatio': 16 / 9,
-        'isPortrait': false,
-        'isLandscape': true,
-        'isSquare': false,
-        'width': 0.0,
-        'height': 0.0,
-        'duration': Duration.zero,
-        'error': e.toString(),
-      };
+      if (mounted && _thumbnailCompleter == completer) {
+        completer.completeError(e);
+      }
     }
+
+    return completer.future;
   }
 
-  /// Static helper method to check if path is URL
-  static bool _isUrlStatic(String path) {
-    return path.startsWith('http://') || path.startsWith('https://');
+  void _retryLoading() {
+    setState(() {
+      _retryKey++;
+    });
   }
 }

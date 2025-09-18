@@ -24,7 +24,7 @@ Future<FFmpegSession> convertVideo({
 
   final command =
       '-i $videoPath '
-      '-vf "$scaleFilter,fps=20,format=yuv420p" '
+      '-vf "$scaleFilter,fps=30,format=yuv420p" '
       '-c:v libx264 -preset veryfast -crf 23 '
       '-c:a aac -b:a 128k '
       '$outputPath';

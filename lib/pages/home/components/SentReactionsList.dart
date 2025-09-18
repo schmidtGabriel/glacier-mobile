@@ -115,8 +115,8 @@ class _SentReactionsListState extends State<SentReactionsList> {
                               spacing: 12,
                               children: [
                                 UserAvatar(
-                                  userName: user?.name,
-                                  pictureUrl: user?.profilePic,
+                                  userName: user?.name ?? '',
+                                  pictureUrl: user?.profilePic ?? '',
                                   size: 55,
                                 ),
 
@@ -142,7 +142,7 @@ class _SentReactionsListState extends State<SentReactionsList> {
                                         style: TextStyle(fontSize: 12),
                                       ),
                                       Text(
-                                        'To: ${user?.name ?? 'Unknown'}',
+                                        'To: ${user?.name ?? reaction.invitedTo}',
                                         style: TextStyle(fontSize: 12),
                                       ),
                                     ],

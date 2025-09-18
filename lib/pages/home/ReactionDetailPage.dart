@@ -49,8 +49,6 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
     final finalUrl = reaction?.finalUrl ?? '';
     final videoDuration = reaction?.videoDuration?.round() ?? '0';
 
-    print('Final URL: $finalUrl ');
-
     final isStartRecording =
         status == '0' &&
         user?.uuid != reaction?.createdBy?.uuid &&
@@ -186,51 +184,50 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
                           ],
                         ),
 
-                        if (assignedUser != null) ...[
-                          SizedBox(height: 16),
-                          Divider(color: Colors.grey[200]),
-                          SizedBox(height: 16),
+                        SizedBox(height: 16),
+                        Divider(color: Colors.grey[200]),
+                        SizedBox(height: 16),
 
-                          // Assigned To
-                          Row(
-                            children: [
-                              Container(
-                                width: 40,
-                                height: 40,
-                                decoration: BoxDecoration(
-                                  color: Colors.green[100],
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                                child: Icon(
-                                  Icons.assignment_ind_outlined,
-                                  color: Colors.green[600],
-                                  size: 20,
-                                ),
+                        // Assigned To
+                        Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.green[100],
+                                borderRadius: BorderRadius.circular(20),
                               ),
-                              SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Assigned to',
-                                      style:
-                                          Theme.of(context).textTheme.bodySmall,
-                                    ),
-                                    Text(
-                                      assignedUser.name,
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium?.copyWith(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              child: Icon(
+                                Icons.assignment_ind_outlined,
+                                color: Colors.green[600],
+                                size: 20,
                               ),
-                            ],
-                          ),
-                        ],
+                            ),
+                            SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Assigned to${assignedUser != null ? '' : ' (Not yet assigned)'}",
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                  Text(
+                                    assignedUser?.name ??
+                                        reaction?.invitedTo ??
+                                        'Unknown',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),

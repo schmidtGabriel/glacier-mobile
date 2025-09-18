@@ -217,15 +217,15 @@ class AppTheme {
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.lightOnSurfaceVariant),
+        borderSide: BorderSide(color: AppColors.darkOnSurfaceVariant),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.primaryLight),
+        borderSide: BorderSide(color: AppColors.darkOnSurfaceVariant),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: AppColors.primaryLight),
+        borderSide: BorderSide(color: AppColors.primary),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -234,7 +234,7 @@ class AppTheme {
       prefixIconColor: AppColors.darkDivider,
       filled: true,
       fillColor: AppColors.darkBackground,
-      floatingLabelStyle: TextStyle(color: AppColors.secondary),
+      floatingLabelStyle: TextStyle(color: AppColors.primary),
       hintStyle: const TextStyle(color: AppColors.darkOnSurfaceVariant),
     ),
     checkboxTheme: CheckboxThemeData(
@@ -282,7 +282,8 @@ class AppTheme {
     tabBarTheme: TabBarThemeData(
       labelColor: Colors.white,
       labelStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      unselectedLabelColor: AppColors.darkOnSurfaceVariant,
+      unselectedLabelColor: AppColors.lightOnSurfaceVariant,
+      unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal),
       dividerColor: Colors.transparent,
       indicatorSize: TabBarIndicatorSize.tab,
       indicator: BoxDecoration(

@@ -3,10 +3,10 @@
 import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:glacier/helpers/convertVideo.dart';
 import 'package:glacier/helpers/editReactionVideo.dart';
 import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/services/user/updateUserData.dart';
+import 'package:native_media_converter/native_media_converter.dart';
 // import 'package:native_media_converter/native_media_converter.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -126,17 +126,38 @@ class FirebaseStorageService {
       //   'hdr': true,
       // });
 
-      await convertVideo(
-        videoPath: videoPath,
+      // await convertVideo(
+      //   videoPath: videoPath,
+      //   outputPath: tempVideoPath,
+      //   onProgress: (progress) {
+      //     // Convert progress is 0-50% of total progress
+      //     final totalProgress = progress * 0.5;
+      //     onProgress?.call(totalProgress, 1.0);
+      //   },
+      // );
+
+      NativeMediaConverter.progressStream().listen((p) {
+        onProgress?.call(p * 0.5, 1.0);
+      });
+
+      final opts = ConvertOptions(
+        inputPath: videoPath,
         outputPath: tempVideoPath,
-        onProgress: (progress) {
-          // Convert progress is 0-50% of total progress
-          final totalProgress = progress * 0.5;
-          onProgress?.call(totalProgress, 1.0);
-        },
+        width: 1280,
+        height: 720,
+        resolution: 720,
+        fps: 30,
+        videoBitrate: 2_000_000, // Reduced bitrate for faster processing
+        codec: "h264",
+        container: "mp4",
+        // crop: { 'x': 500, 'y': 300, 'width': 1280, 'height': 720 },
+        hdr: HDROptions(isHdr: false), // Set to false for better compatibility
       );
 
-      final videoFile = File(tempVideoPath);
+      final outPath = await NativeMediaConverter.transcode(opts);
+
+      // final videoFile = File(tempVideoPath);
+      final videoFile = File(outPath);
 
       if (!videoFile.existsSync()) {
         print('Video file does not exist at path: $videoPath');

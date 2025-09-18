@@ -37,7 +37,7 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
   late TextEditingController _controller;
   List<FriendResource> _allFriends = [];
   List<FriendResource> _filteredFriends = [];
-  final bool _isLoading = false;
+  bool _isLoading = false;
   Timer? _debounceTimer;
   final FocusNode _focusNode = FocusNode();
   final LayerLink _layerLink = LayerLink();
@@ -75,7 +75,7 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     ),
                   )
-                  : Icon(Icons.search),
+                  : const Icon(Icons.search),
         ),
       ),
     );
@@ -107,11 +107,23 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
   }
 
   void loadFriends() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      _allFriends = (await getUserFriends(isAll: true)).cast<FriendResource>();
+      final friends =
+          (await getUserFriends(isAll: true)).cast<FriendResource>();
+      setState(() {
+        _allFriends = friends;
+        _isLoading = false;
+      });
     } catch (e) {
       print('Error fetching friends: $e');
-      _allFriends = [];
+      setState(() {
+        _allFriends = [];
+        _isLoading = false;
+      });
     }
   }
 
@@ -312,12 +324,16 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
       return;
     }
 
-    _filterFriends(_controller.text);
+    // Cancel previous timer
+    _debounceTimer?.cancel();
+
+    // Set up new timer with debounce
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      _filterFriends(_controller.text);
+    });
   }
 
   void _showAddFriendBottomSheet() {
-    bool isLoading = false;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -334,11 +350,11 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
                 _controller.text = name;
               });
               loadFriends();
+              if (widget.onNewFriendCreated != null) {
+                await widget.onNewFriendCreated!(name, emailOrPhone);
+              }
               Navigator.of(context).pop();
             } else {
-              setState(() {
-                isLoading = false;
-              });
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Please fill in both fields')),
               );

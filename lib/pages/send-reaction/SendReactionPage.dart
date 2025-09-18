@@ -246,7 +246,6 @@ class _SendReactionPageState extends State<SendReactionPage> {
                                 ],
                               ),
                             ),
-
                             SizedBox(height: 8),
                           ] else ...[
                             GestureDetector(

@@ -104,9 +104,11 @@ Future<FFmpegSession> makeFinalVideo({
         'drawtext=text=\'$text\':fontcolor=0x011275:fontsize=12:x=(w-text_w)/2:y=640-18+(36-text_h)/2[final]';
   }
 
+  final delayMs = (delay * 1000).round();
+
   final command =
       '-i "$videoPath" -i "$selfiePath" '
-      '-filter_complex "$stackFilter; $watermarkFilter; [0:a]adelay=${delay * 1000}|${delay * 1000}[delayed_audio]" '
+      '-filter_complex "$stackFilter; $watermarkFilter; [0:a]adelay=$delayMs|$delayMs[delayed_audio]" '
       '-map "[final]" -map "[delayed_audio]" -map 1:a? '
       '-c:v libx264 -preset veryfast -crf 23 '
       '-c:a aac -b:a 128k -ac 2 '

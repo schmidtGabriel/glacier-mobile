@@ -25,6 +25,7 @@ class _HomePageState extends State<HomePage>
 
   List reactions = [];
   bool isLoading = false;
+  int currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -94,17 +95,51 @@ class _HomePageState extends State<HomePage>
                           ],
                         ),
                       ),
-                      TabBar(
-                        controller: _tabController,
-                        tabs: [Tab(text: 'Received'), Tab(text: 'Sent')],
+                      Container(
+                        margin: EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(25),
+                          color:
+                              context.isDarkMode
+                                  ? AppColors.darkSurfaceVariant
+                                  : AppColors.lightSurfaceVariant,
+                        ),
 
-                        indicatorPadding: EdgeInsets.symmetric(
-                          horizontal: 16.0,
+                        child: TabBar(
+                          controller: _tabController,
+                          tabs: [
+                            Tab(
+                              child: Row(
+                                spacing: 5,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.inbox_rounded),
+                                  Text('Received'),
+                                ],
+                              ),
+                            ),
+
+                            Tab(
+                              child: Row(
+                                spacing: 5,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.outbox_outlined),
+                                  Text('Sent'),
+                                ],
+                              ),
+                            ),
+                          ],
+
+                          unselectedLabelStyle: TextStyle(
+                            fontWeight: FontWeight.normal,
+                          ),
                         ),
                       ),
                       Expanded(
                         child: TabBarView(
                           controller: _tabController,
+
                           children: [
                             // Requested Reactions Tab
                             RequestedReactionsList(user: user),
@@ -131,6 +166,11 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _tabController.addListener(() {
+      setState(() {
+        currentIndex = _tabController.index;
+      });
+    });
     loadUserData();
   }
 

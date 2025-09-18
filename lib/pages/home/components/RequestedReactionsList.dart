@@ -94,8 +94,10 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                       final reaction = reactions[index];
                       final title = reaction.title ?? 'No Title';
                       final createdBy = reaction.createdBy;
+
                       return GestureDetector(
                         onTap: () {
+                          print('Tapped reaction: ${reaction.toJson()}');
                           Navigator.of(context)
                               .pushNamed(
                                 '/reaction-detail',

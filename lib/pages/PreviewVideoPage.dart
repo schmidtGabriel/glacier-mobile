@@ -262,6 +262,7 @@ class _PreviewVideoPageState extends State<PreviewVideoPage> {
             DeviceOrientation.portraitUp,
             DeviceOrientation.landscapeRight,
           ],
+          autoPlay: widget.hasConfirmButton ? false : true,
           deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
           fit: BoxFit.contain,
         ),
@@ -283,6 +284,7 @@ class _PreviewVideoPageState extends State<PreviewVideoPage> {
             DeviceOrientation.landscapeRight,
           ],
           deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
+          autoPlay: widget.hasConfirmButton ? false : true,
           fit: BoxFit.contain,
         ),
         betterPlayerDataSource: BetterPlayerDataSource(
