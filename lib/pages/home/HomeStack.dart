@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:glacier/pages/PageNotFound.dart';
 import 'package:glacier/pages/home/HomePage.dart';
 import 'package:glacier/pages/home/ProfileEditPage.dart';
 import 'package:glacier/pages/home/ProfilePage.dart';
@@ -30,22 +31,12 @@ class HomeStack extends StatelessWidget {
                 builder: (_) => ReactionDetailPage(uuid: args.uuid),
               );
             }
-            return _errorRoute();
+            return pageNotFound();
 
           default:
-            return _errorRoute();
+            return pageNotFound();
         }
       },
-    );
-  }
-
-  Route _errorRoute() {
-    return MaterialPageRoute(
-      builder:
-          (_) => Scaffold(
-            appBar: AppBar(title: Text("Error")),
-            body: Center(child: Text("Page not found or invalid arguments")),
-          ),
     );
   }
 }

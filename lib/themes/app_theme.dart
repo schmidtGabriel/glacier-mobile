@@ -69,9 +69,13 @@ class AppTheme {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.tertiary,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: AppColors.tertiaryLight,
+        foregroundColor: AppColors.tertiaryDark,
+        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: AppColors.tertiaryDark, width: 1),
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
@@ -209,9 +213,13 @@ class AppTheme {
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.tertiaryLight,
-        foregroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        backgroundColor: AppColors.tertiaryDark,
+        foregroundColor: AppColors.tertiaryLight,
+        textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: AppColors.tertiaryLight, width: 1),
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(

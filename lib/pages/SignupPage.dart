@@ -7,7 +7,6 @@ import 'package:glacier/services/auth/signup.dart';
 import 'package:glacier/services/auth/verifyEmail.dart';
 import 'package:glacier/services/user/getMe.dart';
 import 'package:glacier/themes/app_colors.dart';
-import 'package:toastification/toastification.dart';
 
 class SignupPage extends StatefulWidget {
   final String email;
@@ -464,12 +463,10 @@ class _SignupPageState extends State<SignupPage> {
         'invited_friends': _invitedFriends,
         'hasAccount': true,
       });
-      toastification.show(
-        title: Text('Welcome!'),
-        description: Text("Signup successful!"),
-        autoCloseDuration: const Duration(seconds: 5),
-        type: ToastificationType.success,
-        alignment: Alignment.bottomCenter,
+      ToastHelper.showSuccess(
+        context,
+        message: 'Welcome!',
+        description: "Signup successful!",
       );
 
       await getMe();
@@ -484,14 +481,11 @@ class _SignupPageState extends State<SignupPage> {
       ).pushNamedAndRemoveUntil('/', (route) => false);
     } catch (e) {
       print('Signup failed: $e');
-      toastification.show(
-        title: Text('Error.'),
-        description: Text(
-          'Signup failed: $e' ?? 'An error occurred during signup.',
-        ),
-        autoCloseDuration: const Duration(seconds: 5),
-        type: ToastificationType.error,
-        alignment: Alignment.bottomCenter,
+
+      ToastHelper.showError(
+        context,
+        message: 'Signup failed.',
+        description: '$e' ?? 'An error occurred during signup.',
       );
 
       return;

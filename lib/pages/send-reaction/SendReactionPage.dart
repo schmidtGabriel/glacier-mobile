@@ -20,7 +20,14 @@ import 'package:glacier/themes/app_colors.dart';
 import 'package:glacier/themes/theme_extensions.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:toastification/toastification.dart';
+
+//  ReactionStatusEnum {
+//   Hold = -1,
+//   Pending = 0,
+//   Sent = 1,
+//   Approved = 10,
+//   Rejected = -10,
+// }
 
 class SendReactionPage extends StatefulWidget {
   final UserResource? sendTo;
@@ -47,6 +54,10 @@ class _SendReactionPageState extends State<SendReactionPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _controllerFriend = TextEditingController();
+
+  final _titleFocusNode = FocusNode();
+  final _descriptionFocusNode = FocusNode();
+
   UserResource? selectedFriend;
   String? selectedFriendEmail;
   String? selectedVideoType;
@@ -121,11 +132,14 @@ class _SendReactionPageState extends State<SendReactionPage> {
                           SizedBox(height: 8),
                           TextFormField(
                             controller: _titleController,
+                            focusNode: _titleFocusNode,
+                            autofocus: false,
                             decoration: InputDecoration(
                               labelText: "Enter title",
                             ),
                             onTapOutside: (event) {
                               FocusScope.of(context).unfocus();
+                              _titleFocusNode.unfocus();
                             },
                             autovalidateMode:
                                 AutovalidateMode.onUserInteraction,
@@ -147,7 +161,10 @@ class _SendReactionPageState extends State<SendReactionPage> {
                           TextFormField(
                             minLines: 2,
                             maxLines: 6,
+                            autofocus: false,
                             controller: _descriptionController,
+                            focusNode: _descriptionFocusNode,
+
                             autovalidateMode:
                                 AutovalidateMode.onUserInteraction,
 
@@ -156,6 +173,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
                             ),
                             onTapOutside: (event) {
                               FocusScope.of(context).unfocus();
+                              _descriptionFocusNode.unfocus();
                             },
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -250,6 +268,8 @@ class _SendReactionPageState extends State<SendReactionPage> {
                           ] else ...[
                             GestureDetector(
                               onTap: () async {
+                                FocusScope.of(context).unfocus();
+
                                 _handlePickVideo();
                               },
                               child: Container(
@@ -454,12 +474,9 @@ class _SendReactionPageState extends State<SendReactionPage> {
     if (_formKey.currentState?.validate() != true) return;
 
     if (_selectedVideo == null) {
-      toastification.show(
-        title: Text('Warning'),
-        description: Text("You have to pick a video first."),
-        autoCloseDuration: const Duration(seconds: 5),
-        type: ToastificationType.warning,
-        alignment: Alignment.bottomCenter,
+      ToastHelper.showWarning(
+        context,
+        description: 'Please select a video to send.',
       );
 
       return;
@@ -486,13 +503,11 @@ class _SendReactionPageState extends State<SendReactionPage> {
 
     if ((selectedFriend == null && selectedFriendEmail == null) ||
         _titleController.text.trim().isEmpty) {
-      toastification.show(
-        title: Text('Warning'),
-        description: Text("Please fill in all fields."),
-        autoCloseDuration: const Duration(seconds: 5),
-        type: ToastificationType.warning,
-        alignment: Alignment.bottomCenter,
+      ToastHelper.showWarning(
+        context,
+        description: 'Please select a friend and enter a title.',
       );
+
       setState(() {
         isLoadingSubmit = false;
       });
@@ -511,7 +526,7 @@ class _SendReactionPageState extends State<SendReactionPage> {
         'description': _descriptionController.text.trim(),
       });
 
-      await uploadService.uploadVideo(
+      final res = await uploadService.uploadVideo(
         file?.path ?? '',
         'sources',
         reactionId!,
@@ -523,38 +538,55 @@ class _SendReactionPageState extends State<SendReactionPage> {
           });
         },
       );
+      print('Upload result: $res');
+      if (res != null) {
+        file?.delete();
 
-      file?.delete();
+        // print('Reaction ID: $reactionId');
+        updateReaction(reactionId, {
+          'video_path': 'sources/$reactionId.mp4',
+          'video_duration': _duration.round(),
+          'video_orientation': videoOrientationEnum.value,
+        });
 
-      // var uploadResult = await handleUploadVideo(
-      //   reactionId,
-      //   videoOrientationEnum.value == 1 ? '1080x1920' : '1920x1080',
-      // );
+        createReactionVideo({
+          'reaction_id': reactionId,
+          'video_path': 'sources/$reactionId.mp4',
+          'video_duration': _duration.round(),
+          'video_orientation': videoOrientationEnum.value,
+          'video_name': _fileName ?? '',
+          'segment': ReactionVideoSegment.sourceVideo.value,
+          'created_at': DateTime.now().toIso8601String(),
+        });
 
-      // print('Reaction ID: $reactionId');
-      updateReaction(reactionId, {
-        'video_path': 'sources/$reactionId.mp4',
-        'video_duration': _duration.round(),
-        'video_orientation': videoOrientationEnum.value,
-      });
+        if (selectedFriend != null) {
+          await updateRecentFriends(selectedFriend?.toJson());
+        }
 
-      createReactionVideo({
-        'reaction_id': reactionId,
-        'video_path': 'sources/$reactionId.mp4',
-        'video_duration': _duration.round(),
-        'video_orientation': videoOrientationEnum.value,
-        'video_name': _fileName ?? '',
-        'segment': ReactionVideoSegment.sourceVideo.value,
-        'created_at': DateTime.now().toIso8601String(),
-      });
+        ToastHelper.showSuccess(
+          context,
+          description: 'Reaction sent successfully!',
+        );
+
+        clearTextFields();
+        setState(() {
+          isLoadingSubmit = false;
+          _uploadProgress = 0.0;
+        });
+
+        // Navigate away before clearing fields to avoid widget lifecycle issues
+        Navigator.of(
+          context,
+        ).pushReplacementNamed('/', arguments: {'index': 0});
+      } else {
+        updateReaction(reactionId, {'status': '-10'});
+        return;
+      }
     } catch (e) {
       print('Error creating reaction: $e');
-      toastification.show(
-        title: Text('Error'),
-        description: Text("There was an error creating the reaction."),
-        autoCloseDuration: const Duration(seconds: 5),
-        type: ToastificationType.error,
-        alignment: Alignment.bottomCenter,
+      ToastHelper.showError(
+        context,
+        description: "There was an error creating the reaction.",
       );
 
       setState(() {
@@ -563,28 +595,5 @@ class _SendReactionPageState extends State<SendReactionPage> {
       });
       return;
     }
-
-    if (selectedFriend != null) {
-      await updateRecentFriends(selectedFriend?.toJson());
-    }
-
-    print('Reaction sent successfully!');
-
-    toastification.show(
-      title: Text('Success'),
-      description: Text("Reaction sent successfully!"),
-      autoCloseDuration: const Duration(seconds: 5),
-      type: ToastificationType.success,
-      alignment: Alignment.bottomCenter,
-    );
-
-    clearTextFields();
-    setState(() {
-      isLoadingSubmit = false;
-      _uploadProgress = 0.0;
-    });
-
-    // Navigate away before clearing fields to avoid widget lifecycle issues
-    Navigator.of(context).pushReplacementNamed('/', arguments: {'index': 0});
   }
 }

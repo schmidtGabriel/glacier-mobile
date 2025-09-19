@@ -49,6 +49,50 @@ Future<bool> isVideoLandscape(String videoPath) async {
         print('Raw video dimensions: ${width}x$height');
         print('Rotation metadata: $rotation degrees');
 
+        // Print additional video metadata
+        print('=== Video Metadata ===');
+        print('Codec: ${videoStream['codec_name'] ?? 'Unknown'}');
+        print('Pixel format: ${videoStream['pix_fmt'] ?? 'Unknown'}');
+        print('Duration: ${videoStream['duration'] ?? 'Unknown'} seconds');
+        print('Frame rate: ${videoStream['r_frame_rate'] ?? 'Unknown'}');
+        print('Bit rate: ${videoStream['bit_rate'] ?? 'Unknown'} bps');
+        print('Profile: ${videoStream['profile'] ?? 'Unknown'}');
+        print('Level: ${videoStream['level'] ?? 'Unknown'}');
+
+        // Print tags metadata if available
+        if (tags != null && tags.isNotEmpty) {
+          print('=== Tags Metadata ===');
+          tags.forEach((key, value) {
+            print('$key: $value');
+          });
+        }
+
+        // Print side data information if available
+        if (sideDataList != null && sideDataList.isNotEmpty) {
+          print('=== Side Data ===');
+          for (var sideData in sideDataList) {
+            print('Type: ${sideData['side_data_type']}');
+            sideData.forEach((key, value) {
+              if (key != 'side_data_type') {
+                print('  $key: $value');
+              }
+            });
+          }
+        }
+
+        // Print disposition information
+        final disposition = videoStream['disposition'];
+        if (disposition != null) {
+          print('=== Disposition ===');
+          disposition.forEach((key, value) {
+            if (value == 1) {
+              print('$key: enabled');
+            }
+          });
+        }
+
+        print('=====================');
+
         // If video is rotated 90 or 270 degrees, swap width and height
         if (rotation == 90 || rotation == 270) {
           final temp = width;

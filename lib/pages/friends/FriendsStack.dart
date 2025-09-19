@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:glacier/gate/AuthGate.dart';
+import 'package:glacier/pages/PageNotFound.dart';
 import 'package:glacier/pages/friends/FriendsPage.dart';
 
 class FriendsStack extends StatelessWidget {
@@ -19,19 +20,9 @@ class FriendsStack extends StatelessWidget {
             );
 
           default:
-            return _errorRoute();
+            return pageNotFound();
         }
       },
-    );
-  }
-
-  Route _errorRoute() {
-    return MaterialPageRoute(
-      builder:
-          (_) => Scaffold(
-            appBar: AppBar(title: Text("Error")),
-            body: Center(child: Text("Page not found or invalid arguments")),
-          ),
     );
   }
 }

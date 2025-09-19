@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:glacier/components/Button.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/services/PermissionsService.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -313,14 +314,14 @@ class _PermissionsPageState extends State<PermissionsPage> {
 
     if (mounted) {
       await Future.delayed(Duration(milliseconds: 200));
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Permission requests completed!'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 1),
-        ),
-      );
+      if (_allPermissionsGranted) {
+        ToastHelper.showSuccess(context, message: 'All permissions granted!');
+      } else {
+        ToastHelper.showWarning(
+          context,
+          message: 'Some permissions were not granted.',
+        );
+      }
     }
 
     setState(() {

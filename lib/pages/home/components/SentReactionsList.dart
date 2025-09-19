@@ -58,12 +58,9 @@ class _SentReactionsListState extends State<SentReactionsList> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add, color: Colors.white),
+                          Icon(Icons.add),
                           SizedBox(width: 8),
-                          Text(
-                            'New Request',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          Text('New Request'),
                         ],
                       ),
                     ),

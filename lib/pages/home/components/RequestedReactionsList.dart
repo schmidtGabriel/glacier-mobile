@@ -62,12 +62,9 @@ class _RequestedReactionsListState extends State<RequestedReactionsList> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.person_add, color: Colors.white),
+                          Icon(Icons.person_add),
                           SizedBox(width: 8),
-                          Text(
-                            'Invite Friends',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                          Text('Invite Friends'),
                         ],
                       ),
                     ),

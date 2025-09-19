@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/Button.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/pages/ResetPasswordPage.dart';
 import 'package:glacier/services/auth/signin.dart';
 import 'package:glacier/themes/app_colors.dart';
 import 'package:glacier/themes/theme_extensions.dart';
-import 'package:toastification/toastification.dart';
 
 class SigninPage extends StatefulWidget {
   const SigninPage({super.key});
@@ -218,12 +218,10 @@ class _SigninPageState extends State<SigninPage> {
     } on FirebaseAuthException catch (e) {
       setState(() {
         _errorMessage = e.message ?? 'An error occurred';
-        toastification.show(
-          title: Text('Sign-in failed.'),
-          description: Text(" ${_errorMessage.toString()}"),
-          autoCloseDuration: const Duration(seconds: 5),
-          type: ToastificationType.error,
-          alignment: Alignment.bottomCenter,
+        ToastHelper.showError(
+          context,
+          message: 'Sign-in failed.',
+          description: _errorMessage.toString(),
         );
       });
     } finally {

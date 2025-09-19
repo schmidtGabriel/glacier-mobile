@@ -92,10 +92,9 @@ class _AddFriendBottomSheetState extends State<AddFriendBottomSheet> {
                     if (name.isNotEmpty && emailOrPhone.isNotEmpty) {
                       inviteFriend(name, emailOrPhone);
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Please fill in both fields'),
-                        ),
+                      ToastHelper.showError(
+                        context,
+                        message: 'Please fill in both fields',
                       );
                     }
                   },

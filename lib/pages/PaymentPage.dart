@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:glacier/config/payment_config.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/themes/app_colors.dart';
 import 'package:glacier/themes/theme_extensions.dart';
@@ -320,8 +321,9 @@ class _PaymentPageState extends State<PaymentPage> {
       final result = await _paymentService.restorePurchases();
       if (result.success) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Purchases restored successfully!')),
+          ToastHelper.showSuccess(
+            context,
+            message: 'Purchases restored successfully!',
           );
           Navigator.of(context).pop();
         }
@@ -330,10 +332,10 @@ class _PaymentPageState extends State<PaymentPage> {
           _isRestoring = false;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(result.error ?? 'Failed to restore purchases'),
-            ),
+          ToastHelper.showError(
+            context,
+            message: 'Failed to restore purchases',
+            description: result.error ?? 'Unknown error',
           );
         }
       }
@@ -342,8 +344,10 @@ class _PaymentPageState extends State<PaymentPage> {
         _isRestoring = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to restore purchases: $e')),
+        ToastHelper.showError(
+          context,
+          message: 'Failed to restore purchases',
+          description: e.toString(),
         );
       }
     }
@@ -365,8 +369,10 @@ class _PaymentPageState extends State<PaymentPage> {
           _isSubscribing = false;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result.error ?? 'Purchase failed')),
+          ToastHelper.showError(
+            context,
+            message: 'Purchase failed',
+            description: result.error ?? 'Unknown error',
           );
         }
       }
@@ -376,9 +382,11 @@ class _PaymentPageState extends State<PaymentPage> {
         _isSubscribing = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(
+        ToastHelper.showError(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to start purchase: $e')));
+          message: 'Failed to start purchase',
+          description: e.toString(),
+        );
       }
     }
   }
@@ -434,21 +442,17 @@ class _PaymentPageState extends State<PaymentPage> {
     if (result.success) {
       // Handle successful purchase
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Subscription successful!')),
-        );
+        ToastHelper.showSuccess(context, message: 'Subscription successful!');
         // Navigate back or to the main app
         Navigator.of(context).pop();
       }
     } else {
       // Handle purchase error
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Purchase failed: ${result.error ?? "Unknown error"}',
-            ),
-          ),
+        ToastHelper.showError(
+          context,
+          message: 'Purchase failed',
+          description: result.error ?? 'Unknown error',
         );
       }
     }

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:glacier/components/AddFriendBottomSheet.dart';
 import 'package:glacier/components/UserAvatar.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/resources/FriendResource.dart';
 import 'package:glacier/resources/UserResource.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
@@ -38,11 +39,9 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
   List<FriendResource> _allFriends = [];
   List<FriendResource> _filteredFriends = [];
   bool _isLoading = false;
-  Timer? _debounceTimer;
   final FocusNode _focusNode = FocusNode();
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
-  bool _isSettingTextProgrammatically = false;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +49,8 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
       link: _layerLink,
       child: TextFormField(
         controller: _controller,
+        autofocus: false,
+
         validator: (value) {
           if (value == null || value.isEmpty) {
             return 'Please choose an user';
@@ -57,7 +58,10 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
           return null;
         },
         onTapOutside: (event) {
-          if (_controller.text.isEmpty) FocusScope.of(context).unfocus();
+          if (_controller.text.isEmpty) {
+            FocusScope.of(context).unfocus();
+            _focusNode.unfocus();
+          }
         },
         autovalidateMode: AutovalidateMode.onUserInteraction,
         focusNode: _focusNode,
@@ -83,7 +87,6 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
 
   @override
   void dispose() {
-    _debounceTimer?.cancel();
     _controller.removeListener(_onTextChanged);
     _focusNode.removeListener(_onFocusChanged);
     if (widget.controller == null) {
@@ -128,7 +131,10 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
   }
 
   void showDropdownOverlay() {
-    if (_overlayEntry != null) return;
+    if (_overlayEntry != null) {
+      _overlayEntry!.remove();
+      _overlayEntry = null;
+    }
 
     _overlayEntry = _createOverlayEntry();
     Overlay.of(context).insert(_overlayEntry!);
@@ -186,6 +192,7 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
         // Show friends first, then add new friend option at the end
         if (index < _filteredFriends.length) {
           final friendResource = _filteredFriends[index];
+          // Debug log
           final friend = friendResource.friend;
 
           if (friend == null) return const SizedBox.shrink();
@@ -205,11 +212,12 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
               style: TextStyle(color: Colors.grey.shade600),
             ),
             onTap: () {
-              _isSettingTextProgrammatically = true;
               _controller.text = friend.name;
-              _hideDropdown();
               widget.onFriendSelected(friend);
+
               FocusScope.of(context).unfocus();
+              _focusNode.unfocus();
+              _hideDropdown();
             },
           );
         } else {
@@ -261,8 +269,11 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                     child: GestureDetector(
-                      onTap:
-                          () {}, // Prevent tap from bubbling up to the full screen detector
+                      onTap: () {
+                        // Prevent tap from bubbling up to the full screen detector
+                        // This empty onTap will consume the tap event
+                      },
+                      behavior: HitTestBehavior.opaque,
                       child: _buildDropdownContent(),
                     ),
                   ),
@@ -300,7 +311,6 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
     setState(() {
       _filteredFriends = filtered;
     });
-
     showDropdownOverlay();
   }
 
@@ -318,19 +328,7 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
   }
 
   void _onTextChanged() {
-    // Don't show dropdown if text was changed programmatically
-    if (_isSettingTextProgrammatically) {
-      _isSettingTextProgrammatically = false;
-      return;
-    }
-
-    // Cancel previous timer
-    _debounceTimer?.cancel();
-
-    // Set up new timer with debounce
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-      _filterFriends(_controller.text);
-    });
+    _filterFriends(_controller.text);
   }
 
   void _showAddFriendBottomSheet() {
@@ -346,7 +344,6 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
           onSubmit: (String name, String emailOrPhone) async {
             if (name.isNotEmpty && emailOrPhone.isNotEmpty) {
               setState(() {
-                _isSettingTextProgrammatically = true;
                 _controller.text = name;
               });
               loadFriends();
@@ -355,8 +352,9 @@ class _FriendAutocompleteState extends State<FriendAutocomplete> {
               }
               Navigator.of(context).pop();
             } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Please fill in both fields')),
+              ToastHelper.showError(
+                context,
+                message: 'Please fill in both fields',
               );
             }
           },

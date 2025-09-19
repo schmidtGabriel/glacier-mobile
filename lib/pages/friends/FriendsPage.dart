@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:glacier/components/AddFriendBottomSheet.dart';
+import 'package:glacier/helpers/ToastHelper.dart';
 import 'package:glacier/pages/friends/components/AcceptedFriendsList.dart';
 import 'package:glacier/pages/friends/components/PendingFriendsList.dart';
 import 'package:glacier/resources/FriendResource.dart';
@@ -10,7 +11,6 @@ import 'package:glacier/services/user/getPendingUserFriends.dart';
 import 'package:glacier/services/user/getUserFriends.dart';
 import 'package:glacier/services/user/updateFriendRequest.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:toastification/toastification.dart';
 
 class FriendsPage extends StatefulWidget {
   final int? segment;
@@ -111,21 +111,15 @@ class _FriendsPageState extends State<FriendsPage>
               isLoading = false;
             });
           }
-          toastification.show(
-            title: Text('Success!'),
-            description: Text("Friend request processed!"),
-            autoCloseDuration: const Duration(seconds: 5),
-            type: ToastificationType.success,
-            alignment: Alignment.bottomCenter,
+          ToastHelper.showSuccess(
+            context,
+            description: 'Friend request processed successfully!',
           );
         })
         .catchError((error) {
-          toastification.show(
-            title: Text('Error.'),
-            description: Text("Processing friend failed!"),
-            autoCloseDuration: const Duration(seconds: 5),
-            type: ToastificationType.error,
-            alignment: Alignment.bottomCenter,
+          ToastHelper.showError(
+            context,
+            description: 'Error processing friend request.',
           );
         });
   }
@@ -180,7 +174,7 @@ class _FriendsPageState extends State<FriendsPage>
         return AddFriendBottomSheet(
           initialName: '',
           onSubmit: (String name, String emailOrPhone) async {
-            getPendingUserFriends();
+            getPendingFriends();
             Navigator.of(context).pop();
           },
         );

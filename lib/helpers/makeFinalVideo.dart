@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter_new/ffmpeg_session.dart';
 import 'package:glacier/helpers/isVideoLandscape.dart';
@@ -110,11 +112,24 @@ Future<FFmpegSession> makeFinalVideo({
       '-i "$videoPath" -i "$selfiePath" '
       '-filter_complex "$stackFilter; $watermarkFilter; [0:a]adelay=$delayMs|$delayMs[delayed_audio]" '
       '-map "[final]" -map "[delayed_audio]" -map 1:a? '
-      '-c:v libx264 -preset veryfast -crf 23 '
+      '-c:v libx264 -preset medium -crf 18 '
       '-c:a aac -b:a 128k -ac 2 '
       '"$outputPath"';
 
   var result = await FFmpegKit.execute(command);
+
+  // Clean up temporary processed video if it was created
+  if (videoPath != videoPath) {
+    try {
+      final tempFile = File(videoPath);
+      if (await tempFile.exists()) {
+        await tempFile.delete();
+        print('Cleaned up temporary processed video: $videoPath');
+      }
+    } catch (e) {
+      print('Warning: Could not clean up temporary file $videoPath: $e');
+    }
+  }
 
   return result;
 }

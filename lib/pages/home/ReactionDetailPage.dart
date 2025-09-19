@@ -673,7 +673,7 @@ class _ReactionDetailPageState extends State<ReactionDetailPage> {
         } else {
           final path = '${Directory.systemTemp.path}/${reaction?.uuid}.mp4';
           await Dio().download(videoPath, path);
-          await Gal.putVideo(path);
+          await Gal.putVideo(path, album: 'Glacier Videos');
 
           File(path).delete();
           ToastHelper.showSuccess(

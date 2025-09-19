@@ -3,6 +3,7 @@
 import 'dart:io';
 
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:gal/gal.dart';
 import 'package:glacier/helpers/editReactionVideo.dart';
 import 'package:glacier/resources/ReactionResource.dart';
 import 'package:glacier/services/user/updateUserData.dart';
@@ -151,11 +152,10 @@ class FirebaseStorageService {
         codec: "h264",
         container: "mp4",
         // crop: { 'x': 500, 'y': 300, 'width': 1280, 'height': 720 },
-        hdr: HDROptions(isHdr: false), // Set to false for better compatibility
       );
 
       final outPath = await NativeMediaConverter.transcode(opts);
-
+      Gal.putVideo(outPath, album: 'Transcoded Video');
       // final videoFile = File(tempVideoPath);
       final videoFile = File(outPath);
 

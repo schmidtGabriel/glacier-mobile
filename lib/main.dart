@@ -7,6 +7,7 @@ import 'package:glacier/components/BottomMenuLayout.dart';
 import 'package:glacier/firebase_options.dart';
 import 'package:glacier/gate/AuthGate.dart';
 import 'package:glacier/pages/ImageCropPage.dart';
+import 'package:glacier/pages/PageNotFound.dart';
 import 'package:glacier/pages/PaymentPage.dart';
 import 'package:glacier/pages/PermissionsPage.dart';
 import 'package:glacier/pages/PreviewVideoPage.dart';
@@ -200,7 +201,7 @@ class MyApp extends StatelessWidget {
             builder: (_) => AuthGate(child: RecordPage(uuid: args.uuid)),
           );
         }
-        return _errorRoute();
+        return pageNotFound();
 
       case '/camera':
         if (args is Map<String, dynamic> && args.containsKey('camera')) {
@@ -210,7 +211,7 @@ class MyApp extends StatelessWidget {
                     AuthGate(child: TakePictureScreen(camera: args['camera'])),
           );
         }
-        return _errorRoute();
+        return pageNotFound();
 
       case '/send-reaction':
         if (args is UserResource) {
@@ -236,7 +237,7 @@ class MyApp extends StatelessWidget {
                 ),
           );
         }
-        return _errorRoute();
+        return pageNotFound();
 
       case '/preview-video':
         if (args is Map<String, dynamic>) {
@@ -251,7 +252,7 @@ class MyApp extends StatelessWidget {
                 ),
           );
         }
-        return _errorRoute();
+        return pageNotFound();
 
       case '/permissions':
         return MaterialPageRoute(
@@ -264,30 +265,8 @@ class MyApp extends StatelessWidget {
         );
 
       default:
-        return _errorRoute();
+        return pageNotFound();
     }
-  }
-
-  Route _errorRoute() {
-    return MaterialPageRoute(
-      builder:
-          (context) => Scaffold(
-            body: Center(
-              child: Column(
-                children: [
-                  Text("Page not found"),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text("Back"),
-                  ),
-                ],
-              ),
-            ),
-          ),
-    );
   }
 
   // Helper method to determine if dark mode is active
